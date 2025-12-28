@@ -1,5 +1,6 @@
 import { ToolDefinition, ToolResult, AgentContext } from '../types';
 import { sendSms } from '@/lib/integrations/twilio/client';
+import { scheduleSmsReminder, scheduleRequestExpiration } from '@/lib/jobs/scheduler';
 
 interface SendSmsInput {
   body: string;
@@ -51,6 +52,12 @@ export async function sendSmsToUser(
     schedulingRequestId: context.schedulingRequestId,
     awaitingResponseType: params.awaiting_response_type,
   });
+
+  // Schedule reminder and expiration if this is a booking approval request
+  if (params.awaiting_response_type === 'booking_approval' && context.schedulingRequestId) {
+    await scheduleSmsReminder(context.schedulingRequestId);
+    await scheduleRequestExpiration(context.schedulingRequestId);
+  }
 
   return {
     success: true,

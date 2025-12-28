@@ -6,6 +6,8 @@ import {
 } from '@/lib/auth/google-oauth';
 import { createSession } from '@/lib/auth/session';
 import { config } from '@/lib/config';
+import { setupGmailWatch } from '@/lib/integrations/gmail/client';
+import { scheduleGmailWatchRenewal } from '@/lib/jobs/scheduler';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -42,6 +44,16 @@ export async function GET(request: NextRequest) {
 
     // Create session
     await createSession(userId);
+
+    // Set up Gmail watch for push notifications
+    try {
+      await setupGmailWatch(userId);
+      await scheduleGmailWatchRenewal(userId);
+      console.log('Gmail watch setup complete for user:', userId);
+    } catch (watchError) {
+      // Non-fatal - user can still use the app, just won't get push notifications
+      console.error('Failed to setup Gmail watch:', watchError);
+    }
 
     // Redirect to dashboard
     return NextResponse.redirect(new URL('/dashboard', config.appUrl));

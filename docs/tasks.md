@@ -26,7 +26,7 @@
 ## Phase 4: Webhooks
 - [x] Gmail push notification handler (/api/webhooks/gmail)
 - [x] Twilio inbound SMS handler (/api/webhooks/twilio)
-- [ ] Webhook verification/security
+- [x] Webhook verification/security (Twilio signature validation)
 
 ## Phase 5: Agent System
 - [x] Claude agent executor (tool calling loop)
@@ -63,8 +63,10 @@
 - [x] Settings page: keyword rules
 
 ## Phase 8: Polish
-- [ ] Error handling for all edge cases
-- [ ] Structured logging
+- [x] Error handling for all edge cases
+- [x] Structured logging
+- [x] Job scheduling (email delays, reminders, expiration, watch renewal)
+- [x] Gmail watch setup on OAuth completion
 - [ ] Local development documentation (ngrok setup)
 - [ ] Manual thread linking UI
 

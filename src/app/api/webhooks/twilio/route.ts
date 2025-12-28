@@ -4,21 +4,41 @@ import {
   getMostRecentAwaitingSms,
   storeInboundSms,
   clearAwaitingResponse,
+  validateTwilioSignature,
 } from '@/lib/integrations/twilio/client';
 import { runAgent } from '@/lib/agent';
 import { db } from '@/lib/db';
 import { schedulingRequests } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { config } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {
-    // Parse form data from Twilio
+    // Clone request to read body twice (once for validation, once for parsing)
+    const clonedRequest = request.clone();
     const formData = await request.formData();
+
+    // Validate Twilio signature in production
+    if (process.env.NODE_ENV === 'production') {
+      const signature = request.headers.get('x-twilio-signature') || '';
+      const url = `${config.appUrl}/api/webhooks/twilio`;
+
+      // Convert FormData to object for validation
+      const params: Record<string, string> = {};
+      formData.forEach((value, key) => {
+        params[key] = value.toString();
+      });
+
+      if (!validateTwilioSignature(signature, url, params)) {
+        console.error('Invalid Twilio signature');
+        return new NextResponse('Forbidden', { status: 403 });
+      }
+    }
     const from = formData.get('From') as string;
     const body = formData.get('Body') as string;
     const messageSid = formData.get('MessageSid') as string;
 
-    console.log('Twilio SMS received:', { from, body, messageSid });
+    console.log('Twilio SMS received:', { from, messageSid });
 
     // Find user by phone number
     const user = await findUserByPhone(from);
