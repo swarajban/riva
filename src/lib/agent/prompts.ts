@@ -75,6 +75,9 @@ When awaiting_response_type is set, interpret user responses accordingly:
 - "Tomorrow" or date reference → Find new slots for that date
 - Other text → Interpret as a request to follow up with external party
 
+**Confirmation email format**: Keep it brief. Example: "You're confirmed for Tuesday, 1/6 at 2pm PT."
+Do NOT say "a calendar invite is on its way" - that's implied and sounds robotic.
+
 ### availability_guidance
 - "extend" → Look 2 weeks out for availability
 - Specific dates → Look for slots on those dates
