@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { config } from '../config';
 import { db } from '../db';
-import { users } from '../db/schema';
+import { assistants } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
 // Create OAuth2 client
@@ -13,16 +13,44 @@ export function createOAuth2Client() {
   );
 }
 
-// Generate authorization URL for user to visit
-export function getAuthUrl(state?: string): string {
+// Generate authorization URL for assistant to visit (full Gmail/Calendar permissions)
+export function getAssistantAuthUrl(state?: string): string {
   const oauth2Client = createOAuth2Client();
 
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
-    scope: [...config.google.scopes],
+    scope: [...config.google.assistantScopes],
     prompt: 'consent', // Force to get refresh token
     state,
   });
+}
+
+// Create OAuth2 client for user authentication
+export function createUserOAuth2Client() {
+  return new google.auth.OAuth2(
+    config.google.clientId,
+    config.google.clientSecret,
+    config.google.userRedirectUri
+  );
+}
+
+// Generate authorization URL for users (minimal permissions - just identity)
+export function getUserAuthUrl(state?: string): string {
+  const oauth2Client = createUserOAuth2Client();
+
+  return oauth2Client.generateAuthUrl({
+    access_type: 'online', // Don't need refresh token for users
+    scope: [...config.google.userScopes],
+    prompt: 'select_account', // Let user pick which account
+    state,
+  });
+}
+
+// Exchange authorization code for tokens (for user login)
+export async function exchangeUserCodeForTokens(code: string) {
+  const oauth2Client = createUserOAuth2Client();
+  const { tokens } = await oauth2Client.getToken(code);
+  return tokens;
 }
 
 // Exchange authorization code for tokens
@@ -46,104 +74,119 @@ export async function getUserInfo(accessToken: string) {
   };
 }
 
-// Get a valid access token for a user, refreshing if necessary
-export async function getValidAccessToken(userId: string): Promise<string> {
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
+// Get a valid access token for the assistant, refreshing if necessary
+export async function getValidAccessToken(assistantId: string): Promise<string> {
+  const assistant = await db.query.assistants.findFirst({
+    where: eq(assistants.id, assistantId),
   });
 
-  if (!user) {
-    throw new Error('User not found');
+  if (!assistant) {
+    throw new Error('Assistant not found');
   }
 
-  if (!user.googleRefreshToken) {
-    throw new Error('User has no refresh token - needs to re-authenticate');
+  if (!assistant.googleRefreshToken) {
+    throw new Error('Assistant has no refresh token - needs to re-authenticate');
   }
 
   // Check if token expires in less than 5 minutes
   const now = new Date();
-  const expiresAt = user.googleTokenExpiresAt;
+  const expiresAt = assistant.googleTokenExpiresAt;
   const bufferMs = config.timing.tokenRefreshBufferMs;
 
   if (expiresAt && expiresAt.getTime() - now.getTime() > bufferMs) {
     // Token is still valid
-    return user.googleAccessToken!;
+    return assistant.googleAccessToken!;
   }
 
   // Token expired or expiring soon - refresh it
   const oauth2Client = createOAuth2Client();
   oauth2Client.setCredentials({
-    refresh_token: user.googleRefreshToken,
+    refresh_token: assistant.googleRefreshToken,
   });
 
   const { credentials } = await oauth2Client.refreshAccessToken();
 
   // Update tokens in database
   await db
-    .update(users)
+    .update(assistants)
     .set({
       googleAccessToken: credentials.access_token!,
       googleTokenExpiresAt: new Date(credentials.expiry_date!),
       updatedAt: new Date(),
     })
-    .where(eq(users.id, userId));
+    .where(eq(assistants.id, assistantId));
 
   return credentials.access_token!;
 }
 
-// Get an authenticated OAuth2 client for a user
-export async function getAuthenticatedClient(userId: string) {
-  const accessToken = await getValidAccessToken(userId);
+// Get an authenticated OAuth2 client for the assistant
+export async function getAuthenticatedClient(assistantId: string) {
+  const accessToken = await getValidAccessToken(assistantId);
   const oauth2Client = createOAuth2Client();
   oauth2Client.setCredentials({ access_token: accessToken });
   return oauth2Client;
 }
 
-// Store tokens for a user (after OAuth callback)
-export async function storeUserTokens(
+// Get the single assistant (Riva) - convenience function
+export async function getAssistant() {
+  const assistant = await db.query.assistants.findFirst();
+  if (!assistant) {
+    throw new Error('No assistant configured - please complete OAuth setup');
+  }
+  return assistant;
+}
+
+// Get authenticated client for the default assistant
+export async function getDefaultAuthenticatedClient() {
+  const assistant = await getAssistant();
+  return getAuthenticatedClient(assistant.id);
+}
+
+// Store tokens for the assistant (after OAuth callback)
+export async function storeAssistantTokens(
   email: string,
   tokens: {
     access_token?: string | null;
     refresh_token?: string | null;
     expiry_date?: number | null;
   },
-  userInfo: { name?: string }
+  assistantInfo: { name?: string }
 ) {
-  const existingUser = await db.query.users.findFirst({
-    where: eq(users.email, email),
+  const existingAssistant = await db.query.assistants.findFirst({
+    where: eq(assistants.email, email),
   });
 
-  if (existingUser) {
-    // Update existing user
+  if (existingAssistant) {
+    // Update existing assistant
     await db
-      .update(users)
+      .update(assistants)
       .set({
-        googleAccessToken: tokens.access_token || existingUser.googleAccessToken,
-        googleRefreshToken: tokens.refresh_token || existingUser.googleRefreshToken,
+        googleAccessToken: tokens.access_token || existingAssistant.googleAccessToken,
+        googleRefreshToken: tokens.refresh_token || existingAssistant.googleRefreshToken,
         googleTokenExpiresAt: tokens.expiry_date
           ? new Date(tokens.expiry_date)
-          : existingUser.googleTokenExpiresAt,
-        name: userInfo.name || existingUser.name,
+          : existingAssistant.googleTokenExpiresAt,
+        name: assistantInfo.name || existingAssistant.name,
         updatedAt: new Date(),
       })
-      .where(eq(users.id, existingUser.id));
+      .where(eq(assistants.id, existingAssistant.id));
 
-    return existingUser.id;
+    return existingAssistant.id;
   } else {
-    // Create new user
-    const [newUser] = await db
-      .insert(users)
+    // Create new assistant
+    const [newAssistant] = await db
+      .insert(assistants)
       .values({
         email,
-        name: userInfo.name,
+        name: assistantInfo.name,
         googleAccessToken: tokens.access_token,
         googleRefreshToken: tokens.refresh_token,
         googleTokenExpiresAt: tokens.expiry_date
           ? new Date(tokens.expiry_date)
           : null,
       })
-      .returning({ id: users.id });
+      .returning({ id: assistants.id });
 
-    return newUser.id;
+    return newAssistant.id;
   }
 }

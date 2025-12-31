@@ -7,7 +7,7 @@ export interface TimeSlot {
 }
 
 export interface FindSlotsOptions {
-  userId: string;
+  calendarId: string;
   settings: UserSettings;
   startDate: Date;
   endDate: Date;
@@ -150,7 +150,7 @@ function findFreeSlotsInDay(
 // Main function: Find available slots
 export async function findAvailableSlots(options: FindSlotsOptions): Promise<TimeSlot[]> {
   const {
-    userId,
+    calendarId,
     settings,
     startDate,
     endDate,
@@ -169,7 +169,7 @@ export async function findAvailableSlots(options: FindSlotsOptions): Promise<Tim
   } = settings;
 
   // Get freebusy data
-  const freeBusy = await getFreeBusy(userId, startDate, endDate);
+  const freeBusy = await getFreeBusy(calendarId, startDate, endDate);
 
   // Build busy intervals with buffer
   const busyIntervals: TimeSlot[] = (freeBusy.busy || []).map((b) => ({
@@ -229,12 +229,12 @@ export async function findAvailableSlots(options: FindSlotsOptions): Promise<Tim
 
 // Check if a specific slot is still available
 export async function isSlotAvailable(
-  userId: string,
+  calendarId: string,
   slot: TimeSlot,
   bufferMinutes: number
 ): Promise<boolean> {
   const freeBusy = await getFreeBusy(
-    userId,
+    calendarId,
     new Date(slot.start.getTime() - bufferMinutes * 60 * 1000),
     new Date(slot.end.getTime() + bufferMinutes * 60 * 1000)
   );

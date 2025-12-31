@@ -39,3 +39,5 @@ drizzle/meta
 # Editor
 .idea
 .vscode
+
+secrets/

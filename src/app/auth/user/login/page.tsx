@@ -1,19 +1,19 @@
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth/session';
-import { getAssistantAuthUrl } from '@/lib/auth/google-oauth';
+import { getUserSession } from '@/lib/auth/session';
+import { getUserAuthUrl } from '@/lib/auth/google-oauth';
 
-export default async function LoginPage({
+export default async function UserLoginPage({
   searchParams,
 }: {
   searchParams: { error?: string };
 }) {
-  // If already logged in, redirect to dashboard
-  const session = await getSession();
+  // If already logged in as a user, redirect to dashboard
+  const session = await getUserSession();
   if (session) {
     redirect('/dashboard');
   }
 
-  const authUrl = getAssistantAuthUrl();
+  const authUrl = getUserAuthUrl();
   const error = searchParams.error;
 
   return (
@@ -22,16 +22,17 @@ export default async function LoginPage({
         <div>
           <h1 className="text-3xl font-bold text-center text-gray-900">Riva</h1>
           <p className="mt-2 text-center text-gray-600">
-            AI Email Scheduling Assistant
+            Sign in to view your scheduling requests
           </p>
         </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error === 'oauth_failed' && 'OAuth authentication failed. Please try again.'}
+            {error === 'oauth_failed' && 'Authentication failed. Please try again.'}
             {error === 'no_code' && 'No authorization code received.'}
             {error === 'callback_failed' && 'Failed to complete authentication.'}
-            {!['oauth_failed', 'no_code', 'callback_failed'].includes(error) &&
+            {error === 'not_registered' && 'Your email is not registered. Please contact your administrator.'}
+            {!['oauth_failed', 'no_code', 'callback_failed', 'not_registered'].includes(error) &&
               'An error occurred. Please try again.'}
           </div>
         )}
@@ -64,7 +65,7 @@ export default async function LoginPage({
         </div>
 
         <p className="text-center text-sm text-gray-500">
-          Riva needs access to your Gmail and Calendar to schedule meetings on your behalf.
+          Sign in with your work email to access your scheduling dashboard.
         </p>
       </div>
     </div>

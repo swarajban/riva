@@ -83,7 +83,7 @@ export async function createEvent(
 
   // Create the event
   const eventId = await createCalendarEvent({
-    userId: context.userId,
+    calendarId: user.calendarId,
     title: params.title,
     startTime: new Date(params.start_time),
     endTime: new Date(params.end_time),

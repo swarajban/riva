@@ -1,5 +1,5 @@
 /**
- * Seed script to create the initial user
+ * Seed script to create a user
  *
  * Usage:
  *   npx tsx scripts/seed-user.ts
@@ -7,16 +7,20 @@
  * Before running:
  *   1. Set DATABASE_URL in .env.local
  *   2. Run migrations: npm run db:push
- *   3. Update the email and phone below
+ *   3. Update the email, phone, and calendarId below
+ *
+ * Note: This creates a USER record (Swaraj, Anurati, etc.), not the assistant.
+ * The assistant (Riva) is created when you complete OAuth.
  */
 
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
-import { users } from '../src/lib/db/schema';
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import { users } from "../src/lib/db/schema";
 
-const EMAIL = 'your-email@example.com'; // Change this
-const PHONE = '+1234567890'; // Change this to your phone number
-const NAME = 'Your Name'; // Change this
+const EMAIL = "swaraj@semprehealth.com"; // The user's email address
+const PHONE = "+18472074454"; // The user's phone number for SMS
+const NAME = "Swaraj"; // The user's name
+const CALENDAR_ID = "swaraj@semprehealth.com"; // The user's Google Calendar ID (usually same as email)
 
 async function main() {
   const pool = new Pool({
@@ -25,7 +29,7 @@ async function main() {
 
   const db = drizzle(pool);
 
-  console.log('Creating user...');
+  console.log("Creating user...");
 
   try {
     const [user] = await db
@@ -34,13 +38,14 @@ async function main() {
         email: EMAIL,
         name: NAME,
         phone: PHONE,
+        calendarId: CALENDAR_ID,
         settings: {
           defaultMeetingLengthMinutes: 30,
           zoomPersonalLink: null,
-          workingHoursStart: '10:00',
-          workingHoursEnd: '17:00',
-          workingDays: ['mon', 'tue', 'wed', 'thu', 'fri'],
-          timezone: 'America/Los_Angeles',
+          workingHoursStart: "10:00",
+          workingHoursEnd: "17:00",
+          workingDays: ["mon", "tue", "wed", "thu", "fri"],
+          timezone: "America/Los_Angeles",
           bufferMinutes: 15,
           lookaheadDays: 10,
           numOptionsToSuggest: 4,
@@ -50,15 +55,19 @@ async function main() {
       })
       .returning();
 
-    console.log('User created:', user.id);
-    console.log('');
-    console.log('Next steps:');
-    console.log('1. Start the dev server: npm run dev');
-    console.log('2. Visit http://localhost:3000/auth/login');
-    console.log('3. Complete Google OAuth to link your account');
+    console.log("User created:", user.id);
+    console.log("Email:", user.email);
+    console.log("Calendar ID:", user.calendarId);
+    console.log("");
+    console.log("Next steps:");
+    console.log(
+      "1. Make sure Riva has access to this user's calendar (calendar sharing)",
+    );
+    console.log("2. Complete Riva's OAuth at http://localhost:3000/auth/login");
+    console.log("3. Send a test email with Riva CC'd");
   } catch (error) {
-    if ((error as Error).message.includes('duplicate key')) {
-      console.log('User already exists');
+    if ((error as Error).message.includes("duplicate key")) {
+      console.log("User already exists");
     } else {
       throw error;
     }

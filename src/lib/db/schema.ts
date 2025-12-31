@@ -71,15 +71,28 @@ export type ProposedTime = {
   round: number;
 };
 
-// Tables
+// Assistants table - stores Riva's OAuth credentials
+// Single row for the assistant (riva@semprehealth.com)
+export const assistants = pgTable('assistants', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: varchar('email', { length: 255 }).unique().notNull(),
+  name: varchar('name', { length: 255 }),
+  googleRefreshToken: text('google_refresh_token'),
+  googleAccessToken: text('google_access_token'),
+  googleTokenExpiresAt: timestamp('google_token_expires_at', { withTimezone: true }),
+  gmailHistoryId: varchar('gmail_history_id', { length: 255 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+// Users table - actual users whose calendars Riva manages
+// (e.g., Swaraj, Anurati)
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 255 }).unique().notNull(),
   name: varchar('name', { length: 255 }),
   phone: varchar('phone', { length: 20 }),
-  googleRefreshToken: text('google_refresh_token'),
-  googleAccessToken: text('google_access_token'),
-  googleTokenExpiresAt: timestamp('google_token_expires_at', { withTimezone: true }),
+  calendarId: varchar('calendar_id', { length: 255 }).notNull(), // Google Calendar ID (usually same as email)
   settings: jsonb('settings').$type<UserSettings>().default({
     defaultMeetingLengthMinutes: 30,
     zoomPersonalLink: null,
@@ -194,6 +207,8 @@ export const smsMessages = pgTable(
 );
 
 // Relations
+export const assistantsRelations = relations(assistants, ({ }) => ({}));
+
 export const usersRelations = relations(users, ({ many }) => ({
   schedulingRequests: many(schedulingRequests),
   smsMessages: many(smsMessages),
@@ -230,6 +245,8 @@ export const smsMessagesRelations = relations(smsMessages, ({ one }) => ({
 }));
 
 // Type exports for use in application
+export type Assistant = typeof assistants.$inferSelect;
+export type NewAssistant = typeof assistants.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type SchedulingRequest = typeof schedulingRequests.$inferSelect;

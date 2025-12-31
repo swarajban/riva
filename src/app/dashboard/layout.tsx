@@ -10,7 +10,7 @@ export default async function DashboardLayout({
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect('/auth/login');
+    redirect('/auth/user/login');
   }
 
   return (
@@ -39,7 +39,7 @@ export default async function DashboardLayout({
               </nav>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">{user.email}</span>
+              <span className="text-sm text-gray-600">{user.name || user.email}</span>
               <a
                 href="/api/auth/logout"
                 className="text-sm text-gray-600 hover:text-gray-900"

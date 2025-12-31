@@ -12,6 +12,22 @@ Riva is an AI email scheduling assistant. When CC'd on an email thread, it:
 5. Sends SMS to user for final confirmation (Y/N)
 6. Creates Google Calendar event and sends confirmation email
 
+## Architecture: Two Accounts
+
+Riva uses a **calendar sharing** model:
+
+| Account | Role | Access |
+|---------|------|--------|
+| **Riva** (riva@semprehealth.com) | Assistant | Gmail (read/send), OAuth login |
+| **Anurati** (user) | User | Calendar shared with Riva |
+
+- Riva logs in with her own Google Workspace account
+- Anurati shares her calendar with Riva (with "Make changes to events" permission)
+- Riva reads/sends emails from her own address, never from Anurati's
+- Riva checks availability and creates events on Anurati's shared calendar
+
+The `USER_CALENDAR_ID` env var specifies which calendar Riva manages (e.g., `anurati@semprehealth.com`).
+
 ## Tech Stack
 
 - **Framework**: Next.js 14 (App Router)
@@ -20,7 +36,7 @@ Riva is an AI email scheduling assistant. When CC'd on an email thread, it:
 - **Job Queue**: pg-boss (Postgres-based)
 - **LLM**: Claude API (claude-sonnet-4-5-20250929)
 - **Email**: Gmail API with push notifications
-- **Calendar**: Google Calendar API
+- **Calendar**: Google Calendar API (via calendar sharing)
 - **SMS**: Twilio
 - **Auth**: Google OAuth 2.0
 - **Styling**: Tailwind CSS (no component library)

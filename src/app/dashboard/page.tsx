@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { schedulingRequests } from '@/lib/db/schema';
 import { getCurrentUser } from '@/lib/auth/session';
-import { eq, desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import Link from 'next/link';
 
 const statusColors: Record<string, string> = {
@@ -39,7 +39,7 @@ export default async function DashboardPage({
 
   const statusFilter = searchParams.status;
 
-  // Get all requests for user
+  // Get requests for this user only
   const requests = await db.query.schedulingRequests.findMany({
     where: eq(schedulingRequests.userId, user.id),
     orderBy: desc(schedulingRequests.createdAt),
@@ -64,7 +64,7 @@ export default async function DashboardPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Scheduling Requests</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Your Scheduling Requests</h1>
 
       {/* Status filters */}
       <div className="flex flex-wrap gap-2 mb-6">

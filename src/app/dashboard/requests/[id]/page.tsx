@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { schedulingRequests, emailThreads, smsMessages } from '@/lib/db/schema';
 import { getCurrentUser } from '@/lib/auth/session';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, asc, and } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { formatDateTimePT } from '@/lib/utils/time';
@@ -24,7 +24,7 @@ export default async function RequestDetailPage({
   const user = await getCurrentUser();
   if (!user) return null;
 
-  // Get the request
+  // Get the request - only if it belongs to the current user
   const request = await db.query.schedulingRequests.findFirst({
     where: and(
       eq(schedulingRequests.id, params.id),

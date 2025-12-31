@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
+// Get settings for the current user
 export async function GET() {
   const user = await getCurrentUser();
 
@@ -12,10 +13,12 @@ export async function GET() {
   }
 
   return NextResponse.json({
+    user,
     settings: user.settings,
   });
 }
 
+// Update settings for the current user
 export async function PATCH(request: NextRequest) {
   const user = await getCurrentUser();
 

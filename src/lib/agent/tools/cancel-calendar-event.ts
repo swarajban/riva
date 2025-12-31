@@ -1,7 +1,7 @@
 import { ToolDefinition, ToolResult, AgentContext } from '../types';
 import { cancelCalendarEvent } from '@/lib/integrations/calendar/client';
 import { db } from '@/lib/db';
-import { schedulingRequests } from '@/lib/db/schema';
+import { schedulingRequests, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 interface CancelEventInput {
@@ -29,7 +29,16 @@ export async function cancelEvent(
 ): Promise<ToolResult> {
   const params = input as CancelEventInput;
 
-  await cancelCalendarEvent(context.userId, params.event_id);
+  // Get user for calendarId
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, context.userId),
+  });
+
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+
+  await cancelCalendarEvent(user.calendarId, params.event_id);
 
   // Update scheduling request if we have one
   if (context.schedulingRequestId) {

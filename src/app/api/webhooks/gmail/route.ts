@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { users, emailThreads, schedulingRequests } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { assistants, users, emailThreads, schedulingRequests } from '@/lib/db/schema';
+import { eq, or, sql } from 'drizzle-orm';
 import {
   getHistory,
   getMessage,
   parseGmailMessage,
   isRivaAddressed,
   parseHeaders,
+  parseEmailAddresses,
 } from '@/lib/integrations/gmail/client';
 import { runAgent } from '@/lib/agent';
+import { config } from '@/lib/config';
 
 // Gmail Pub/Sub push notification format
 interface PubSubMessage {
@@ -26,6 +28,30 @@ interface GmailNotification {
   historyId: string;
 }
 
+// Find user by matching email addresses in the message
+async function findUserFromEmail(
+  fromEmail: string,
+  toEmails: string[],
+  ccEmails: string[]
+): Promise<typeof users.$inferSelect | null> {
+  // Collect all emails to check (excluding Riva's email)
+  const rivaEmail = config.rivaEmail.toLowerCase();
+  const allEmails = [fromEmail, ...toEmails, ...ccEmails]
+    .map((e) => e.toLowerCase())
+    .filter((e) => e !== rivaEmail);
+
+  if (allEmails.length === 0) return null;
+
+  // Find a user whose email matches any of the participants
+  const user = await db.query.users.findFirst({
+    where: or(
+      ...allEmails.map((email) => eq(users.email, email))
+    ),
+  });
+
+  return user || null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: PubSubMessage = await request.json();
@@ -36,20 +62,30 @@ export async function POST(request: NextRequest) {
 
     console.log('Gmail notification received:', notification);
 
-    // Find user by email
-    const user = await db.query.users.findFirst({
-      where: eq(users.email, notification.emailAddress),
+    // Find assistant by email (this should be Riva's email)
+    const assistant = await db.query.assistants.findFirst({
+      where: eq(assistants.email, notification.emailAddress),
     });
 
-    if (!user) {
-      console.log('User not found for email:', notification.emailAddress);
-      return NextResponse.json({ status: 'user_not_found' });
+    if (!assistant) {
+      console.log('Assistant not found for email:', notification.emailAddress);
+      return NextResponse.json({ status: 'assistant_not_found' });
     }
 
+    // Get the stored history ID or use a default
+    const lastHistoryId = assistant.gmailHistoryId || notification.historyId;
+
     // Get message history since last known historyId
-    // For now, we'll use the historyId from the notification
-    // In production, you'd want to store and compare historyIds
-    const history = await getHistory(user.id, notification.historyId);
+    const history = await getHistory(lastHistoryId, assistant.id);
+
+    // Update the assistant's history ID
+    await db
+      .update(assistants)
+      .set({
+        gmailHistoryId: notification.historyId,
+        updatedAt: new Date(),
+      })
+      .where(eq(assistants.id, assistant.id));
 
     // Process each new message
     for (const historyItem of history) {
@@ -69,8 +105,8 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Get full message
-        const fullMessage = await getMessage(user.id, messageId);
+        // Get full message using assistant's credentials
+        const fullMessage = await getMessage(messageId, assistant.id);
         const headers = parseHeaders(fullMessage.payload?.headers);
 
         // Check if Riva is addressed
@@ -82,9 +118,21 @@ export async function POST(request: NextRequest) {
         // Parse the message
         const parsed = parseGmailMessage(fullMessage);
 
-        // Check if this is from the user themselves (ignore)
-        if (parsed.fromEmail.toLowerCase() === user.email.toLowerCase()) {
-          console.log('Message from user, ignoring:', messageId);
+        // Check if this is from the assistant/Riva (ignore our own sent messages)
+        if (parsed.fromEmail.toLowerCase() === config.rivaEmail.toLowerCase()) {
+          console.log('Message from Riva, ignoring:', messageId);
+          continue;
+        }
+
+        // Find which user this email is for
+        const user = await findUserFromEmail(
+          parsed.fromEmail,
+          parsed.toEmails,
+          parsed.ccEmails
+        );
+
+        if (!user) {
+          console.log('No matching user found for message participants:', messageId);
           continue;
         }
 

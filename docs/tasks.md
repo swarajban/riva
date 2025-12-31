@@ -6,7 +6,7 @@
 - [x] Set up Drizzle ORM configuration
 - [x] Create database schema (users, scheduling_requests, email_threads, sms_messages)
 - [x] Create .env.example with all environment variables
-- [ ] Run initial migration
+- [x] Run initial migration
 
 ## Phase 2: Authentication
 - [x] Implement Google OAuth client

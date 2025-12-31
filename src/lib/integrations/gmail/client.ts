@@ -1,21 +1,31 @@
 import { google, gmail_v1 } from 'googleapis';
-import { getAuthenticatedClient } from '@/lib/auth/google-oauth';
+import { getAuthenticatedClient, getAssistant } from '@/lib/auth/google-oauth';
 import { config } from '@/lib/config';
+import { db } from '@/lib/db';
+import { assistants } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export type GmailClient = gmail_v1.Gmail;
 
-// Get Gmail client for a user
-export async function getGmailClient(userId: string): Promise<GmailClient> {
-  const oauth2Client = await getAuthenticatedClient(userId);
+// Get Gmail client for the assistant
+export async function getGmailClient(assistantId?: string): Promise<GmailClient> {
+  const id = assistantId || (await getAssistant()).id;
+  const oauth2Client = await getAuthenticatedClient(id);
   return google.gmail({ version: 'v1', auth: oauth2Client });
 }
 
 // Set up Gmail push notifications
-export async function setupGmailWatch(userId: string): Promise<{
+export async function setupGmailWatch(assistantId?: string): Promise<{
   historyId: string;
   expiration: string;
 }> {
-  const gmail = await getGmailClient(userId);
+  const assistant = assistantId
+    ? await db.query.assistants.findFirst({ where: eq(assistants.id, assistantId) })
+    : await getAssistant();
+
+  if (!assistant) throw new Error('Assistant not found');
+
+  const gmail = await getGmailClient(assistant.id);
 
   const response = await gmail.users.watch({
     userId: 'me',
@@ -26,6 +36,15 @@ export async function setupGmailWatch(userId: string): Promise<{
     },
   });
 
+  // Store the history ID on the assistant
+  await db
+    .update(assistants)
+    .set({
+      gmailHistoryId: response.data.historyId!,
+      updatedAt: new Date(),
+    })
+    .where(eq(assistants.id, assistant.id));
+
   return {
     historyId: response.data.historyId!,
     expiration: response.data.expiration!,
@@ -33,17 +52,17 @@ export async function setupGmailWatch(userId: string): Promise<{
 }
 
 // Stop Gmail push notifications
-export async function stopGmailWatch(userId: string): Promise<void> {
-  const gmail = await getGmailClient(userId);
+export async function stopGmailWatch(assistantId?: string): Promise<void> {
+  const gmail = await getGmailClient(assistantId);
   await gmail.users.stop({ userId: 'me' });
 }
 
 // Get message by ID
 export async function getMessage(
-  userId: string,
-  messageId: string
+  messageId: string,
+  assistantId?: string
 ): Promise<gmail_v1.Schema$Message> {
-  const gmail = await getGmailClient(userId);
+  const gmail = await getGmailClient(assistantId);
   const response = await gmail.users.messages.get({
     userId: 'me',
     id: messageId,
@@ -54,10 +73,10 @@ export async function getMessage(
 
 // Get message history since a specific historyId
 export async function getHistory(
-  userId: string,
-  startHistoryId: string
+  startHistoryId: string,
+  assistantId?: string
 ): Promise<gmail_v1.Schema$History[]> {
-  const gmail = await getGmailClient(userId);
+  const gmail = await getGmailClient(assistantId);
 
   try {
     const response = await gmail.users.history.list({
@@ -79,10 +98,10 @@ export async function getHistory(
 
 // Get thread by ID with all messages
 export async function getThread(
-  userId: string,
-  threadId: string
+  threadId: string,
+  assistantId?: string
 ): Promise<gmail_v1.Schema$Thread> {
-  const gmail = await getGmailClient(userId);
+  const gmail = await getGmailClient(assistantId);
   const response = await gmail.users.threads.get({
     userId: 'me',
     id: threadId,
