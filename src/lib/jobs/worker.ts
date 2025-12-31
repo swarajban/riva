@@ -25,12 +25,35 @@ async function processPendingEmails(): Promise<void> {
     console.log(`Processing pending email: ${email.id}`);
 
     try {
+      // Atomically claim the email by setting sentAt to a placeholder
+      // This prevents race conditions with concurrent poll cycles
+      const claimed = await db
+        .update(emailThreads)
+        .set({ sentAt: new Date(0) }) // Placeholder timestamp (epoch)
+        .where(
+          and(
+            eq(emailThreads.id, email.id),
+            isNull(emailThreads.sentAt) // Only claim if not already claimed
+          )
+        )
+        .returning({ id: emailThreads.id });
+
+      if (claimed.length === 0) {
+        console.log(`Email ${email.id} already claimed, skipping`);
+        continue;
+      }
+
       // Get assistant for sending
       const assistant = await getAssistant();
       await sendEmailNow(assistant.id, email.id);
       console.log(`Email sent: ${email.id}`);
     } catch (error) {
       console.error(`Failed to send email ${email.id}:`, error);
+      // Reset sentAt on failure so it can be retried
+      await db
+        .update(emailThreads)
+        .set({ sentAt: null })
+        .where(eq(emailThreads.id, email.id));
     }
   }
 }

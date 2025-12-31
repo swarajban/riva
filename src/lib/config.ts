@@ -44,11 +44,16 @@ export const config = {
   // Anthropic
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY!,
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-opus-4-5-20251101',
+    useExtendedThinking: true,
+    thinkingBudget: 10000, // tokens for thinking
   },
 
   // Session
   sessionSecret: process.env.SESSION_SECRET!,
+
+  // Development options
+  fastEmailDelay: process.env.FAST_EMAIL_DELAY === 'true',
 
   // Timing constants
   timing: {
@@ -65,6 +70,11 @@ export const config = {
 
 // Helper to get a random delay between min and max
 export function getRandomEmailDelay(): number {
+  // Fast mode for local testing: 5 second delay
+  if (config.fastEmailDelay) {
+    return 5 * 1000; // 5 seconds
+  }
+
   const { emailDelayMinMs, emailDelayMaxMs } = config.timing;
   return Math.floor(Math.random() * (emailDelayMaxMs - emailDelayMinMs + 1)) + emailDelayMinMs;
 }

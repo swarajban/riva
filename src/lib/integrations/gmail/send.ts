@@ -142,7 +142,9 @@ export async function sendEmailNow(userId: string, emailThreadId: string): Promi
     throw new Error(`Email thread not found: ${emailThreadId}`);
   }
 
-  if (emailRecord.sentAt) {
+  // Check if already sent (epoch timestamp = claimed but not sent yet)
+  const epochTime = new Date(0).getTime();
+  if (emailRecord.sentAt && emailRecord.sentAt.getTime() !== epochTime) {
     console.log(`Email ${emailThreadId} already sent, skipping`);
     return;
   }

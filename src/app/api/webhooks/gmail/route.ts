@@ -145,17 +145,32 @@ export async function POST(request: NextRequest) {
 
         // If no existing request, create one
         if (!schedulingRequestId) {
+          // Identify external parties (not user, not Riva)
+          const rivaEmail = config.rivaEmail.toLowerCase();
+          const userEmail = user.email.toLowerCase();
+
+          const externalParties = [
+            ...parsed.toEmails.map(email => ({ email, name: undefined as string | undefined })),
+            ...parsed.ccEmails.map(email => ({ email, name: undefined as string | undefined })),
+          ].filter(p => {
+            const email = p.email.toLowerCase();
+            return email !== rivaEmail && email !== userEmail;
+          });
+
+          // If sender is external (not the user), add them too
+          if (parsed.fromEmail.toLowerCase() !== userEmail) {
+            externalParties.unshift({
+              email: parsed.fromEmail,
+              name: parsed.fromName || undefined,
+            });
+          }
+
           const [newRequest] = await db
             .insert(schedulingRequests)
             .values({
               userId: user.id,
               status: 'pending',
-              attendees: [
-                {
-                  email: parsed.fromEmail,
-                  name: parsed.fromName || undefined,
-                },
-              ],
+              attendees: externalParties.length > 0 ? externalParties : [],
             })
             .returning({ id: schedulingRequests.id });
 
@@ -181,6 +196,11 @@ export async function POST(request: NextRequest) {
           receivedAt: parsed.receivedAt,
         });
 
+        // Get the scheduling request to pass attendees to agent
+        const schedulingRequest = await db.query.schedulingRequests.findFirst({
+          where: eq(schedulingRequests.id, schedulingRequestId),
+        });
+
         // Run the agent to process this email
         try {
           await runAgent({
@@ -191,8 +211,11 @@ export async function POST(request: NextRequest) {
               subject: parsed.subject,
               from: parsed.fromEmail,
               fromName: parsed.fromName,
+              to: parsed.toEmails,
+              cc: parsed.ccEmails,
               body: parsed.bodyText,
               threadId: parsed.gmailThreadId,
+              attendees: schedulingRequest?.attendees || [],
             }),
           });
         } catch (agentError) {

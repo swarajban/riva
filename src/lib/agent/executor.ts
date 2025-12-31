@@ -53,13 +53,19 @@ export async function runAgent(context: AgentContext): Promise<void> {
     iterations++;
     console.log(`Agent iteration ${iterations}`);
 
-    // Call Claude
+    // Call Claude with optional extended thinking
     const response = await anthropic.messages.create({
       model: config.anthropic.model,
-      max_tokens: 4096,
+      max_tokens: config.anthropic.useExtendedThinking ? 16000 : 4096,
       system: systemPrompt,
       tools,
       messages,
+      ...(config.anthropic.useExtendedThinking && {
+        thinking: {
+          type: 'enabled' as const,
+          budget_tokens: config.anthropic.thinkingBudget,
+        },
+      }),
     });
 
     console.log('Agent response:', {
@@ -116,12 +122,18 @@ export async function runAgent(context: AgentContext): Promise<void> {
 
 function buildInitialMessage(context: AgentContext): string {
   if (context.triggerType === 'email') {
+    const emailData = JSON.parse(context.triggerContent);
+    const attendeesInfo = emailData.attendees?.length > 0
+      ? `\nExternal party to schedule with: ${emailData.attendees.map((a: { email: string; name?: string }) => a.name ? `${a.name} <${a.email}>` : a.email).join(', ')}`
+      : '';
+
     return `New inbound email received. Process this email and take appropriate action.
 
 Email details:
 ${context.triggerContent}
+${attendeesInfo}
 
-Analyze the email, determine the intent, and use the available tools to respond appropriately.`;
+The attendees list above shows who the meeting should be scheduled with. Use the available tools to check availability and propose times to the external party.`;
   }
 
   if (context.triggerType === 'sms') {
