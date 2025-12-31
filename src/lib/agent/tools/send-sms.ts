@@ -1,5 +1,5 @@
 import { ToolDefinition, ToolResult, AgentContext } from '../types';
-import { sendSms } from '@/lib/integrations/twilio/client';
+import { sendNotification } from '@/lib/integrations/notification/service';
 import { scheduleSmsReminder, scheduleRequestExpiration } from '@/lib/jobs/scheduler';
 
 interface SendSmsInput {
@@ -46,7 +46,7 @@ export async function sendSmsToUser(
 ): Promise<ToolResult> {
   const params = input as SendSmsInput;
 
-  const smsId = await sendSms({
+  const notificationId = await sendNotification({
     userId: context.userId,
     body: params.body,
     schedulingRequestId: context.schedulingRequestId,
@@ -62,8 +62,8 @@ export async function sendSmsToUser(
   return {
     success: true,
     data: {
-      smsId,
-      message: 'SMS sent to user.',
+      notificationId,
+      message: 'Message sent to user.',
       awaitingResponse: params.awaiting_response_type || null,
     },
   };

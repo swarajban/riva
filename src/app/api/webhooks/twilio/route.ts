@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  findUserByPhone,
-  getMostRecentAwaitingSms,
-  storeInboundSms,
+  findUserByNotificationId,
+  getMostRecentAwaiting,
+  storeInboundNotification,
   clearAwaitingResponse,
   validateTwilioSignature,
-} from '@/lib/integrations/twilio/client';
+} from '@/lib/integrations/notification/service';
 import { runAgent } from '@/lib/agent';
 import { db } from '@/lib/db';
 import { schedulingRequests } from '@/lib/db/schema';
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     console.log('Twilio SMS received:', { from, messageSid });
 
     // Find user by phone number
-    const user = await findUserByPhone(from);
+    const user = await findUserByNotificationId(from, 'twilio');
 
     if (!user) {
       console.log('User not found for phone:', from);
@@ -52,35 +52,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find the most recent SMS awaiting response
-    const awaitingSms = await getMostRecentAwaitingSms(user.id);
+    // Find the most recent notification awaiting response
+    const awaitingNotification = await getMostRecentAwaiting(user.id);
 
-    // Store the inbound SMS
-    await storeInboundSms(
+    // Store the inbound notification
+    await storeInboundNotification(
       user.id,
       body,
+      'twilio',
       messageSid,
-      awaitingSms?.schedulingRequestId || undefined
+      awaitingNotification?.schedulingRequestId || undefined
     );
 
     // Clear the awaiting response flag if there was one
-    if (awaitingSms) {
-      await clearAwaitingResponse(awaitingSms.id);
+    if (awaitingNotification) {
+      await clearAwaitingResponse(awaitingNotification.id);
     }
 
     // Run the agent to process this SMS
     try {
       await runAgent({
         userId: user.id,
-        schedulingRequestId: awaitingSms?.schedulingRequestId || undefined,
+        schedulingRequestId: awaitingNotification?.schedulingRequestId || undefined,
         triggerType: 'sms',
         triggerContent: body,
-        awaitingResponseType: awaitingSms?.awaitingResponseType || undefined,
+        awaitingResponseType: awaitingNotification?.awaitingResponseType || undefined,
       });
     } catch (agentError) {
       console.error('Agent error:', agentError);
       // Update request with error if we have one
-      if (awaitingSms?.schedulingRequestId) {
+      if (awaitingNotification?.schedulingRequestId) {
         await db
           .update(schedulingRequests)
           .set({
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
             errorMessage: agentError instanceof Error ? agentError.message : 'Agent processing failed',
             updatedAt: new Date(),
           })
-          .where(eq(schedulingRequests.id, awaitingSms.schedulingRequestId));
+          .where(eq(schedulingRequests.id, awaitingNotification.schedulingRequestId));
       }
     }
 

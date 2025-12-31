@@ -98,6 +98,11 @@ export async function runAgent(context: AgentContext): Promise<void> {
 
           console.log(`Tool result:`, result);
 
+          // Critical tool failure - stop execution entirely
+          if (!result.success && block.name === 'send_sms_to_user') {
+            throw new Error(`Failed to notify user: ${result.error}`);
+          }
+
           toolResults.push({
             type: 'tool_result',
             tool_use_id: block.id,

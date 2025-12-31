@@ -67,10 +67,9 @@ export async function checkAvailability(
 
   const settings = user.settings as UserSettings;
 
-  // Parse dates
-  const startDate = new Date(params.start_date);
-  const endDate = new Date(params.end_date);
-  endDate.setHours(23, 59, 59, 999);
+  // Parse dates as PT timezone (add noon to avoid timezone day-shift issues)
+  const startDate = new Date(`${params.start_date}T12:00:00-08:00`);
+  const endDate = new Date(`${params.end_date}T23:59:59-08:00`);
 
   // Find slots
   const slots = await findAvailableSlots({

@@ -37,6 +37,16 @@ export const awaitingResponseTypeEnum = pgEnum('awaiting_response_type', [
   'meeting_title',
 ]);
 
+export const notificationPreferenceEnum = pgEnum('notification_preference', [
+  'sms',
+  'telegram',
+]);
+
+export const notificationProviderEnum = pgEnum('notification_provider', [
+  'twilio',
+  'telegram',
+]);
+
 // Types for JSONB fields
 export type UserSettings = {
   defaultMeetingLengthMinutes: number;
@@ -93,6 +103,8 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).unique().notNull(),
   name: varchar('name', { length: 255 }),
   phone: varchar('phone', { length: 20 }),
+  telegramChatId: varchar('telegram_chat_id', { length: 255 }),
+  notificationPreference: notificationPreferenceEnum('notification_preference').default('sms'),
   calendarId: varchar('calendar_id', { length: 255 }).notNull(), // Google Calendar ID (usually same as email)
   settings: jsonb('settings').$type<UserSettings>().default({
     defaultMeetingLengthMinutes: 30,
@@ -181,8 +193,8 @@ export const emailThreads = pgTable(
   })
 );
 
-export const smsMessages = pgTable(
-  'sms_messages',
+export const notifications = pgTable(
+  'notifications',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     schedulingRequestId: uuid('scheduling_request_id').references(
@@ -192,19 +204,21 @@ export const smsMessages = pgTable(
     userId: uuid('user_id')
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
+    provider: notificationProviderEnum('provider').notNull(),
     direction: messageDirectionEnum('direction').notNull(),
     body: text('body').notNull(),
     awaitingResponseType: awaitingResponseTypeEnum('awaiting_response_type'),
-    twilioMessageSid: varchar('twilio_message_sid', { length: 255 }),
+    providerMessageId: varchar('provider_message_id', { length: 255 }),
     sentAt: timestamp('sent_at', { withTimezone: true }),
     receivedAt: timestamp('received_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (table) => ({
-    awaitingIdx: index('idx_sms_awaiting').on(
+    awaitingIdx: index('idx_notifications_awaiting').on(
       table.userId,
       table.awaitingResponseType
     ),
+    providerIdx: index('idx_notifications_provider').on(table.provider),
   })
 );
 
@@ -213,7 +227,7 @@ export const assistantsRelations = relations(assistants, ({ }) => ({}));
 
 export const usersRelations = relations(users, ({ many }) => ({
   schedulingRequests: many(schedulingRequests),
-  smsMessages: many(smsMessages),
+  notifications: many(notifications),
 }));
 
 export const schedulingRequestsRelations = relations(
@@ -224,7 +238,7 @@ export const schedulingRequestsRelations = relations(
       references: [users.id],
     }),
     emailThreads: many(emailThreads),
-    smsMessages: many(smsMessages),
+    notifications: many(notifications),
   })
 );
 
@@ -235,13 +249,13 @@ export const emailThreadsRelations = relations(emailThreads, ({ one }) => ({
   }),
 }));
 
-export const smsMessagesRelations = relations(smsMessages, ({ one }) => ({
+export const notificationsRelations = relations(notifications, ({ one }) => ({
   schedulingRequest: one(schedulingRequests, {
-    fields: [smsMessages.schedulingRequestId],
+    fields: [notifications.schedulingRequestId],
     references: [schedulingRequests.id],
   }),
   user: one(users, {
-    fields: [smsMessages.userId],
+    fields: [notifications.userId],
     references: [users.id],
   }),
 }));
@@ -255,5 +269,10 @@ export type SchedulingRequest = typeof schedulingRequests.$inferSelect;
 export type NewSchedulingRequest = typeof schedulingRequests.$inferInsert;
 export type EmailThread = typeof emailThreads.$inferSelect;
 export type NewEmailThread = typeof emailThreads.$inferInsert;
-export type SmsMessage = typeof smsMessages.$inferSelect;
-export type NewSmsMessage = typeof smsMessages.$inferInsert;
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert;
+
+// Keep old type aliases for backward compatibility during migration
+export type SmsMessage = Notification;
+export type NewSmsMessage = NewNotification;
+export const smsMessages = notifications;

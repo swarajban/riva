@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
-import { schedulingRequests, smsMessages } from '@/lib/db/schema';
+import { schedulingRequests, notifications } from '@/lib/db/schema';
 import { eq, and, isNotNull } from 'drizzle-orm';
-import { sendSms } from '@/lib/integrations/twilio/client';
+import { sendNotification } from '@/lib/integrations/notification/service';
 
 interface SmsReminderJobData {
   schedulingRequestId: string;
@@ -26,26 +26,26 @@ export async function handleSmsReminder(data: SmsReminderJobData): Promise<void>
     return;
   }
 
-  // Check if there's still an SMS awaiting response
-  const awaitingSms = await db.query.smsMessages.findFirst({
+  // Check if there's still a notification awaiting response
+  const awaitingNotification = await db.query.notifications.findFirst({
     where: and(
-      eq(smsMessages.schedulingRequestId, schedulingRequestId),
-      eq(smsMessages.direction, 'outbound'),
-      isNotNull(smsMessages.awaitingResponseType)
+      eq(notifications.schedulingRequestId, schedulingRequestId),
+      eq(notifications.direction, 'outbound'),
+      isNotNull(notifications.awaitingResponseType)
     ),
   });
 
-  if (!awaitingSms) {
-    console.log(`No awaiting SMS for request ${schedulingRequestId}, skipping reminder`);
+  if (!awaitingNotification) {
+    console.log(`No awaiting notification for request ${schedulingRequestId}, skipping reminder`);
     return;
   }
 
   // Send reminder
-  await sendSms({
+  await sendNotification({
     userId: request.userId,
     body: `Reminder: You have a pending meeting confirmation. Reply Y to confirm or N to cancel.`,
     schedulingRequestId,
-    awaitingResponseType: awaitingSms.awaitingResponseType as 'booking_approval',
+    awaitingResponseType: awaitingNotification.awaitingResponseType as 'booking_approval',
   });
 
   // Update request to mark reminder sent

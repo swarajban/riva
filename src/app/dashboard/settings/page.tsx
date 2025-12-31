@@ -38,6 +38,9 @@ const DAYS = [
 export default function SettingsPage() {
   const router = useRouter();
   const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [notificationPreference, setNotificationPreference] = useState<'sms' | 'telegram'>('sms');
+  const [telegramChatId, setTelegramChatId] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -52,6 +55,9 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error('Failed to fetch settings');
       const data = await res.json();
       setSettings(data.settings);
+      setNotificationPreference(data.notificationPreference || 'sms');
+      setTelegramChatId(data.telegramChatId || '');
+      setPhone(data.user?.phone || '');
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to load settings' });
     } finally {
@@ -69,7 +75,12 @@ export default function SettingsPage() {
       const res = await fetch('/api/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings }),
+        body: JSON.stringify({
+          settings,
+          notificationPreference,
+          telegramChatId,
+          phone,
+        }),
       });
 
       if (!res.ok) throw new Error('Failed to save settings');
@@ -260,6 +271,87 @@ export default function SettingsPage() {
           <p className="mt-2 text-sm text-gray-500">
             This link will be included in calendar invites when video is enabled.
           </p>
+        </div>
+
+        {/* Notification Preferences */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Notification Preferences</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Notification Method
+              </label>
+              <select
+                value={notificationPreference}
+                onChange={(e) => setNotificationPreference(e.target.value as 'sms' | 'telegram')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="sms">SMS (Twilio)</option>
+                <option value="telegram">Telegram</option>
+              </select>
+              <p className="mt-1 text-sm text-gray-500">
+                Choose how you want to receive meeting confirmation requests.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number (for SMS)
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+1234567890"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Your phone number for SMS notifications (with country code).
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Telegram Chat ID
+              </label>
+              <input
+                type="text"
+                value={telegramChatId}
+                onChange={(e) => setTelegramChatId(e.target.value)}
+                placeholder="123456789"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <div className="mt-2 text-sm text-gray-500 space-y-2">
+                <p>Setup steps:</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>
+                    <a
+                      href={`https://t.me/${(process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || '').replace('@', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      Open Riva bot in Telegram
+                    </a>
+                    {' '}and send /start
+                  </li>
+                  <li>
+                    Message{' '}
+                    <a
+                      href="https://t.me/userinfobot"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      @userinfobot
+                    </a>
+                    {' '}- it will reply with your info
+                  </li>
+                  <li>Copy the numeric <strong>Id</strong> (e.g. 123456789), not your username</li>
+                </ol>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Keyword Rules */}

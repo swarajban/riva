@@ -49,6 +49,11 @@ export const config = {
     thinkingBudget: 10000, // tokens for thinking
   },
 
+  // Telegram
+  telegram: {
+    botToken: process.env.TELEGRAM_BOT_TOKEN!,
+  },
+
   // Session
   sessionSecret: process.env.SESSION_SECRET!,
 

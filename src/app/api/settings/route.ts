@@ -15,6 +15,8 @@ export async function GET() {
   return NextResponse.json({
     user,
     settings: user.settings,
+    notificationPreference: user.notificationPreference || 'sms',
+    telegramChatId: user.telegramChatId || '',
   });
 }
 
@@ -28,11 +30,16 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { settings } = body;
+    const { settings, notificationPreference, telegramChatId, phone } = body;
 
     // Validate settings
     if (!settings || typeof settings !== 'object') {
       return NextResponse.json({ error: 'Invalid settings' }, { status: 400 });
+    }
+
+    // Validate notification preference if provided
+    if (notificationPreference && !['sms', 'telegram'].includes(notificationPreference)) {
+      return NextResponse.json({ error: 'Invalid notification preference' }, { status: 400 });
     }
 
     // Update user settings
@@ -40,6 +47,9 @@ export async function PATCH(request: NextRequest) {
       .update(users)
       .set({
         settings,
+        notificationPreference: notificationPreference || 'sms',
+        telegramChatId: telegramChatId || null,
+        phone: phone || null,
         updatedAt: new Date(),
       })
       .where(eq(users.id, user.id));

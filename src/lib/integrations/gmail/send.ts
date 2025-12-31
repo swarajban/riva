@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { getAuthenticatedClient } from '@/lib/auth/google-oauth';
+import { getAuthenticatedClient, getAssistant } from '@/lib/auth/google-oauth';
 import { config, getRandomEmailDelay } from '@/lib/config';
 import { db } from '@/lib/db';
 import { emailThreads } from '@/lib/db/schema';
@@ -125,7 +125,13 @@ export async function queueEmail(options: SendEmailOptions): Promise<string> {
 
   // If immediate, send now; otherwise leave for worker to pick up
   if (options.immediate) {
-    await sendEmailNow(options.userId, emailThread.id);
+    try {
+      await sendEmailNow(options.userId, emailThread.id);
+    } catch (error) {
+      // Delete the record so it doesn't get picked up by worker
+      await db.delete(emailThreads).where(eq(emailThreads.id, emailThread.id));
+      throw error;
+    }
   }
   // Non-immediate emails will be picked up by the worker when scheduledSendAt passes
 
@@ -149,7 +155,9 @@ export async function sendEmailNow(userId: string, emailThreadId: string): Promi
     return;
   }
 
-  const oauth2Client = await getAuthenticatedClient(userId);
+  // Use assistant's credentials (Riva sends emails, not individual users)
+  const assistant = await getAssistant();
+  const oauth2Client = await getAuthenticatedClient(assistant.id);
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
   const mimeMessage = buildMimeMessage({
