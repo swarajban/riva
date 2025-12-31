@@ -1,78 +1,88 @@
-# Riva Implementation Tasks
+# Riva Tasks
 
-## Phase 1: Foundation
-- [x] Initialize Next.js 14 project with App Router
-- [x] Install dependencies (drizzle-orm, pg, pg-boss, googleapis, twilio, @anthropic-ai/sdk)
-- [x] Set up Drizzle ORM configuration
-- [x] Create database schema (users, scheduling_requests, email_threads, sms_messages)
-- [x] Create .env.example with all environment variables
-- [x] Run initial migration
+## Completed
 
-## Phase 2: Authentication
-- [x] Implement Google OAuth client
-- [x] Create /auth/callback route handler
-- [x] Add token refresh logic
-- [x] Create session middleware
-- [x] Create login page
+### Foundation
+- [x] Next.js 14 project with App Router
+- [x] Drizzle ORM + PostgreSQL schema
+- [x] Multi-user/assistant architecture
 
-## Phase 3: Core Integrations
-- [x] Gmail API client (read emails, send emails, setup watch)
-- [x] Email parsing utilities (extract sender, recipients, body)
-- [x] Google Calendar API client
-- [x] Availability/slot finding algorithm
-- [x] Calendar event CRUD operations
-- [x] Twilio SMS client (send/receive)
+### Authentication
+- [x] Google OAuth for assistant (Riva email)
+- [x] Google OAuth for users (calendar access)
+- [x] Token refresh logic
+- [x] Session management
 
-## Phase 4: Webhooks
-- [x] Gmail push notification handler (/api/webhooks/gmail)
-- [x] Twilio inbound SMS handler (/api/webhooks/twilio)
-- [x] Webhook verification/security (Twilio signature validation)
+### Core Integrations
+- [x] Gmail API (read, send, watch via Pub/Sub)
+- [x] Google Calendar API (freebusy, events)
+- [x] Twilio SMS (send/receive)
+- [x] Telegram Bot API (send/receive)
+- [x] Unified notification service (SMS + Telegram)
 
-## Phase 5: Agent System
-- [x] Claude agent executor (tool calling loop)
+### Agent System
+- [x] Claude Opus 4.5 with extended thinking
+- [x] Tool calling loop with error handling
+- [x] All 9 agent tools implemented
 - [x] System prompts with personality/rules
-- [x] Tool: check_availability
-- [x] Tool: send_email
-- [x] Tool: send_sms_to_user
-- [x] Tool: create_calendar_event
-- [x] Tool: cancel_calendar_event
-- [x] Tool: update_scheduling_request
-- [x] Tool: lookup_contact
-- [x] Tool: get_thread_emails
-- [x] Tool: link_threads
-- [x] Time formatting utilities (PT timezone)
 
-## Phase 6: Background Jobs
-- [x] pg-boss queue initialization
-- [x] Job handler: delayed email sender
-- [x] Job handler: SMS reminders (3 hours)
-- [x] Job handler: request expiration (2 days)
-- [x] Job handler: Gmail watch renewal (6 days)
-- [x] Job scheduling utilities
+### Background Jobs
+- [x] Polling-based worker (replaced pg-boss)
+- [x] Delayed email sender
+- [x] Gmail watch renewal
 
-## Phase 7: Dashboard
-- [x] Dashboard layout with navigation
-- [x] Auth-protected routes
-- [x] Request list view with status filtering
-- [x] Request detail view (email thread display)
-- [x] Request detail view (SMS history display)
-- [x] Settings page: working hours
-- [x] Settings page: working days
-- [x] Settings page: meeting preferences
-- [x] Settings page: Zoom link
-- [x] Settings page: keyword rules
+### Dashboard
+- [x] Request list view
+- [x] Request detail view
+- [x] Settings page (working hours, Zoom, notifications)
+- [x] Telegram setup instructions
 
-## Phase 8: Polish
-- [x] Error handling for all edge cases
-- [x] Structured logging
-- [x] Job scheduling (email delays, reminders, expiration, watch renewal)
-- [x] Gmail watch setup on OAuth completion
-- [ ] Local development documentation (ngrok setup)
-- [ ] Manual thread linking UI
+### Bug Fixes
+- [x] Email threading (Message-ID, In-Reply-To, References)
+- [x] Duplicate email prevention (atomic claim)
+- [x] Timezone date parsing (year boundary, PT offset)
+- [x] Assistant OAuth for email sending
 
 ---
 
-## Legend
-- [ ] Todo
-- [~] In Progress
-- [x] Done
+## Next Up: Deployment & CI
+
+### Deployment
+- [ ] Set up Render web service
+- [ ] Configure production PostgreSQL
+- [ ] Production environment variables
+- [ ] Domain setup (app.riva.systems)
+- [ ] SSL/HTTPS configuration
+
+### CI/CD
+- [ ] GitHub Actions workflow
+- [ ] Build + type check on PR
+- [ ] Auto-deploy to Render on merge to main
+
+### Production Webhooks
+- [ ] Production Pub/Sub subscription for Gmail
+- [ ] Production Twilio webhook URL
+- [ ] Production Telegram webhook URL
+
+---
+
+## Backlog
+
+### Features
+- [ ] Twilio A2P registration (in progress, 2 week wait)
+- [ ] Request expiration handling (auto-expire after 2 days)
+- [ ] SMS reminders for pending confirmations (3 hour)
+- [ ] Reschedule/cancel flows
+- [ ] Manual thread linking UI
+- [ ] Multi-calendar support
+
+### Polish
+- [ ] Error handling improvements
+- [ ] Dashboard UI refinements
+- [ ] Observability/logging
+- [ ] Rate limiting
+
+### Testing
+- [ ] Unit tests for availability logic
+- [ ] Integration tests for agent flows
+- [ ] E2E tests for webhook handlers
