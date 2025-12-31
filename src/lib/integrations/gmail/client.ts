@@ -36,11 +36,12 @@ export async function setupGmailWatch(assistantId?: string): Promise<{
     },
   });
 
-  // Store the history ID on the assistant
+  // Store the history ID and watch expiration on the assistant
   await db
     .update(assistants)
     .set({
       gmailHistoryId: response.data.historyId!,
+      gmailWatchExpiresAt: new Date(parseInt(response.data.expiration!, 10)),
       updatedAt: new Date(),
     })
     .where(eq(assistants.id, assistant.id));

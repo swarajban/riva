@@ -5,7 +5,6 @@ import { db } from '@/lib/db';
 import { emailThreads } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
-import { scheduleEmailSend } from '@/lib/jobs/scheduler';
 
 interface SendEmailOptions {
   userId: string;
@@ -124,12 +123,11 @@ export async function queueEmail(options: SendEmailOptions): Promise<string> {
     })
     .returning({ id: emailThreads.id });
 
-  // If immediate, send now; otherwise schedule job
+  // If immediate, send now; otherwise leave for worker to pick up
   if (options.immediate) {
     await sendEmailNow(options.userId, emailThread.id);
-  } else {
-    await scheduleEmailSend(emailThread.id, sendTime);
   }
+  // Non-immediate emails will be picked up by the worker when scheduledSendAt passes
 
   return emailThread.id;
 }

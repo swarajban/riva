@@ -81,6 +81,7 @@ export const assistants = pgTable('assistants', {
   googleAccessToken: text('google_access_token'),
   googleTokenExpiresAt: timestamp('google_token_expires_at', { withTimezone: true }),
   gmailHistoryId: varchar('gmail_history_id', { length: 255 }),
+  gmailWatchExpiresAt: timestamp('gmail_watch_expires_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
@@ -131,6 +132,7 @@ export const schedulingRequests = pgTable(
     errorMessage: text('error_message'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    smsReminderAt: timestamp('sms_reminder_at', { withTimezone: true }),
     smsReminderSentAt: timestamp('sms_reminder_sent_at', { withTimezone: true }),
     expiresAt: timestamp('expires_at', { withTimezone: true }),
   },

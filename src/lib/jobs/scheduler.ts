@@ -1,64 +1,40 @@
-import { scheduleJob, QUEUE_NAMES } from './queue';
+import { db } from '@/lib/db';
+import { schedulingRequests } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 import { config } from '@/lib/config';
 
-// Schedule SMS reminder for a request (3 hours after initial SMS)
+// Schedule SMS reminder for a request (sets reminder time on the request)
 export async function scheduleSmsReminder(
   schedulingRequestId: string
-): Promise<string | null> {
-  const sendAt = new Date(Date.now() + config.timing.smsReminderMs);
+): Promise<void> {
+  const reminderAt = new Date(Date.now() + config.timing.smsReminderMs);
 
-  return scheduleJob(
-    QUEUE_NAMES.SMS_REMINDER,
-    { schedulingRequestId },
-    {
-      startAfter: sendAt,
-      singletonKey: `sms-reminder-${schedulingRequestId}`,
-    }
-  );
+  await db
+    .update(schedulingRequests)
+    .set({ smsReminderAt: reminderAt })
+    .where(eq(schedulingRequests.id, schedulingRequestId));
 }
 
-// Schedule request expiration (2 days after creation)
+// Schedule request expiration (sets expiration time on the request)
 export async function scheduleRequestExpiration(
   schedulingRequestId: string
-): Promise<string | null> {
+): Promise<void> {
   const expiresAt = new Date(Date.now() + config.timing.requestExpirationMs);
 
-  return scheduleJob(
-    QUEUE_NAMES.EXPIRE_REQUEST,
-    { schedulingRequestId },
-    {
-      startAfter: expiresAt,
-      singletonKey: `expire-${schedulingRequestId}`,
-    }
-  );
+  await db
+    .update(schedulingRequests)
+    .set({ expiresAt })
+    .where(eq(schedulingRequests.id, schedulingRequestId));
 }
 
-// Schedule delayed email send
-export async function scheduleEmailSend(
-  emailThreadId: string,
-  sendAt: Date
-): Promise<string | null> {
-  return scheduleJob(
-    QUEUE_NAMES.SEND_EMAIL,
-    { emailThreadId },
-    {
-      startAfter: sendAt,
-    }
-  );
-}
+// Note: Email scheduling is handled by storing scheduledSendAt on emailThreads
+// No separate scheduling function needed - the worker polls for pending emails
 
-// Schedule Gmail watch renewal
+// Schedule Gmail watch renewal (stores next renewal time on assistant)
 export async function scheduleGmailWatchRenewal(
-  userId: string
-): Promise<string | null> {
-  const renewAt = new Date(Date.now() + config.timing.gmailWatchRenewalMs);
-
-  return scheduleJob(
-    QUEUE_NAMES.GMAIL_WATCH_RENEWAL,
-    { userId },
-    {
-      startAfter: renewAt,
-      singletonKey: `gmail-watch-${userId}`,
-    }
-  );
+  assistantId: string
+): Promise<void> {
+  // This is now a no-op - the worker will check gmailWatchExpiresAt on assistants
+  // The expiration is set when setupGmailWatch is called
+  console.log(`Gmail watch renewal will be handled by worker for assistant ${assistantId}`);
 }
