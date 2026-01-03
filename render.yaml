@@ -1,0 +1,49 @@
+services:
+  # Main App + Worker (PM2 manages both processes)
+  - type: web
+    name: riva-app
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run build && npm run db:push
+    startCommand: npx pm2-runtime ecosystem.config.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: riva-db
+          property: connectionString
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://app.riva.systems
+      - key: GOOGLE_REDIRECT_URI
+        value: https://app.riva.systems/auth/callback
+      - key: GOOGLE_USER_REDIRECT_URI
+        value: https://app.riva.systems/auth/user/callback
+      # Secrets - add values in Render Dashboard
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_PUBSUB_TOPIC
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: RIVA_EMAIL
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+
+databases:
+  - name: riva-db
+    plan: starter
