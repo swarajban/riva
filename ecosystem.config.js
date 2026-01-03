@@ -2,15 +2,15 @@ module.exports = {
   apps: [
     {
       name: 'web',
-      script: 'npm',
+      script: 'node_modules/.bin/next',
       args: 'start',
-      instances: 1,
+      exec_mode: 'fork',
     },
     {
       name: 'worker',
-      script: 'npx',
-      args: 'tsx src/lib/jobs/worker.ts',
-      instances: 1,
+      script: 'node_modules/.bin/tsx',
+      args: 'src/lib/jobs/worker.ts',
+      exec_mode: 'fork',
       restart_delay: 5000,
     },
   ],

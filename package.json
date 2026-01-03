@@ -21,6 +21,7 @@
     "pm2": "^5.4.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "tsx": "^4.19.2",
     "twilio": "^5.4.0"
   },
   "devDependencies": {
