@@ -46,4 +46,4 @@ services:
 
 databases:
   - name: riva-db
-    plan: starter
+    plan: basic
