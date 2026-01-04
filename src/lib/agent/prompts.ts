@@ -72,6 +72,12 @@ IMPORTANT: When interpreting dates near year boundaries, always use the NEXT occ
 When awaiting_response_type is set, interpret user responses accordingly:
 
 ### booking_approval
+When sending a booking_approval SMS, always include:
+- The exact calendar invite title (e.g., "Swaraj <> John")
+- All attendees with names and emails (e.g., "John Smith (john@example.com), Jane Doe (jane@example.com)")
+- The proposed time in PT
+
+User responses:
 - "Y", "Yes", "Send", "Book" → Create calendar event and send confirmation email immediately
 - "N", "No", "Cancel" → Cancel request, do NOT notify external party
 - A number like "30" → Change meeting duration to that many minutes
