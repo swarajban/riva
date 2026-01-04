@@ -24,11 +24,8 @@ docker run -d --name riva-postgres -e POSTGRES_PASSWORD=riva -e POSTGRES_DB=riva
 # Install dependencies
 npm install
 
-# Push schema to local database (dev only)
-DATABASE_URL="postgresql://postgres:riva@localhost:5432/riva" npm run db:push
-
-# Generate migration after schema changes
-npm run db:generate
+# Apply migrations to local database
+DATABASE_URL="postgresql://postgres:riva@localhost:5432/riva" npm run db:migrate
 
 # Start dev server
 npm run dev
@@ -42,18 +39,18 @@ ngrok http 3000
 
 ## Database Migrations
 
-Uses Drizzle ORM with proper migrations for production:
-
-- **Local dev**: Use `db:push` to sync schema directly (fast iteration)
-- **Production**: Migrations run automatically during deploy via `db:migrate`
+Uses Drizzle ORM with migrations (same workflow for local and production):
 
 **Schema change workflow:**
 1. Edit `src/lib/db/schema.ts`
 2. Run `npm run db:generate` to create migration file in `drizzle/`
-3. Commit the new migration file
-4. Push - migrations apply automatically on Render deploy
+3. Run `npm run db:migrate` to apply locally
+4. Commit the new migration file
+5. Push - migrations apply automatically on Render deploy
 
 **Migration files**: `drizzle/*.sql` (tracked in git)
+
+Note: `db:push` exists for quick experimentation but prefer migrations for consistency.
 
 ## Key Directories
 
