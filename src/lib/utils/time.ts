@@ -29,7 +29,7 @@ export function formatTimePT(date: Date): string {
   return timeStr;
 }
 
-// Format time range (e.g., "2-2:30" or "10:30-11am")
+// Format time range (e.g., "2-2:30pm" or "10:30-11am")
 export function formatTimeSlot(start: Date, end: Date): string {
   const startHour = parseInt(
     start.toLocaleString('en-US', {
@@ -50,26 +50,14 @@ export function formatTimeSlot(start: Date, end: Date): string {
   const startStr = formatTimePT(start);
   const endStr = formatTimePT(end);
 
-  // Determine if we need am/pm
-  const startIsMorning = startHour < 12;
-  const endIsMorning = endHour < 12 || endHour === 12;
+  const startAmPm = startHour >= 12 ? 'pm' : 'am';
+  const endAmPm = endHour >= 12 ? 'pm' : 'am';
 
-  // Add am/pm only when crossing noon or when it's not obvious
-  if (startIsMorning && !endIsMorning) {
-    // Crossing noon
-    return `${startStr}am-${endStr}pm`;
-  } else if (startIsMorning && endIsMorning && startHour < 10) {
-    // Morning times, add am at end
-    return `${startStr}-${endStr}am`;
-  } else if (!startIsMorning && !endIsMorning) {
-    // Afternoon times, might add pm
-    if (endHour >= 17) {
-      return `${startStr}-${endStr}pm`;
-    }
-    return `${startStr}-${endStr}`;
+  // Always show am/pm - include start's am/pm only if different from end
+  if (startAmPm !== endAmPm) {
+    return `${startStr}${startAmPm}-${endStr}${endAmPm}`;
   }
-
-  return `${startStr}-${endStr}`;
+  return `${startStr}-${endStr}${endAmPm}`;
 }
 
 // Format date for display (e.g., "Monday, 1/6")

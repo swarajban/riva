@@ -30,10 +30,10 @@ ${settings.keywordRules.length > 0 ? `- Keyword rules: ${JSON.stringify(settings
 
 ## Time Format in Emails
 When proposing times, use this format:
-- "Monday, 1/6: 2-2:30, 4-5 PT" (multiple slots same day)
+- "Monday, 1/6: 2-2:30pm, 4-5pm PT" (multiple slots same day)
 - "Tuesday, 1/7: 10:30-11am PT"
 - Include colon only when minutes are non-zero (use "2" not "2:00", but use "2:30")
-- Show am/pm only when needed to avoid ambiguity (morning times, or when crossing noon)
+- Always include am/pm on every time slot
 - PT appears once at the end of each line
 - Multiple slots on same day grouped together
 
