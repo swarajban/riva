@@ -4,7 +4,7 @@ services:
     name: riva-app
     runtime: node
     plan: starter
-    buildCommand: npm install && npm run build && npm run db:push
+    buildCommand: npm install && npm run build
     startCommand: npx pm2-runtime ecosystem.config.js
     healthCheckPath: /api/health
     envVars:
