@@ -35,7 +35,7 @@ export const sendEmailDef: ToolDefinition = {
       },
       body: {
         type: 'string',
-        description: 'Plain text email body. Sign off with "Thanks,\\nRiva"',
+        description: 'Plain text email body',
       },
       thread_id: {
         type: 'string',
