@@ -37,14 +37,24 @@ export async function GET(request: NextRequest) {
       where: eq(users.email, userInfo.email),
     });
 
-    if (!existingUser) {
-      // User not registered - redirect with error
-      console.log('User not found:', userInfo.email);
-      return NextResponse.redirect(new URL('/auth/user/login?error=not_registered', config.appUrl));
+    let user = existingUser;
+
+    if (!user) {
+      // Auto-create new user
+      console.log('Creating new user:', userInfo.email);
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          email: userInfo.email,
+          name: userInfo.name,
+          calendarId: userInfo.email, // Google Calendar ID is typically the email
+        })
+        .returning();
+      user = newUser;
     }
 
     // Create session for the user
-    await createUserSession(existingUser.id);
+    await createUserSession(user.id);
 
     // Redirect to dashboard
     return NextResponse.redirect(new URL('/dashboard', config.appUrl));
