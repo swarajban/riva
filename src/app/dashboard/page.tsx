@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { schedulingRequests } from '@/lib/db/schema';
+import { schedulingRequests, users, assistants } from '@/lib/db/schema';
 import { getCurrentUser } from '@/lib/auth/session';
 import { desc, eq } from 'drizzle-orm';
 import Link from 'next/link';
@@ -32,6 +32,13 @@ function formatDate(date: Date | null): string {
 export default async function DashboardPage({ searchParams }: { searchParams: { status?: string } }) {
   const user = await getCurrentUser();
   if (!user) return null;
+
+  // Get assistant email if connected
+  const assistant = user.assistantId
+    ? await db.query.assistants.findFirst({
+        where: eq(assistants.id, user.assistantId),
+      })
+    : null;
 
   const statusFilter = searchParams.status;
 
@@ -89,7 +96,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
       {filteredRequests.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-8 text-center text-gray-500">
           {requests.length === 0
-            ? 'No scheduling requests yet. CC riva@semprehealth.com on an email to get started.'
+            ? assistant
+              ? `No scheduling requests yet. CC ${assistant.email} on an email to get started.`
+              : 'No scheduling requests yet. Connect an assistant to get started.'
             : 'No requests match the selected filter.'}
         </div>
       ) : (
