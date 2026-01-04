@@ -5,14 +5,14 @@ import { schedulingRequests, users } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { cancelCalendarEvent } from '@/lib/integrations/calendar/client';
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { id } = params;
+  const { id } = await params;
 
   try {
     // Get the scheduling request - ensure it belongs to this user

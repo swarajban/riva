@@ -2,7 +2,11 @@ import { redirect } from 'next/navigation';
 import { getUserSession } from '@/lib/auth/session';
 import { getUserAuthUrl } from '@/lib/auth/google-oauth';
 
-export default async function UserLoginPage({ searchParams }: { searchParams: { error?: string } }) {
+export default async function UserLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   // If already logged in as a user, redirect to dashboard
   const session = await getUserSession();
   if (session) {
@@ -10,7 +14,7 @@ export default async function UserLoginPage({ searchParams }: { searchParams: { 
   }
 
   const authUrl = getUserAuthUrl();
-  const error = searchParams.error;
+  const { error } = await searchParams;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

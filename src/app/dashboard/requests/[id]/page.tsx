@@ -19,13 +19,15 @@ const statusColors: Record<string, string> = {
   error: 'bg-red-100 text-red-800',
 };
 
-export default async function RequestDetailPage({ params }: { params: { id: string } }) {
+export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
   const user = await getCurrentUser();
   if (!user) return null;
 
   // Get the request - only if it belongs to the current user
   const request = await db.query.schedulingRequests.findFirst({
-    where: and(eq(schedulingRequests.id, params.id), eq(schedulingRequests.userId, user.id)),
+    where: and(eq(schedulingRequests.id, id), eq(schedulingRequests.userId, user.id)),
   });
 
   if (!request) {
@@ -34,13 +36,13 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
 
   // Get email threads
   const emails = await db.query.emailThreads.findMany({
-    where: eq(emailThreads.schedulingRequestId, params.id),
+    where: eq(emailThreads.schedulingRequestId, id),
     orderBy: asc(emailThreads.createdAt),
   });
 
   // Get SMS messages
   const sms = await db.query.smsMessages.findMany({
-    where: eq(smsMessages.schedulingRequestId, params.id),
+    where: eq(smsMessages.schedulingRequestId, id),
     orderBy: asc(smsMessages.createdAt),
   });
 

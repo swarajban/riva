@@ -29,7 +29,11 @@ function formatDate(date: Date | null): string {
   }).format(date);
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: { status?: string } }) {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -40,7 +44,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
       })
     : null;
 
-  const statusFilter = searchParams.status;
+  const { status: statusFilter } = await searchParams;
 
   // Get requests for this user only
   const requests = await db.query.schedulingRequests.findMany({

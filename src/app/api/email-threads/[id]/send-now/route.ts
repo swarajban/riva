@@ -5,14 +5,14 @@ import { emailThreads, schedulingRequests } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { sendEmailNow } from '@/lib/integrations/gmail/send';
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { id } = params;
+  const { id } = await params;
 
   try {
     // Get the email thread
