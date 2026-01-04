@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { emailThreads, schedulingRequests, assistants } from '@/lib/db/schema';
-import { and, isNotNull, isNull, lte, eq } from 'drizzle-orm';
+import { and, isNotNull, isNull, lte, eq, gt } from 'drizzle-orm';
 import { sendEmailNow } from '@/lib/integrations/gmail/send';
 import { setupGmailWatch } from '@/lib/integrations/gmail/client';
 import { handleSmsReminder } from './handlers/sms-reminder';
@@ -56,6 +56,31 @@ async function processPendingEmails(): Promise<void> {
       if (!request) {
         console.error(`Scheduling request ${email.schedulingRequestId} not found`);
         await db.update(emailThreads).set({ sentAt: null }).where(eq(emailThreads.id, email.id));
+        continue;
+      }
+
+      // Safety check: don't send if newer inbound emails arrived after this was queued
+      // This handles edge cases where the webhook cancellation might have missed something
+      const newerInbound = await db.query.emailThreads.findFirst({
+        where: and(
+          eq(emailThreads.schedulingRequestId, email.schedulingRequestId),
+          eq(emailThreads.direction, 'inbound'),
+          gt(emailThreads.createdAt, email.createdAt!)
+        ),
+      });
+
+      if (newerInbound) {
+        console.log(
+          `Email ${email.id} cancelled at send time - newer inbound email ${newerInbound.id} arrived after it was queued`
+        );
+        await db
+          .update(emailThreads)
+          .set({
+            sentAt: null,
+            scheduledSendAt: null,
+            processingError: 'Cancelled: newer inbound email arrived before send',
+          })
+          .where(eq(emailThreads.id, email.id));
         continue;
       }
 

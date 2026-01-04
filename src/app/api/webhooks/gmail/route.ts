@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { assistants, users, emailThreads, schedulingRequests } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, isNotNull, isNull } from 'drizzle-orm';
 import {
   getHistory,
   getMessage,
@@ -167,6 +167,31 @@ export async function POST(request: NextRequest) {
           direction: 'inbound',
           receivedAt: parsed.receivedAt,
         });
+
+        // Cancel any pending outbound emails for this request
+        // They're now stale since new context has arrived - the agent will
+        // run fresh and queue new responses with the updated context
+        const cancelledEmails = await db
+          .update(emailThreads)
+          .set({
+            scheduledSendAt: null,
+            processingError: 'Cancelled: new inbound email arrived before send',
+          })
+          .where(
+            and(
+              eq(emailThreads.schedulingRequestId, schedulingRequestId),
+              eq(emailThreads.direction, 'outbound'),
+              isNotNull(emailThreads.scheduledSendAt),
+              isNull(emailThreads.sentAt)
+            )
+          )
+          .returning({ id: emailThreads.id });
+
+        if (cancelledEmails.length > 0) {
+          console.log(
+            `Cancelled ${cancelledEmails.length} pending outbound email(s) for request ${schedulingRequestId} due to new inbound`
+          );
+        }
 
         // Get the scheduling request to pass attendees to agent
         const schedulingRequest = await db.query.schedulingRequests.findFirst({
