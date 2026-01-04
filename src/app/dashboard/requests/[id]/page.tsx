@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { formatDateTimePT } from '@/lib/utils/time';
 import { CancelRequestButton } from '@/components/CancelRequestButton';
 import { SendNowButton } from '@/components/SendNowButton';
+import { LocalTimestamp } from '@/components/LocalTimestamp';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -87,10 +88,10 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
                         </div>
                         <span className="text-xs text-gray-400 flex items-center">
                           {email.sentAt || email.receivedAt ? (
-                            new Date((email.sentAt || email.receivedAt)!).toLocaleString()
+                            <LocalTimestamp date={(email.sentAt || email.receivedAt)!} />
                           ) : email.scheduledSendAt ? (
                             <>
-                              Scheduled: {new Date(email.scheduledSendAt).toLocaleString()}
+                              Scheduled: <LocalTimestamp date={email.scheduledSendAt} />
                               <SendNowButton emailId={email.id} />
                             </>
                           ) : (
@@ -138,8 +139,9 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
                           message.direction === 'outbound' ? 'text-gray-400' : 'text-blue-100'
                         }`}
                       >
-                        {(message.sentAt || message.receivedAt) &&
-                          new Date((message.sentAt || message.receivedAt)!).toLocaleTimeString()}
+                        {(message.sentAt || message.receivedAt) && (
+                          <LocalTimestamp date={(message.sentAt || message.receivedAt)!} />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -221,7 +223,9 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
             <div className="p-4 text-sm space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-500">Created</span>
-                <span className="text-gray-900">{request.createdAt?.toLocaleString()}</span>
+                <span className="text-gray-900">
+                  {request.createdAt && <LocalTimestamp date={request.createdAt} />}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Meeting length</span>
