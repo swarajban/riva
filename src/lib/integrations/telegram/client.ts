@@ -2,6 +2,14 @@ import { config } from '@/lib/config';
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
 
+// Escape HTML special characters for Telegram's HTML parse mode
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 interface TelegramResponse<T> {
   ok: boolean;
   result?: T;
@@ -33,7 +41,7 @@ export async function sendTelegramMessage(chatId: string, text: string): Promise
     },
     body: JSON.stringify({
       chat_id: chatId,
-      text,
+      text: escapeHtml(text),
       parse_mode: 'HTML',
     }),
   });
