@@ -36,7 +36,7 @@ export async function runAgent(context: AgentContext): Promise<void> {
   }
 
   // Build system prompt
-  const systemPrompt = buildSystemPrompt(user, context);
+  const systemPrompt = buildSystemPrompt(user, user.assistant, context);
 
   // Convert our tool definitions to Anthropic format
   const tools: Anthropic.Messages.Tool[] = toolDefinitions.map((t) => ({

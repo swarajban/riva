@@ -87,35 +87,49 @@ export default async function RequestDetailPage({
               <div className="p-4 text-gray-500 text-sm">No emails yet</div>
             ) : (
               <div className="divide-y divide-gray-100">
-                {emails.map((email) => (
-                  <div key={email.id} className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <span className="font-medium text-gray-900">
-                          {email.fromName || email.fromEmail}
-                        </span>
-                        <span className="text-gray-500 text-sm ml-2">
-                          {email.direction === 'outbound' ? '(Riva)' : ''}
+                {emails.map((email) => {
+                  const toEmails = (email.toEmails as string[]) || [];
+                  const ccEmails = (email.ccEmails as string[]) || [];
+                  return (
+                    <div key={email.id} className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <span className="font-medium text-gray-900">
+                            {email.fromName || email.fromEmail}
+                          </span>
+                          <span className="text-gray-500 text-sm ml-2">
+                            {email.direction === 'outbound' ? '(Assistant)' : ''}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-400">
+                          {email.sentAt || email.receivedAt
+                            ? new Date((email.sentAt || email.receivedAt)!).toLocaleString()
+                            : email.scheduledSendAt
+                            ? `Scheduled: ${new Date(email.scheduledSendAt).toLocaleString()}`
+                            : ''}
                         </span>
                       </div>
-                      <span className="text-xs text-gray-400">
-                        {email.sentAt || email.receivedAt
-                          ? new Date((email.sentAt || email.receivedAt)!).toLocaleString()
-                          : email.scheduledSendAt
-                          ? `Scheduled: ${new Date(email.scheduledSendAt).toLocaleString()}`
-                          : ''}
-                      </span>
-                    </div>
-                    {email.subject && (
-                      <div className="text-sm text-gray-600 mb-2">
-                        Subject: {email.subject}
+                      {toEmails.length > 0 && (
+                        <div className="text-sm text-gray-500 mb-1">
+                          To: {toEmails.join(', ')}
+                        </div>
+                      )}
+                      {ccEmails.length > 0 && (
+                        <div className="text-sm text-gray-500 mb-1">
+                          Cc: {ccEmails.join(', ')}
+                        </div>
+                      )}
+                      {email.subject && (
+                        <div className="text-sm text-gray-600 mb-2">
+                          Subject: {email.subject}
+                        </div>
+                      )}
+                      <div className="text-sm text-gray-800 whitespace-pre-wrap">
+                        {email.bodyText}
                       </div>
-                    )}
-                    <div className="text-sm text-gray-800 whitespace-pre-wrap">
-                      {email.bodyText}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

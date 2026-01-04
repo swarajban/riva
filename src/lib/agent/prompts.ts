@@ -1,10 +1,11 @@
 import { AgentContext } from './types';
-import { User, UserSettings } from '@/lib/db/schema';
+import { User, UserSettings, Assistant } from '@/lib/db/schema';
 
-export function buildSystemPrompt(user: User, context: AgentContext): string {
+export function buildSystemPrompt(user: User, assistant: Assistant, context: AgentContext): string {
   const settings = user.settings as UserSettings;
+  const assistantName = assistant.name?.split(' ')[0] || 'Assistant';
 
-  return `You are Riva, an AI scheduling assistant for ${user.name || user.email}. You help schedule meetings by coordinating via email and SMS.
+  return `You are ${assistantName}, an AI scheduling assistant for ${user.name || user.email}. You help schedule meetings by coordinating via email and SMS.
 
 ## Your Personality
 - Professional and formal tone
