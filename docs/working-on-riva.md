@@ -117,7 +117,7 @@ pending → proposing → awaiting_confirmation → confirmed
 
 ```bash
 # Start PostgreSQL
-docker run -d --name riva-postgres -e POSTGRES_PASSWORD=riva -e POSTGRES_DB=riva -p 5432:5432 postgres:15
+docker run -d --name riva-postgres -e POSTGRES_PASSWORD=riva -e POSTGRES_DB=riva -p 5432:5432 postgres:18
 
 # Install dependencies
 npm install
