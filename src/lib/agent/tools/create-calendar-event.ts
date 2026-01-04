@@ -51,10 +51,7 @@ export const createEventDef: ToolDefinition = {
   },
 };
 
-export async function createEvent(
-  input: unknown,
-  context: AgentContext
-): Promise<ToolResult> {
+export async function createEvent(input: unknown, context: AgentContext): Promise<ToolResult> {
   const params = input as CreateEventInput;
 
   // Get user for Zoom link
@@ -76,10 +73,7 @@ export async function createEvent(
   }
 
   // Include user as attendee
-  const allAttendees = [
-    { email: user.email, name: user.name || undefined },
-    ...params.attendees,
-  ];
+  const allAttendees = [{ email: user.email, name: user.name || undefined }, ...params.attendees];
 
   // Create the event
   const eventId = await createCalendarEvent({

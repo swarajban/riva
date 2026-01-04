@@ -21,10 +21,7 @@ export const lookupContactDef: ToolDefinition = {
   },
 };
 
-export async function lookupContact(
-  input: unknown,
-  context: AgentContext
-): Promise<ToolResult> {
+export async function lookupContact(input: unknown, context: AgentContext): Promise<ToolResult> {
   const params = input as LookupContactInput;
 
   try {

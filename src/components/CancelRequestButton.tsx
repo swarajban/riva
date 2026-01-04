@@ -8,10 +8,7 @@ interface CancelRequestButtonProps {
   hasCalendarEvent: boolean;
 }
 
-export function CancelRequestButton({
-  requestId,
-  hasCalendarEvent,
-}: CancelRequestButtonProps) {
+export function CancelRequestButton({ requestId, hasCalendarEvent }: CancelRequestButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);

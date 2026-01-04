@@ -165,24 +165,12 @@ export async function storeInboundNotification(
 
 // Clear awaiting response type after user responds
 export async function clearAwaitingResponse(notificationId: string): Promise<void> {
-  await db
-    .update(notifications)
-    .set({ awaitingResponseType: null })
-    .where(eq(notifications.id, notificationId));
+  await db.update(notifications).set({ awaitingResponseType: null }).where(eq(notifications.id, notificationId));
 }
 
 // Validate Twilio webhook signature
-export function validateTwilioSignature(
-  signature: string,
-  url: string,
-  params: Record<string, string>
-): boolean {
-  return Twilio.validateRequest(
-    config.twilio.authToken,
-    signature,
-    url,
-    params
-  );
+export function validateTwilioSignature(signature: string, url: string, params: Record<string, string>): boolean {
+  return Twilio.validateRequest(config.twilio.authToken, signature, url, params);
 }
 
 // Re-export for backward compatibility

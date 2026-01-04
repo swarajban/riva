@@ -32,10 +32,7 @@ export async function POST(request: NextRequest) {
     // Handle /start command - send welcome message
     if (text.startsWith('/start')) {
       console.log(`User started bot with chat ID: ${chatId}`);
-      await sendTelegramMessage(
-        chatId,
-        `You're ready to receive meeting confirmation notifications from Riva.`
-      );
+      await sendTelegramMessage(chatId, `You're ready to receive meeting confirmation notifications from Riva.`);
       return NextResponse.json({ status: 'ok', chatId });
     }
 
@@ -50,10 +47,7 @@ export async function POST(request: NextRequest) {
 
     if (!user.assistantId) {
       console.log('User has no assistant configured:', user.email);
-      await sendTelegramMessage(
-        chatId,
-        'Your account is not fully set up. Please configure your assistant first.'
-      );
+      await sendTelegramMessage(chatId, 'Your account is not fully set up. Please configure your assistant first.');
       return NextResponse.json({ status: 'no_assistant' });
     }
 
@@ -102,10 +96,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'ok' });
   } catch (error) {
     console.error('Telegram webhook error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

@@ -23,10 +23,7 @@ export const toolDefinitions: ToolDefinition[] = [
 ];
 
 // Tool executor map
-const toolExecutors: Record<
-  ToolName,
-  (input: unknown, context: AgentContext) => Promise<ToolResult>
-> = {
+const toolExecutors: Record<ToolName, (input: unknown, context: AgentContext) => Promise<ToolResult>> = {
   check_availability: checkAvailability,
   send_email: sendEmail,
   send_sms_to_user: sendSmsToUser,
@@ -39,11 +36,7 @@ const toolExecutors: Record<
 };
 
 // Execute a tool by name
-export async function executeTool(
-  toolName: ToolName,
-  input: unknown,
-  context: AgentContext
-): Promise<ToolResult> {
+export async function executeTool(toolName: ToolName, input: unknown, context: AgentContext): Promise<ToolResult> {
   const executor = toolExecutors[toolName];
 
   if (!executor) {

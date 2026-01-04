@@ -45,10 +45,7 @@ async function processPendingEmails(): Promise<void> {
       // Get the user from the scheduling request
       if (!email.schedulingRequestId) {
         console.error(`Email ${email.id} has no scheduling request, cannot send`);
-        await db
-          .update(emailThreads)
-          .set({ sentAt: null })
-          .where(eq(emailThreads.id, email.id));
+        await db.update(emailThreads).set({ sentAt: null }).where(eq(emailThreads.id, email.id));
         continue;
       }
 
@@ -58,10 +55,7 @@ async function processPendingEmails(): Promise<void> {
 
       if (!request) {
         console.error(`Scheduling request ${email.schedulingRequestId} not found`);
-        await db
-          .update(emailThreads)
-          .set({ sentAt: null })
-          .where(eq(emailThreads.id, email.id));
+        await db.update(emailThreads).set({ sentAt: null }).where(eq(emailThreads.id, email.id));
         continue;
       }
 
@@ -70,10 +64,7 @@ async function processPendingEmails(): Promise<void> {
     } catch (error) {
       console.error(`Failed to send email ${email.id}:`, error);
       // Reset sentAt on failure so it can be retried
-      await db
-        .update(emailThreads)
-        .set({ sentAt: null })
-        .where(eq(emailThreads.id, email.id));
+      await db.update(emailThreads).set({ sentAt: null }).where(eq(emailThreads.id, email.id));
     }
   }
 }
@@ -132,10 +123,7 @@ async function processGmailWatchRenewals(): Promise<void> {
   const oneDayFromNow = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   const expiringAssistants = await db.query.assistants.findMany({
-    where: and(
-      isNotNull(assistants.gmailWatchExpiresAt),
-      lte(assistants.gmailWatchExpiresAt, oneDayFromNow)
-    ),
+    where: and(isNotNull(assistants.gmailWatchExpiresAt), lte(assistants.gmailWatchExpiresAt, oneDayFromNow)),
   });
 
   for (const assistant of expiringAssistants) {

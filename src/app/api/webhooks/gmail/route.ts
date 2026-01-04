@@ -122,9 +122,9 @@ export async function POST(request: NextRequest) {
           const userEmail = user.email.toLowerCase();
 
           const externalParties = [
-            ...parsed.toEmails.map(email => ({ email, name: undefined as string | undefined })),
-            ...parsed.ccEmails.map(email => ({ email, name: undefined as string | undefined })),
-          ].filter(p => {
+            ...parsed.toEmails.map((email) => ({ email, name: undefined as string | undefined })),
+            ...parsed.ccEmails.map((email) => ({ email, name: undefined as string | undefined })),
+          ].filter((p) => {
             const email = p.email.toLowerCase();
             return email !== assistantEmail && email !== userEmail;
           });
@@ -209,10 +209,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'ok' });
   } catch (error) {
     console.error('Gmail webhook error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

@@ -41,9 +41,7 @@ export interface CreateEventOptions {
   location?: string;
 }
 
-export async function createCalendarEvent(
-  options: CreateEventOptions
-): Promise<string> {
+export async function createCalendarEvent(options: CreateEventOptions): Promise<string> {
   const calendar = await getCalendarClient(options.assistantId);
 
   const response = await calendar.events.insert({
@@ -72,11 +70,7 @@ export async function createCalendarEvent(
 }
 
 // Cancel (delete) a calendar event
-export async function cancelCalendarEvent(
-  assistantId: string,
-  calendarId: string,
-  eventId: string
-): Promise<void> {
+export async function cancelCalendarEvent(assistantId: string, calendarId: string, eventId: string): Promise<void> {
   const calendar = await getCalendarClient(assistantId);
 
   await calendar.events.delete({
@@ -113,16 +107,10 @@ export interface UpdateEventOptions {
   description?: string;
 }
 
-export async function updateCalendarEvent(
-  options: UpdateEventOptions
-): Promise<void> {
+export async function updateCalendarEvent(options: UpdateEventOptions): Promise<void> {
   const calendar = await getCalendarClient(options.assistantId);
 
-  const existing = await getCalendarEvent(
-    options.assistantId,
-    options.calendarId,
-    options.eventId
-  );
+  const existing = await getCalendarEvent(options.assistantId, options.calendarId, options.eventId);
 
   await calendar.events.patch({
     calendarId: options.calendarId,

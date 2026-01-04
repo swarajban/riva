@@ -20,21 +20,15 @@ export async function GET(request: NextRequest) {
   // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error);
-    return NextResponse.redirect(
-      new URL('/dashboard/settings?error=oauth_failed', config.appUrl)
-    );
+    return NextResponse.redirect(new URL('/dashboard/settings?error=oauth_failed', config.appUrl));
   }
 
   if (!code) {
-    return NextResponse.redirect(
-      new URL('/dashboard/settings?error=no_code', config.appUrl)
-    );
+    return NextResponse.redirect(new URL('/dashboard/settings?error=no_code', config.appUrl));
   }
 
   if (!state) {
-    return NextResponse.redirect(
-      new URL('/dashboard/settings?error=no_state', config.appUrl)
-    );
+    return NextResponse.redirect(new URL('/dashboard/settings?error=no_state', config.appUrl));
   }
 
   const userId = state;
@@ -47,9 +41,7 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       console.error('User not found:', userId);
-      return NextResponse.redirect(
-        new URL('/dashboard/settings?error=user_not_found', config.appUrl)
-      );
+      return NextResponse.redirect(new URL('/dashboard/settings?error=user_not_found', config.appUrl));
     }
 
     // Exchange code for tokens
@@ -64,17 +56,11 @@ export async function GET(request: NextRequest) {
 
     // Make sure user isn't trying to use their own email as assistant
     if (assistantInfo.email.toLowerCase() === user.email.toLowerCase()) {
-      return NextResponse.redirect(
-        new URL('/dashboard/settings?error=same_email', config.appUrl)
-      );
+      return NextResponse.redirect(new URL('/dashboard/settings?error=same_email', config.appUrl));
     }
 
     // Store tokens and get/create assistant
-    const assistantId = await storeAssistantTokens(
-      assistantInfo.email,
-      tokens,
-      assistantInfo
-    );
+    const assistantId = await storeAssistantTokens(assistantInfo.email, tokens, assistantInfo);
 
     // Link assistant to user
     await linkAssistantToUser(userId, assistantId);
@@ -89,13 +75,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Redirect to settings with success
-    return NextResponse.redirect(
-      new URL('/dashboard/settings?success=assistant_connected', config.appUrl)
-    );
+    return NextResponse.redirect(new URL('/dashboard/settings?success=assistant_connected', config.appUrl));
   } catch (error) {
     console.error('OAuth callback error:', error);
-    return NextResponse.redirect(
-      new URL('/dashboard/settings?error=callback_failed', config.appUrl)
-    );
+    return NextResponse.redirect(new URL('/dashboard/settings?error=callback_failed', config.appUrl));
   }
 }

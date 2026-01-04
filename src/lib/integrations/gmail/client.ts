@@ -60,10 +60,7 @@ export async function stopGmailWatch(assistantId: string): Promise<void> {
 }
 
 // Get message by ID
-export async function getMessage(
-  messageId: string,
-  assistantId: string
-): Promise<gmail_v1.Schema$Message> {
+export async function getMessage(messageId: string, assistantId: string): Promise<gmail_v1.Schema$Message> {
   const gmail = await getGmailClient(assistantId);
   const response = await gmail.users.messages.get({
     userId: 'me',
@@ -74,10 +71,7 @@ export async function getMessage(
 }
 
 // Get message history since a specific historyId
-export async function getHistory(
-  startHistoryId: string,
-  assistantId: string
-): Promise<gmail_v1.Schema$History[]> {
+export async function getHistory(startHistoryId: string, assistantId: string): Promise<gmail_v1.Schema$History[]> {
   const gmail = await getGmailClient(assistantId);
 
   try {
@@ -99,10 +93,7 @@ export async function getHistory(
 }
 
 // Get thread by ID with all messages
-export async function getThread(
-  threadId: string,
-  assistantId: string
-): Promise<gmail_v1.Schema$Thread> {
+export async function getThread(threadId: string, assistantId: string): Promise<gmail_v1.Schema$Thread> {
   const gmail = await getGmailClient(assistantId);
   const response = await gmail.users.threads.get({
     userId: 'me',
@@ -113,9 +104,7 @@ export async function getThread(
 }
 
 // Parse email headers
-export function parseHeaders(
-  headers: gmail_v1.Schema$MessagePartHeader[] | undefined
-): Record<string, string> {
+export function parseHeaders(headers: gmail_v1.Schema$MessagePartHeader[] | undefined): Record<string, string> {
   const result: Record<string, string> = {};
   if (!headers) return result;
 
@@ -129,9 +118,7 @@ export function parseHeaders(
 }
 
 // Parse email body (handles multipart messages)
-export function parseBody(
-  payload: gmail_v1.Schema$MessagePart | undefined
-): { text: string; html: string } {
+export function parseBody(payload: gmail_v1.Schema$MessagePart | undefined): { text: string; html: string } {
   const result = { text: '', html: '' };
   if (!payload) return result;
 
@@ -194,10 +181,7 @@ export function parseSenderName(fromHeader: string | undefined): string | null {
 }
 
 // Check if assistant is in TO or CC
-export function isAssistantAddressed(
-  headers: Record<string, string>,
-  assistantEmail: string
-): boolean {
+export function isAssistantAddressed(headers: Record<string, string>, assistantEmail: string): boolean {
   const email = assistantEmail.toLowerCase();
   const to = parseEmailAddresses(headers['to']);
   const cc = parseEmailAddresses(headers['cc']);

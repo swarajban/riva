@@ -23,10 +23,7 @@ export const cancelEventDef: ToolDefinition = {
   },
 };
 
-export async function cancelEvent(
-  input: unknown,
-  context: AgentContext
-): Promise<ToolResult> {
+export async function cancelEvent(input: unknown, context: AgentContext): Promise<ToolResult> {
   const params = input as CancelEventInput;
 
   // Get user for calendarId

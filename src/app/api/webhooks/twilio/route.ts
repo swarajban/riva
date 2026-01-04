@@ -103,10 +103,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Return empty TwiML response (agent will send any reply via our SMS function)
-    return new NextResponse(
-      '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
-      { headers: { 'Content-Type': 'text/xml' } }
-    );
+    return new NextResponse('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
+      headers: { 'Content-Type': 'text/xml' },
+    });
   } catch (error) {
     console.error('Twilio webhook error:', error);
     return new NextResponse(

@@ -145,9 +145,7 @@ export default function SettingsPage() {
   }
 
   if (!settings) {
-    return (
-      <div className="text-red-600">Failed to load settings</div>
-    );
+    return <div className="text-red-600">Failed to load settings</div>;
   }
 
   return (
@@ -186,10 +184,7 @@ export default function SettingsPage() {
               <p className="text-sm text-gray-500">
                 This Google account sends emails and manages calendar events on your behalf.
               </p>
-              <a
-                href="/auth/assistant/login"
-                className="inline-block text-sm text-blue-600 hover:underline"
-              >
+              <a href="/auth/assistant/login" className="inline-block text-sm text-blue-600 hover:underline">
                 Connect a different account
               </a>
             </div>
@@ -232,9 +227,7 @@ export default function SettingsPage() {
           <h2 className="text-lg font-medium text-gray-900 mb-4">Working Hours</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Time
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
               <input
                 type="time"
                 value={settings.workingHoursStart}
@@ -243,9 +236,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                End Time
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
               <input
                 type="time"
                 value={settings.workingHoursEnd}
@@ -281,67 +272,47 @@ export default function SettingsPage() {
           <h2 className="text-lg font-medium text-gray-900 mb-4">Meeting Preferences</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Default Meeting Length (minutes)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Default Meeting Length (minutes)</label>
               <input
                 type="number"
                 value={settings.defaultMeetingLengthMinutes}
-                onChange={(e) =>
-                  updateSetting('defaultMeetingLengthMinutes', parseInt(e.target.value) || 30)
-                }
+                onChange={(e) => updateSetting('defaultMeetingLengthMinutes', parseInt(e.target.value) || 30)}
                 className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Buffer Between Meetings (minutes)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Buffer Between Meetings (minutes)</label>
               <input
                 type="number"
                 value={settings.bufferMinutes}
-                onChange={(e) =>
-                  updateSetting('bufferMinutes', parseInt(e.target.value) || 0)
-                }
+                onChange={(e) => updateSetting('bufferMinutes', parseInt(e.target.value) || 0)}
                 className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Number of Options to Suggest
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Number of Options to Suggest</label>
               <input
                 type="number"
                 value={settings.numOptionsToSuggest}
-                onChange={(e) =>
-                  updateSetting('numOptionsToSuggest', parseInt(e.target.value) || 4)
-                }
+                onChange={(e) => updateSetting('numOptionsToSuggest', parseInt(e.target.value) || 4)}
                 className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Max Slots Per Day
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Max Slots Per Day</label>
               <input
                 type="number"
                 value={settings.maxSlotsPerDay}
-                onChange={(e) =>
-                  updateSetting('maxSlotsPerDay', parseInt(e.target.value) || 2)
-                }
+                onChange={(e) => updateSetting('maxSlotsPerDay', parseInt(e.target.value) || 2)}
                 className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Lookahead Days
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lookahead Days</label>
               <input
                 type="number"
                 value={settings.lookaheadDays}
-                onChange={(e) =>
-                  updateSetting('lookaheadDays', parseInt(e.target.value) || 10)
-                }
+                onChange={(e) => updateSetting('lookaheadDays', parseInt(e.target.value) || 10)}
                 className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -368,9 +339,7 @@ export default function SettingsPage() {
           <h2 className="text-lg font-medium text-gray-900 mb-4">Notification Preferences</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notification Method
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notification Method</label>
               <select
                 value={notificationPreference}
                 onChange={(e) => setNotificationPreference(e.target.value as 'sms' | 'telegram')}
@@ -385,9 +354,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number (for SMS)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number (for SMS)</label>
               <input
                 type="tel"
                 value={phone}
@@ -395,15 +362,11 @@ export default function SettingsPage() {
                 placeholder="+1234567890"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="mt-1 text-sm text-gray-500">
-                Your phone number for SMS notifications (with country code).
-              </p>
+              <p className="mt-1 text-sm text-gray-500">Your phone number for SMS notifications (with country code).</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Telegram Chat ID
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Telegram Chat ID</label>
               <input
                 type="text"
                 value={telegramChatId}
@@ -422,8 +385,8 @@ export default function SettingsPage() {
                       className="text-blue-600 hover:underline"
                     >
                       Open Riva bot in Telegram
-                    </a>
-                    {' '}and send /start
+                    </a>{' '}
+                    and send /start
                   </li>
                   <li>
                     Message{' '}
@@ -434,10 +397,12 @@ export default function SettingsPage() {
                       className="text-blue-600 hover:underline"
                     >
                       @userinfobot
-                    </a>
-                    {' '}- it will reply with your info
+                    </a>{' '}
+                    - it will reply with your info
                   </li>
-                  <li>Copy the numeric <strong>Id</strong> (e.g. 123456789), not your username</li>
+                  <li>
+                    Copy the numeric <strong>Id</strong> (e.g. 123456789), not your username
+                  </li>
                 </ol>
               </div>
             </div>
@@ -447,9 +412,7 @@ export default function SettingsPage() {
         {/* Keyword Rules */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Keyword Rules</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Define custom rules that trigger based on phrases in emails.
-          </p>
+          <p className="text-sm text-gray-500 mb-4">Define custom rules that trigger based on phrases in emails.</p>
           {settings.keywordRules.length === 0 ? (
             <div className="text-gray-500 text-sm">No keyword rules defined.</div>
           ) : (
@@ -470,12 +433,8 @@ export default function SettingsPage() {
                     </button>
                   </div>
                   <div className="text-sm text-gray-600">
-                    {rule.meetingLengthMinutes && (
-                      <span className="mr-3">{rule.meetingLengthMinutes} min</span>
-                    )}
-                    {rule.allowedDays && (
-                      <span className="mr-3">Days: {rule.allowedDays.join(', ')}</span>
-                    )}
+                    {rule.meetingLengthMinutes && <span className="mr-3">{rule.meetingLengthMinutes} min</span>}
+                    {rule.allowedDays && <span className="mr-3">Days: {rule.allowedDays.join(', ')}</span>}
                     {rule.hourRangeStart && rule.hourRangeEnd && (
                       <span>
                         Hours: {rule.hourRangeStart}-{rule.hourRangeEnd}

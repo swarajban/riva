@@ -18,20 +18,13 @@ const statusColors: Record<string, string> = {
   error: 'bg-red-100 text-red-800',
 };
 
-export default async function RequestDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function RequestDetailPage({ params }: { params: { id: string } }) {
   const user = await getCurrentUser();
   if (!user) return null;
 
   // Get the request - only if it belongs to the current user
   const request = await db.query.schedulingRequests.findFirst({
-    where: and(
-      eq(schedulingRequests.id, params.id),
-      eq(schedulingRequests.userId, user.id)
-    ),
+    where: and(eq(schedulingRequests.id, params.id), eq(schedulingRequests.userId, user.id)),
   });
 
   if (!request) {
@@ -57,21 +50,12 @@ export default async function RequestDetailPage({
     <div>
       {/* Header */}
       <div className="mb-6">
-        <Link
-          href="/dashboard"
-          className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block"
-        >
+        <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block">
           &larr; Back to requests
         </Link>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {request.meetingTitle || 'Scheduling Request'}
-          </h1>
-          <span
-            className={`px-3 py-1 rounded-full text-sm font-medium ${
-              statusColors[request.status]
-            }`}
-          >
+          <h1 className="text-2xl font-bold text-gray-900">{request.meetingTitle || 'Scheduling Request'}</h1>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[request.status]}`}>
             {request.status.replace(/_/g, ' ')}
           </span>
         </div>
@@ -96,44 +80,32 @@ export default async function RequestDetailPage({
                     <div key={email.id} className="p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <span className="font-medium text-gray-900">
-                            {email.fromName || email.fromEmail}
-                          </span>
+                          <span className="font-medium text-gray-900">{email.fromName || email.fromEmail}</span>
                           <span className="text-gray-500 text-sm ml-2">
                             {email.direction === 'outbound' ? '(Assistant)' : ''}
                           </span>
                         </div>
                         <span className="text-xs text-gray-400 flex items-center">
-                          {email.sentAt || email.receivedAt
-                            ? new Date((email.sentAt || email.receivedAt)!).toLocaleString()
-                            : email.scheduledSendAt
-                            ? (
-                              <>
-                                Scheduled: {new Date(email.scheduledSendAt).toLocaleString()}
-                                <SendNowButton emailId={email.id} />
-                              </>
-                            )
-                            : ''}
+                          {email.sentAt || email.receivedAt ? (
+                            new Date((email.sentAt || email.receivedAt)!).toLocaleString()
+                          ) : email.scheduledSendAt ? (
+                            <>
+                              Scheduled: {new Date(email.scheduledSendAt).toLocaleString()}
+                              <SendNowButton emailId={email.id} />
+                            </>
+                          ) : (
+                            ''
+                          )}
                         </span>
                       </div>
                       {toEmails.length > 0 && (
-                        <div className="text-sm text-gray-500 mb-1">
-                          To: {toEmails.join(', ')}
-                        </div>
+                        <div className="text-sm text-gray-500 mb-1">To: {toEmails.join(', ')}</div>
                       )}
                       {ccEmails.length > 0 && (
-                        <div className="text-sm text-gray-500 mb-1">
-                          Cc: {ccEmails.join(', ')}
-                        </div>
+                        <div className="text-sm text-gray-500 mb-1">Cc: {ccEmails.join(', ')}</div>
                       )}
-                      {email.subject && (
-                        <div className="text-sm text-gray-600 mb-2">
-                          Subject: {email.subject}
-                        </div>
-                      )}
-                      <div className="text-sm text-gray-800 whitespace-pre-wrap">
-                        {email.bodyText}
-                      </div>
+                      {email.subject && <div className="text-sm text-gray-600 mb-2">Subject: {email.subject}</div>}
+                      <div className="text-sm text-gray-800 whitespace-pre-wrap">{email.bodyText}</div>
                     </div>
                   );
                 })}
@@ -153,23 +125,17 @@ export default async function RequestDetailPage({
                 {sms.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${
-                      message.direction === 'outbound' ? 'justify-start' : 'justify-end'
-                    }`}
+                    className={`flex ${message.direction === 'outbound' ? 'justify-start' : 'justify-end'}`}
                   >
                     <div
                       className={`max-w-xs rounded-lg px-4 py-2 ${
-                        message.direction === 'outbound'
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'bg-blue-500 text-white'
+                        message.direction === 'outbound' ? 'bg-gray-100 text-gray-900' : 'bg-blue-500 text-white'
                       }`}
                     >
                       <div className="text-sm whitespace-pre-wrap">{message.body}</div>
                       <div
                         className={`text-xs mt-1 ${
-                          message.direction === 'outbound'
-                            ? 'text-gray-400'
-                            : 'text-blue-100'
+                          message.direction === 'outbound' ? 'text-gray-400' : 'text-blue-100'
                         }`}
                       >
                         {(message.sentAt || message.receivedAt) &&
@@ -197,12 +163,8 @@ export default async function RequestDetailPage({
                 <ul className="space-y-2">
                   {attendees.map((attendee, i) => (
                     <li key={i} className="text-sm">
-                      <div className="font-medium text-gray-900">
-                        {attendee.name || attendee.email}
-                      </div>
-                      {attendee.name && (
-                        <div className="text-gray-500">{attendee.email}</div>
-                      )}
+                      <div className="font-medium text-gray-900">{attendee.name || attendee.email}</div>
+                      {attendee.name && <div className="text-gray-500">{attendee.email}</div>}
                     </li>
                   ))}
                 </ul>
@@ -235,14 +197,8 @@ export default async function RequestDetailPage({
                 <h2 className="font-medium text-green-900">Confirmed Booking</h2>
               </div>
               <div className="p-4 text-sm text-green-800">
-                <div className="font-medium">
-                  {formatDateTimePT(request.confirmedStartTime)}
-                </div>
-                {request.googleCalendarEventId && (
-                  <div className="mt-2 text-green-600">
-                    Calendar event created
-                  </div>
-                )}
+                <div className="font-medium">{formatDateTimePT(request.confirmedStartTime)}</div>
+                {request.googleCalendarEventId && <div className="mt-2 text-green-600">Calendar event created</div>}
               </div>
             </div>
           )}
@@ -253,9 +209,7 @@ export default async function RequestDetailPage({
               <div className="px-4 py-3 border-b border-red-200">
                 <h2 className="font-medium text-red-900">Error Details</h2>
               </div>
-              <div className="p-4 text-sm text-red-800">
-                {request.errorMessage}
-              </div>
+              <div className="p-4 text-sm text-red-800">{request.errorMessage}</div>
             </div>
           )}
 
@@ -267,31 +221,22 @@ export default async function RequestDetailPage({
             <div className="p-4 text-sm space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-500">Created</span>
-                <span className="text-gray-900">
-                  {request.createdAt?.toLocaleString()}
-                </span>
+                <span className="text-gray-900">{request.createdAt?.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Meeting length</span>
-                <span className="text-gray-900">
-                  {request.meetingLengthMinutes || 30} min
-                </span>
+                <span className="text-gray-900">{request.meetingLengthMinutes || 30} min</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Video link</span>
-                <span className="text-gray-900">
-                  {request.includeVideoLink ? 'Yes' : 'No'}
-                </span>
+                <span className="text-gray-900">{request.includeVideoLink ? 'Yes' : 'No'}</span>
               </div>
             </div>
           </div>
 
           {/* Cancel button - only show for active requests */}
           {!['cancelled', 'expired', 'error'].includes(request.status) && (
-            <CancelRequestButton
-              requestId={request.id}
-              hasCalendarEvent={!!request.googleCalendarEventId}
-            />
+            <CancelRequestButton requestId={request.id} hasCalendarEvent={!!request.googleCalendarEventId} />
           )}
         </div>
       </div>

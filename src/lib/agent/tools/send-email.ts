@@ -50,10 +50,7 @@ export const sendEmailDef: ToolDefinition = {
   },
 };
 
-export async function sendEmail(
-  input: unknown,
-  context: AgentContext
-): Promise<ToolResult> {
+export async function sendEmail(input: unknown, context: AgentContext): Promise<ToolResult> {
   const params = input as SendEmailInput;
 
   // Get threading info if replying to a thread
@@ -92,9 +89,7 @@ export async function sendEmail(
     data: {
       emailId,
       scheduled: !params.immediate,
-      message: params.immediate
-        ? 'Email sent immediately.'
-        : 'Email queued for sending with 5-15 minute delay.',
+      message: params.immediate ? 'Email sent immediately.' : 'Email queued for sending with 5-15 minute delay.',
     },
   };
 }

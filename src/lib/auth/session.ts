@@ -15,9 +15,7 @@ export interface UserSession {
 // Simple base64 encoding with secret (not production-grade, but sufficient for MVP)
 function encodeSession<T>(session: T): string {
   const payload = JSON.stringify(session);
-  const signature = Buffer.from(
-    `${payload}:${config.sessionSecret}`
-  ).toString('base64');
+  const signature = Buffer.from(`${payload}:${config.sessionSecret}`).toString('base64');
   return Buffer.from(`${payload}|${signature}`).toString('base64');
 }
 
@@ -27,9 +25,7 @@ function decodeSession<T>(encoded: string): T | null {
     const [payload, signature] = decoded.split('|');
 
     // Verify signature
-    const expectedSignature = Buffer.from(
-      `${payload}:${config.sessionSecret}`
-    ).toString('base64');
+    const expectedSignature = Buffer.from(`${payload}:${config.sessionSecret}`).toString('base64');
 
     if (signature !== expectedSignature) {
       return null;

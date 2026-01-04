@@ -2,11 +2,7 @@ import { redirect } from 'next/navigation';
 import { getUserSession } from '@/lib/auth/session';
 import { getUserAuthUrl } from '@/lib/auth/google-oauth';
 
-export default async function UserLoginPage({
-  searchParams,
-}: {
-  searchParams: { error?: string };
-}) {
+export default async function UserLoginPage({ searchParams }: { searchParams: { error?: string } }) {
   // If already logged in as a user, redirect to dashboard
   const session = await getUserSession();
   if (session) {
@@ -21,9 +17,7 @@ export default async function UserLoginPage({
       <div className="max-w-md w-full space-y-8 p-8">
         <div>
           <h1 className="text-3xl font-bold text-center text-gray-900">Riva</h1>
-          <p className="mt-2 text-center text-gray-600">
-            Sign in to view your scheduling requests
-          </p>
+          <p className="mt-2 text-center text-gray-600">Sign in to view your scheduling requests</p>
         </div>
 
         {error && (

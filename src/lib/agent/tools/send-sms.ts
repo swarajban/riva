@@ -40,10 +40,7 @@ export const sendSmsToUserDef: ToolDefinition = {
   },
 };
 
-export async function sendSmsToUser(
-  input: unknown,
-  context: AgentContext
-): Promise<ToolResult> {
+export async function sendSmsToUser(input: unknown, context: AgentContext): Promise<ToolResult> {
   const params = input as SendSmsInput;
 
   const notificationId = await sendNotification({

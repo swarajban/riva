@@ -6,11 +6,7 @@ import { eq } from 'drizzle-orm';
 
 // Create OAuth2 client for user authentication
 export function createUserOAuth2Client() {
-  return new google.auth.OAuth2(
-    config.google.clientId,
-    config.google.clientSecret,
-    config.google.userRedirectUri
-  );
+  return new google.auth.OAuth2(config.google.clientId, config.google.clientSecret, config.google.userRedirectUri);
 }
 
 // Generate authorization URL for users (minimal permissions - just identity)
@@ -27,11 +23,7 @@ export function getUserAuthUrl(state?: string): string {
 
 // Create OAuth2 client for assistant authentication (per-user assistant setup)
 export function createAssistantOAuth2Client() {
-  return new google.auth.OAuth2(
-    config.google.clientId,
-    config.google.clientSecret,
-    config.google.assistantRedirectUri
-  );
+  return new google.auth.OAuth2(config.google.clientId, config.google.clientSecret, config.google.assistantRedirectUri);
 }
 
 // Generate authorization URL for assistant setup (full Gmail+Calendar permissions)
@@ -201,9 +193,7 @@ export async function storeAssistantTokens(
         name: assistantInfo.name,
         googleAccessToken: tokens.access_token,
         googleRefreshToken: tokens.refresh_token,
-        googleTokenExpiresAt: tokens.expiry_date
-          ? new Date(tokens.expiry_date)
-          : null,
+        googleTokenExpiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
       })
       .returning({ id: assistants.id });
 

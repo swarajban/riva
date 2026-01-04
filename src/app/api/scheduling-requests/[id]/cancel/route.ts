@@ -5,10 +5,7 @@ import { schedulingRequests, users } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { cancelCalendarEvent } from '@/lib/integrations/calendar/client';
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -20,25 +17,16 @@ export async function POST(
   try {
     // Get the scheduling request - ensure it belongs to this user
     const schedulingRequest = await db.query.schedulingRequests.findFirst({
-      where: and(
-        eq(schedulingRequests.id, id),
-        eq(schedulingRequests.userId, user.id)
-      ),
+      where: and(eq(schedulingRequests.id, id), eq(schedulingRequests.userId, user.id)),
     });
 
     if (!schedulingRequest) {
-      return NextResponse.json(
-        { error: 'Scheduling request not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Scheduling request not found' }, { status: 404 });
     }
 
     // Check if already cancelled
     if (schedulingRequest.status === 'cancelled') {
-      return NextResponse.json(
-        { error: 'Request is already cancelled' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Request is already cancelled' }, { status: 400 });
     }
 
     // If there's a calendar event, cancel it
@@ -76,9 +64,6 @@ export async function POST(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Cancel scheduling request error:', error);
-    return NextResponse.json(
-      { error: 'Failed to cancel scheduling request' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to cancel scheduling request' }, { status: 500 });
   }
 }

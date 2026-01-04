@@ -10,9 +10,7 @@ export async function GET() {
 
     if (!user) {
       // Redirect to user login first
-      return NextResponse.redirect(
-        new URL('/auth/user/login?error=login_first', config.appUrl)
-      );
+      return NextResponse.redirect(new URL('/auth/user/login?error=login_first', config.appUrl));
     }
 
     // Generate OAuth URL with user ID in state
@@ -21,8 +19,6 @@ export async function GET() {
     return NextResponse.redirect(authUrl);
   } catch (error) {
     console.error('Assistant login error:', error);
-    return NextResponse.redirect(
-      new URL('/dashboard/settings?error=assistant_login_failed', config.appUrl)
-    );
+    return NextResponse.redirect(new URL('/dashboard/settings?error=assistant_login_failed', config.appUrl));
   }
 }

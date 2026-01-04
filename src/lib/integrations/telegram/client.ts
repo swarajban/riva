@@ -23,10 +23,7 @@ interface TelegramUpdate {
 }
 
 // Send a message via Telegram Bot API
-export async function sendTelegramMessage(
-  chatId: string,
-  text: string
-): Promise<string> {
+export async function sendTelegramMessage(chatId: string, text: string): Promise<string> {
   const url = `${TELEGRAM_API_BASE}${config.telegram.botToken}/sendMessage`;
 
   const response = await fetch(url, {

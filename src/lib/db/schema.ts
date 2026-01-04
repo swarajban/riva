@@ -1,15 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  text,
-  timestamp,
-  jsonb,
-  boolean,
-  integer,
-  pgEnum,
-  index,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, jsonb, boolean, integer, pgEnum, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Enums
@@ -23,10 +12,7 @@ export const schedulingRequestStatusEnum = pgEnum('scheduling_request_status', [
   'error',
 ]);
 
-export const messageDirectionEnum = pgEnum('message_direction', [
-  'inbound',
-  'outbound',
-]);
+export const messageDirectionEnum = pgEnum('message_direction', ['inbound', 'outbound']);
 
 export const awaitingResponseTypeEnum = pgEnum('awaiting_response_type', [
   'booking_approval',
@@ -37,15 +23,9 @@ export const awaitingResponseTypeEnum = pgEnum('awaiting_response_type', [
   'meeting_title',
 ]);
 
-export const notificationPreferenceEnum = pgEnum('notification_preference', [
-  'sms',
-  'telegram',
-]);
+export const notificationPreferenceEnum = pgEnum('notification_preference', ['sms', 'telegram']);
 
-export const notificationProviderEnum = pgEnum('notification_provider', [
-  'twilio',
-  'telegram',
-]);
+export const notificationProviderEnum = pgEnum('notification_provider', ['twilio', 'telegram']);
 
 // Types for JSONB fields
 export type UserSettings = {
@@ -98,18 +78,20 @@ export const assistants = pgTable('assistants', {
 
 // Users table - actual users whose calendars are managed
 // Each user has their own assistant (1:1 relationship)
-export const users = pgTable(
-  'users',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    email: varchar('email', { length: 255 }).unique().notNull(),
-    name: varchar('name', { length: 255 }),
-    phone: varchar('phone', { length: 20 }),
-    telegramChatId: varchar('telegram_chat_id', { length: 255 }),
-    notificationPreference: notificationPreferenceEnum('notification_preference').default('sms'),
-    calendarId: varchar('calendar_id', { length: 255 }).notNull(), // Google Calendar ID (usually same as email)
-    assistantId: uuid('assistant_id').unique().references(() => assistants.id, { onDelete: 'set null' }),
-    settings: jsonb('settings').$type<UserSettings>().default({
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: varchar('email', { length: 255 }).unique().notNull(),
+  name: varchar('name', { length: 255 }),
+  phone: varchar('phone', { length: 20 }),
+  telegramChatId: varchar('telegram_chat_id', { length: 255 }),
+  notificationPreference: notificationPreferenceEnum('notification_preference').default('sms'),
+  calendarId: varchar('calendar_id', { length: 255 }).notNull(), // Google Calendar ID (usually same as email)
+  assistantId: uuid('assistant_id')
+    .unique()
+    .references(() => assistants.id, { onDelete: 'set null' }),
+  settings: jsonb('settings')
+    .$type<UserSettings>()
+    .default({
       defaultMeetingLengthMinutes: 30,
       zoomPersonalLink: null,
       workingHoursStart: '10:00',
@@ -122,10 +104,9 @@ export const users = pgTable(
       maxSlotsPerDay: 2,
       keywordRules: [],
     }),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-  }
-);
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
 
 export const schedulingRequests = pgTable(
   'scheduling_requests',
@@ -153,10 +134,7 @@ export const schedulingRequests = pgTable(
     expiresAt: timestamp('expires_at', { withTimezone: true }),
   },
   (table) => ({
-    userStatusIdx: index('idx_scheduling_requests_user_status').on(
-      table.userId,
-      table.status
-    ),
+    userStatusIdx: index('idx_scheduling_requests_user_status').on(table.userId, table.status),
     expiresIdx: index('idx_scheduling_requests_expires').on(table.expiresAt),
   })
 );
@@ -165,10 +143,7 @@ export const emailThreads = pgTable(
   'email_threads',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    schedulingRequestId: uuid('scheduling_request_id').references(
-      () => schedulingRequests.id,
-      { onDelete: 'cascade' }
-    ),
+    schedulingRequestId: uuid('scheduling_request_id').references(() => schedulingRequests.id, { onDelete: 'cascade' }),
     gmailMessageId: varchar('gmail_message_id', { length: 255 }).unique(),
     gmailThreadId: varchar('gmail_thread_id', { length: 255 }),
     messageIdHeader: varchar('message_id_header', { length: 255 }),
@@ -201,10 +176,9 @@ export const notifications = pgTable(
   'notifications',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    schedulingRequestId: uuid('scheduling_request_id').references(
-      () => schedulingRequests.id,
-      { onDelete: 'set null' }
-    ),
+    schedulingRequestId: uuid('scheduling_request_id').references(() => schedulingRequests.id, {
+      onDelete: 'set null',
+    }),
     userId: uuid('user_id')
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
@@ -218,10 +192,7 @@ export const notifications = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (table) => ({
-    awaitingIdx: index('idx_notifications_awaiting').on(
-      table.userId,
-      table.awaitingResponseType
-    ),
+    awaitingIdx: index('idx_notifications_awaiting').on(table.userId, table.awaitingResponseType),
     providerIdx: index('idx_notifications_provider').on(table.provider),
   })
 );
@@ -243,17 +214,14 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   notifications: many(notifications),
 }));
 
-export const schedulingRequestsRelations = relations(
-  schedulingRequests,
-  ({ one, many }) => ({
-    user: one(users, {
-      fields: [schedulingRequests.userId],
-      references: [users.id],
-    }),
-    emailThreads: many(emailThreads),
-    notifications: many(notifications),
-  })
-);
+export const schedulingRequestsRelations = relations(schedulingRequests, ({ one, many }) => ({
+  user: one(users, {
+    fields: [schedulingRequests.userId],
+    references: [users.id],
+  }),
+  emailThreads: many(emailThreads),
+  notifications: many(notifications),
+}));
 
 export const emailThreadsRelations = relations(emailThreads, ({ one }) => ({
   schedulingRequest: one(schedulingRequests, {

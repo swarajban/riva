@@ -33,9 +33,7 @@ export const logger = {
   error(message: string, error?: Error | unknown, context?: LogContext) {
     const errorContext = {
       ...context,
-      ...(error instanceof Error
-        ? { error: error.message, stack: error.stack }
-        : { error: String(error) }),
+      ...(error instanceof Error ? { error: error.message, stack: error.stack } : { error: String(error) }),
     };
     console.error(formatLog('error', message, errorContext));
   },
@@ -43,12 +41,9 @@ export const logger = {
   // Create a child logger with default context
   child(defaultContext: LogContext) {
     return {
-      debug: (message: string, context?: LogContext) =>
-        logger.debug(message, { ...defaultContext, ...context }),
-      info: (message: string, context?: LogContext) =>
-        logger.info(message, { ...defaultContext, ...context }),
-      warn: (message: string, context?: LogContext) =>
-        logger.warn(message, { ...defaultContext, ...context }),
+      debug: (message: string, context?: LogContext) => logger.debug(message, { ...defaultContext, ...context }),
+      info: (message: string, context?: LogContext) => logger.info(message, { ...defaultContext, ...context }),
+      warn: (message: string, context?: LogContext) => logger.warn(message, { ...defaultContext, ...context }),
       error: (message: string, error?: Error | unknown, context?: LogContext) =>
         logger.error(message, error, { ...defaultContext, ...context }),
     };

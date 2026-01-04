@@ -41,12 +41,7 @@ export async function handleExpireRequest(data: ExpireRequestJobData): Promise<v
     .set({
       awaitingResponseType: null,
     })
-    .where(
-      and(
-        eq(smsMessages.schedulingRequestId, schedulingRequestId),
-        isNotNull(smsMessages.awaitingResponseType)
-      )
-    );
+    .where(and(eq(smsMessages.schedulingRequestId, schedulingRequestId), isNotNull(smsMessages.awaitingResponseType)));
 
   console.log(`Request ${schedulingRequestId} expired`);
 }

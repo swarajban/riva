@@ -96,11 +96,7 @@ export async function runAgent(context: AgentContext): Promise<void> {
         if (block.type === 'tool_use') {
           console.log(`Executing tool: ${block.name}`, block.input);
 
-          const result = await executeTool(
-            block.name as ToolName,
-            block.input,
-            context
-          );
+          const result = await executeTool(block.name as ToolName, block.input, context);
 
           console.log(`Tool result:`, result);
 
@@ -134,9 +130,10 @@ export async function runAgent(context: AgentContext): Promise<void> {
 function buildInitialMessage(context: AgentContext): string {
   if (context.triggerType === 'email') {
     const emailData = JSON.parse(context.triggerContent);
-    const attendeesInfo = emailData.attendees?.length > 0
-      ? `\nExternal party to schedule with: ${emailData.attendees.map((a: { email: string; name?: string }) => a.name ? `${a.name} <${a.email}>` : a.email).join(', ')}`
-      : '';
+    const attendeesInfo =
+      emailData.attendees?.length > 0
+        ? `\nExternal party to schedule with: ${emailData.attendees.map((a: { email: string; name?: string }) => (a.name ? `${a.name} <${a.email}>` : a.email)).join(', ')}`
+        : '';
 
     return `New inbound email received. Process this email and take appropriate action.
 

@@ -80,9 +80,7 @@ function calculateSendTime(immediate: boolean): Date {
 
   if (ptHour >= config.timing.blackoutStartHour && ptHour < config.timing.blackoutEndHour) {
     // Push to 5am PT
-    const ptDate = new Date(
-      sendTime.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
-    );
+    const ptDate = new Date(sendTime.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
     ptDate.setHours(config.timing.blackoutEndHour, 0, 0, 0);
 
     // Convert back to UTC

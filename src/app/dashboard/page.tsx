@@ -29,11 +29,7 @@ function formatDate(date: Date | null): string {
   }).format(date);
 }
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: { status?: string };
-}) {
+export default async function DashboardPage({ searchParams }: { searchParams: { status?: string } }) {
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -46,9 +42,7 @@ export default async function DashboardPage({
   });
 
   // Filter by status if specified
-  const filteredRequests = statusFilter
-    ? requests.filter((r) => r.status === statusFilter)
-    : requests;
+  const filteredRequests = statusFilter ? requests.filter((r) => r.status === statusFilter) : requests;
 
   // Count by status
   const counts = {
@@ -83,9 +77,7 @@ export default async function DashboardPage({
               key={status}
               href={`/dashboard?status=${status}`}
               className={`px-3 py-1 rounded-full text-sm font-medium ${
-                statusFilter === status
-                  ? 'bg-gray-900 text-white'
-                  : `${statusColors[status]} hover:opacity-80`
+                statusFilter === status ? 'bg-gray-900 text-white' : `${statusColors[status]} hover:opacity-80`
               }`}
             >
               {formatStatus(status)} ({count})
@@ -97,8 +89,8 @@ export default async function DashboardPage({
       {filteredRequests.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-8 text-center text-gray-500">
           {requests.length === 0
-            ? "No scheduling requests yet. CC riva@semprehealth.com on an email to get started."
-            : "No requests match the selected filter."}
+            ? 'No scheduling requests yet. CC riva@semprehealth.com on an email to get started.'
+            : 'No requests match the selected filter.'}
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-200">
@@ -111,11 +103,7 @@ export default async function DashboardPage({
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-3">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        statusColors[request.status]
-                      }`}
-                    >
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[request.status]}`}>
                       {formatStatus(request.status)}
                     </span>
                     <span className="text-gray-900 font-medium truncate">
@@ -132,18 +120,8 @@ export default async function DashboardPage({
                       : `Created: ${formatDate(request.createdAt)}`}
                   </div>
                 </div>
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
             </Link>

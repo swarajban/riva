@@ -61,14 +61,14 @@ export const config = {
 
   // Timing constants
   timing: {
-    emailDelayMinMs: 5 * 60 * 1000,      // 5 minutes
-    emailDelayMaxMs: 15 * 60 * 1000,     // 15 minutes
-    smsReminderMs: 3 * 60 * 60 * 1000,   // 3 hours
+    emailDelayMinMs: 5 * 60 * 1000, // 5 minutes
+    emailDelayMaxMs: 15 * 60 * 1000, // 15 minutes
+    smsReminderMs: 3 * 60 * 60 * 1000, // 3 hours
     requestExpirationMs: 2 * 24 * 60 * 60 * 1000, // 2 days
     gmailWatchRenewalMs: 6 * 24 * 60 * 60 * 1000, // 6 days
     tokenRefreshBufferMs: 5 * 60 * 1000, // 5 minutes before expiration
-    blackoutStartHour: 0,  // 12am PT
-    blackoutEndHour: 5,    // 5am PT
+    blackoutStartHour: 0, // 12am PT
+    blackoutEndHour: 5, // 5am PT
   },
 } as const;
 
@@ -76,7 +76,7 @@ export const config = {
 export function getRandomEmailDelay(): number {
   // Fast mode for local testing: 5 second delay
   if (config.fastEmailDelay) {
-    return 5 * 1000; // 5 seconds
+    return 60 * 1000; // 5 seconds
   }
 
   const { emailDelayMinMs, emailDelayMaxMs } = config.timing;

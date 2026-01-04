@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  exchangeUserCodeForTokens,
-  getUserInfo,
-} from '@/lib/auth/google-oauth';
+import { exchangeUserCodeForTokens, getUserInfo } from '@/lib/auth/google-oauth';
 import { createUserSession } from '@/lib/auth/session';
 import { config } from '@/lib/config';
 import { db } from '@/lib/db';
@@ -17,15 +14,11 @@ export async function GET(request: NextRequest) {
   // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error);
-    return NextResponse.redirect(
-      new URL('/auth/user/login?error=oauth_failed', config.appUrl)
-    );
+    return NextResponse.redirect(new URL('/auth/user/login?error=oauth_failed', config.appUrl));
   }
 
   if (!code) {
-    return NextResponse.redirect(
-      new URL('/auth/user/login?error=no_code', config.appUrl)
-    );
+    return NextResponse.redirect(new URL('/auth/user/login?error=no_code', config.appUrl));
   }
 
   try {
@@ -47,9 +40,7 @@ export async function GET(request: NextRequest) {
     if (!existingUser) {
       // User not registered - redirect with error
       console.log('User not found:', userInfo.email);
-      return NextResponse.redirect(
-        new URL('/auth/user/login?error=not_registered', config.appUrl)
-      );
+      return NextResponse.redirect(new URL('/auth/user/login?error=not_registered', config.appUrl));
     }
 
     // Create session for the user
@@ -59,8 +50,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', config.appUrl));
   } catch (error) {
     console.error('OAuth callback error:', error);
-    return NextResponse.redirect(
-      new URL('/auth/user/login?error=callback_failed', config.appUrl)
-    );
+    return NextResponse.redirect(new URL('/auth/user/login?error=callback_failed', config.appUrl));
   }
 }

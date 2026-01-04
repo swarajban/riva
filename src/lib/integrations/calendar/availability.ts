@@ -69,8 +69,12 @@ function getWorkingHoursForDay(
   const endMin = endMinutes % 60;
 
   // Create PT date strings
-  const startPT = new Date(`${year}-${month}-${day}T${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}:00-08:00`);
-  const endPT = new Date(`${year}-${month}-${day}T${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}:00-08:00`);
+  const startPT = new Date(
+    `${year}-${month}-${day}T${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}:00-08:00`
+  );
+  const endPT = new Date(
+    `${year}-${month}-${day}T${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}:00-08:00`
+  );
 
   return { start: startPT, end: endPT };
 }
@@ -161,14 +165,8 @@ export async function findAvailableSlots(options: FindSlotsOptions): Promise<Tim
     preferredTimeRange,
   } = options;
 
-  const {
-    workingHoursStart,
-    workingHoursEnd,
-    workingDays,
-    bufferMinutes,
-    numOptionsToSuggest,
-    maxSlotsPerDay,
-  } = settings;
+  const { workingHoursStart, workingHoursEnd, workingDays, bufferMinutes, numOptionsToSuggest, maxSlotsPerDay } =
+    settings;
 
   // Get freebusy data
   const freeBusy = await getFreeBusy(assistantId, calendarId, startDate, endDate);

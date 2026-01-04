@@ -27,10 +27,7 @@ export const linkThreadsDef: ToolDefinition = {
   },
 };
 
-export async function linkThreads(
-  input: unknown,
-  context: AgentContext
-): Promise<ToolResult> {
+export async function linkThreads(input: unknown, context: AgentContext): Promise<ToolResult> {
   const params = input as LinkThreadsInput;
 
   // Update all emails in this thread to point to the scheduling request

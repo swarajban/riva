@@ -27,10 +27,7 @@ export const getThreadEmailsDef: ToolDefinition = {
   },
 };
 
-export async function getThreadEmails(
-  input: unknown,
-  context: AgentContext
-): Promise<ToolResult> {
+export async function getThreadEmails(input: unknown, context: AgentContext): Promise<ToolResult> {
   const params = input as GetThreadEmailsInput;
 
   // Get from database first

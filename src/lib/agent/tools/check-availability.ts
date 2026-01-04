@@ -50,10 +50,7 @@ export const checkAvailabilityDef: ToolDefinition = {
   },
 };
 
-export async function checkAvailability(
-  input: unknown,
-  context: AgentContext
-): Promise<ToolResult> {
+export async function checkAvailability(input: unknown, context: AgentContext): Promise<ToolResult> {
   const params = input as CheckAvailabilityInput;
 
   // Get user settings
