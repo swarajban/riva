@@ -5,6 +5,8 @@ import { eq, asc, and } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { formatDateTimePT } from '@/lib/utils/time';
+import { CancelRequestButton } from '@/components/CancelRequestButton';
+import { SendNowButton } from '@/components/SendNowButton';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -101,11 +103,16 @@ export default async function RequestDetailPage({
                             {email.direction === 'outbound' ? '(Assistant)' : ''}
                           </span>
                         </div>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-gray-400 flex items-center">
                           {email.sentAt || email.receivedAt
                             ? new Date((email.sentAt || email.receivedAt)!).toLocaleString()
                             : email.scheduledSendAt
-                            ? `Scheduled: ${new Date(email.scheduledSendAt).toLocaleString()}`
+                            ? (
+                              <>
+                                Scheduled: {new Date(email.scheduledSendAt).toLocaleString()}
+                                <SendNowButton emailId={email.id} />
+                              </>
+                            )
                             : ''}
                         </span>
                       </div>
@@ -278,6 +285,14 @@ export default async function RequestDetailPage({
               </div>
             </div>
           </div>
+
+          {/* Cancel button - only show for active requests */}
+          {!['cancelled', 'expired', 'error'].includes(request.status) && (
+            <CancelRequestButton
+              requestId={request.id}
+              hasCalendarEvent={!!request.googleCalendarEventId}
+            />
+          )}
         </div>
       </div>
     </div>
