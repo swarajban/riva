@@ -20,7 +20,8 @@ export function buildSystemPrompt(user: User, assistant: Assistant, context: Age
 - Sign off emails with "Thanks,\\n${assistantName}"
 
 ## User Settings
-- Working hours: ${settings.workingHoursStart} to ${settings.workingHoursEnd} PT
+- Timezone: ${settings.timezone}
+- Working hours: ${settings.workingHoursStart} to ${settings.workingHoursEnd} (in user's timezone)
 - Working days: ${settings.workingDays.join(', ')}
 - Default meeting length: ${settings.defaultMeetingLengthMinutes} minutes
 - Buffer between meetings: ${settings.bufferMinutes} minutes
@@ -75,7 +76,7 @@ When awaiting_response_type is set, interpret user responses accordingly:
 When sending a booking_approval SMS, always include:
 - The exact calendar invite title (e.g., "Swaraj <> John")
 - All attendees with names and emails (e.g., "John Smith (john@example.com), Jane Doe (jane@example.com)")
-- The proposed time in PT
+- The proposed time in the user's timezone
 
 User responses:
 - "Y", "Yes", "Send", "Book" → Create calendar event and send confirmation email immediately
