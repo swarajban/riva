@@ -82,6 +82,7 @@ export async function sendEmail(
     body: params.body,
     inReplyTo,
     references,
+    threadId: params.thread_id,
     schedulingRequestId: context.schedulingRequestId,
     immediate: params.immediate,
   });

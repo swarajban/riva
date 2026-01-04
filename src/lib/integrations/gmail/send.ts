@@ -14,6 +14,7 @@ interface SendEmailOptions {
   body: string;
   inReplyTo?: string;
   references?: string;
+  threadId?: string; // Gmail thread ID for replies
   schedulingRequestId?: string;
   immediate?: boolean; // Skip delay (for post-confirmation emails)
 }
@@ -114,6 +115,7 @@ export async function queueEmail(options: SendEmailOptions): Promise<string> {
     .insert(emailThreads)
     .values({
       schedulingRequestId: options.schedulingRequestId,
+      gmailThreadId: options.threadId,
       messageIdHeader: messageId,
       inReplyTo: options.inReplyTo,
       referencesHeader: references || null,
