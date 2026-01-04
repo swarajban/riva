@@ -191,13 +191,33 @@ export async function sendEmailNow(userId: string, emailThreadId: string): Promi
     .replace(/=+$/, '');
 
   // Send
-  const response = await gmail.users.messages.send({
-    userId: 'me',
-    requestBody: {
-      raw: encodedMessage,
-      threadId: emailRecord.gmailThreadId || undefined,
-    },
-  });
+  let response;
+  try {
+    response = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: encodedMessage,
+        threadId: emailRecord.gmailThreadId || undefined,
+      },
+    });
+  } catch (error: unknown) {
+    // If thread not found in sender's mailbox, retry without threadId
+    // The In-Reply-To and References headers will still thread correctly for recipients
+    const gaxiosError = error as { code?: number };
+    if (gaxiosError.code === 404 && emailRecord.gmailThreadId) {
+      console.log(
+        `Thread ${emailRecord.gmailThreadId} not found in sender's mailbox, sending without threadId`
+      );
+      response = await gmail.users.messages.send({
+        userId: 'me',
+        requestBody: {
+          raw: encodedMessage,
+        },
+      });
+    } else {
+      throw error;
+    }
+  }
 
   // Update record with sent info
   await db
