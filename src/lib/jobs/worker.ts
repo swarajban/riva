@@ -2,7 +2,6 @@ import { db } from '@/lib/db';
 import { emailThreads, schedulingRequests, assistants } from '@/lib/db/schema';
 import { and, isNotNull, isNull, lte, eq } from 'drizzle-orm';
 import { sendEmailNow } from '@/lib/integrations/gmail/send';
-import { getAssistant } from '@/lib/auth/google-oauth';
 import { setupGmailWatch } from '@/lib/integrations/gmail/client';
 import { handleSmsReminder } from './handlers/sms-reminder';
 import { handleExpireRequest } from './handlers/expire-request';
@@ -43,9 +42,30 @@ async function processPendingEmails(): Promise<void> {
         continue;
       }
 
-      // Get assistant for sending
-      const assistant = await getAssistant();
-      await sendEmailNow(assistant.id, email.id);
+      // Get the user from the scheduling request
+      if (!email.schedulingRequestId) {
+        console.error(`Email ${email.id} has no scheduling request, cannot send`);
+        await db
+          .update(emailThreads)
+          .set({ sentAt: null })
+          .where(eq(emailThreads.id, email.id));
+        continue;
+      }
+
+      const request = await db.query.schedulingRequests.findFirst({
+        where: eq(schedulingRequests.id, email.schedulingRequestId),
+      });
+
+      if (!request) {
+        console.error(`Scheduling request ${email.schedulingRequestId} not found`);
+        await db
+          .update(emailThreads)
+          .set({ sentAt: null })
+          .where(eq(emailThreads.id, email.id));
+        continue;
+      }
+
+      await sendEmailNow(request.userId, email.id);
       console.log(`Email sent: ${email.id}`);
     } catch (error) {
       console.error(`Failed to send email ${email.id}:`, error);
@@ -155,3 +175,6 @@ export async function startWorker(): Promise<void> {
 
   console.log('Worker started');
 }
+
+// Run if executed directly
+startWorker().catch(console.error);

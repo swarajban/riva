@@ -1,22 +1,22 @@
 import { google, calendar_v3 } from 'googleapis';
-import { getAuthenticatedClient, getAssistant } from '@/lib/auth/google-oauth';
+import { getAuthenticatedClient } from '@/lib/auth/google-oauth';
 
 export type CalendarClient = calendar_v3.Calendar;
 
 // Get Calendar client using assistant's credentials
-export async function getCalendarClient(assistantId?: string): Promise<CalendarClient> {
-  const id = assistantId || (await getAssistant()).id;
-  const oauth2Client = await getAuthenticatedClient(id);
+export async function getCalendarClient(assistantId: string): Promise<CalendarClient> {
+  const oauth2Client = await getAuthenticatedClient(assistantId);
   return google.calendar({ version: 'v3', auth: oauth2Client });
 }
 
 // Get freebusy data for a time range on a specific calendar
 export async function getFreeBusy(
+  assistantId: string,
   calendarId: string,
   timeMin: Date,
   timeMax: Date
 ): Promise<calendar_v3.Schema$FreeBusyCalendar> {
-  const calendar = await getCalendarClient();
+  const calendar = await getCalendarClient(assistantId);
 
   const response = await calendar.freebusy.query({
     requestBody: {
@@ -31,6 +31,7 @@ export async function getFreeBusy(
 
 // Create a calendar event
 export interface CreateEventOptions {
+  assistantId: string;
   calendarId: string;
   title: string;
   startTime: Date;
@@ -43,7 +44,7 @@ export interface CreateEventOptions {
 export async function createCalendarEvent(
   options: CreateEventOptions
 ): Promise<string> {
-  const calendar = await getCalendarClient();
+  const calendar = await getCalendarClient(options.assistantId);
 
   const response = await calendar.events.insert({
     calendarId: options.calendarId,
@@ -72,10 +73,11 @@ export async function createCalendarEvent(
 
 // Cancel (delete) a calendar event
 export async function cancelCalendarEvent(
+  assistantId: string,
   calendarId: string,
   eventId: string
 ): Promise<void> {
-  const calendar = await getCalendarClient();
+  const calendar = await getCalendarClient(assistantId);
 
   await calendar.events.delete({
     calendarId,
@@ -86,10 +88,11 @@ export async function cancelCalendarEvent(
 
 // Get a calendar event by ID
 export async function getCalendarEvent(
+  assistantId: string,
   calendarId: string,
   eventId: string
 ): Promise<calendar_v3.Schema$Event> {
-  const calendar = await getCalendarClient();
+  const calendar = await getCalendarClient(assistantId);
 
   const response = await calendar.events.get({
     calendarId,
@@ -101,6 +104,7 @@ export async function getCalendarEvent(
 
 // Update a calendar event
 export interface UpdateEventOptions {
+  assistantId: string;
   calendarId: string;
   eventId: string;
   title?: string;
@@ -112,9 +116,13 @@ export interface UpdateEventOptions {
 export async function updateCalendarEvent(
   options: UpdateEventOptions
 ): Promise<void> {
-  const calendar = await getCalendarClient();
+  const calendar = await getCalendarClient(options.assistantId);
 
-  const existing = await getCalendarEvent(options.calendarId, options.eventId);
+  const existing = await getCalendarEvent(
+    options.assistantId,
+    options.calendarId,
+    options.eventId
+  );
 
   await calendar.events.patch({
     calendarId: options.calendarId,

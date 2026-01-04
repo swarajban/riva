@@ -1,31 +1,32 @@
 import { google, gmail_v1 } from 'googleapis';
-import { getAuthenticatedClient, getAssistant } from '@/lib/auth/google-oauth';
+import { getAuthenticatedClient } from '@/lib/auth/google-oauth';
 import { config } from '@/lib/config';
 import { db } from '@/lib/db';
 import { assistants } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
+// Note: config is still imported for pubsubTopic in setupGmailWatch
+
 export type GmailClient = gmail_v1.Gmail;
 
 // Get Gmail client for the assistant
-export async function getGmailClient(assistantId?: string): Promise<GmailClient> {
-  const id = assistantId || (await getAssistant()).id;
-  const oauth2Client = await getAuthenticatedClient(id);
+export async function getGmailClient(assistantId: string): Promise<GmailClient> {
+  const oauth2Client = await getAuthenticatedClient(assistantId);
   return google.gmail({ version: 'v1', auth: oauth2Client });
 }
 
 // Set up Gmail push notifications
-export async function setupGmailWatch(assistantId?: string): Promise<{
+export async function setupGmailWatch(assistantId: string): Promise<{
   historyId: string;
   expiration: string;
 }> {
-  const assistant = assistantId
-    ? await db.query.assistants.findFirst({ where: eq(assistants.id, assistantId) })
-    : await getAssistant();
+  const assistant = await db.query.assistants.findFirst({
+    where: eq(assistants.id, assistantId),
+  });
 
   if (!assistant) throw new Error('Assistant not found');
 
-  const gmail = await getGmailClient(assistant.id);
+  const gmail = await getGmailClient(assistantId);
 
   const response = await gmail.users.watch({
     userId: 'me',
@@ -53,7 +54,7 @@ export async function setupGmailWatch(assistantId?: string): Promise<{
 }
 
 // Stop Gmail push notifications
-export async function stopGmailWatch(assistantId?: string): Promise<void> {
+export async function stopGmailWatch(assistantId: string): Promise<void> {
   const gmail = await getGmailClient(assistantId);
   await gmail.users.stop({ userId: 'me' });
 }
@@ -61,7 +62,7 @@ export async function stopGmailWatch(assistantId?: string): Promise<void> {
 // Get message by ID
 export async function getMessage(
   messageId: string,
-  assistantId?: string
+  assistantId: string
 ): Promise<gmail_v1.Schema$Message> {
   const gmail = await getGmailClient(assistantId);
   const response = await gmail.users.messages.get({
@@ -75,7 +76,7 @@ export async function getMessage(
 // Get message history since a specific historyId
 export async function getHistory(
   startHistoryId: string,
-  assistantId?: string
+  assistantId: string
 ): Promise<gmail_v1.Schema$History[]> {
   const gmail = await getGmailClient(assistantId);
 
@@ -100,7 +101,7 @@ export async function getHistory(
 // Get thread by ID with all messages
 export async function getThread(
   threadId: string,
-  assistantId?: string
+  assistantId: string
 ): Promise<gmail_v1.Schema$Thread> {
   const gmail = await getGmailClient(assistantId);
   const response = await gmail.users.threads.get({
@@ -192,13 +193,16 @@ export function parseSenderName(fromHeader: string | undefined): string | null {
   return null;
 }
 
-// Check if Riva is in TO or CC
-export function isRivaAddressed(headers: Record<string, string>): boolean {
-  const rivaEmail = config.rivaEmail.toLowerCase();
+// Check if assistant is in TO or CC
+export function isAssistantAddressed(
+  headers: Record<string, string>,
+  assistantEmail: string
+): boolean {
+  const email = assistantEmail.toLowerCase();
   const to = parseEmailAddresses(headers['to']);
   const cc = parseEmailAddresses(headers['cc']);
 
-  return to.includes(rivaEmail) || cc.includes(rivaEmail);
+  return to.includes(email) || cc.includes(email);
 }
 
 // Parsed email structure

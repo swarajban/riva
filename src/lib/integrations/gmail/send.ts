@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { getAuthenticatedClient, getAssistant } from '@/lib/auth/google-oauth';
+import { getAuthenticatedClient, getAssistantForUser } from '@/lib/auth/google-oauth';
 import { config, getRandomEmailDelay } from '@/lib/config';
 import { db } from '@/lib/db';
 import { emailThreads } from '@/lib/db/schema';
@@ -25,6 +25,8 @@ function generateMessageId(): string {
 
 // Build MIME message
 function buildMimeMessage(options: {
+  fromEmail: string;
+  fromName: string;
   to: string[];
   cc?: string[];
   subject: string;
@@ -36,7 +38,7 @@ function buildMimeMessage(options: {
   const lines: string[] = [];
 
   // Headers
-  lines.push(`From: Riva <${config.rivaEmail}>`);
+  lines.push(`From: ${options.fromName} <${options.fromEmail}>`);
   lines.push(`To: ${options.to.join(', ')}`);
   if (options.cc && options.cc.length > 0) {
     lines.push(`Cc: ${options.cc.join(', ')}`);
@@ -95,6 +97,9 @@ function calculateSendTime(immediate: boolean): Date {
 
 // Queue an email for sending
 export async function queueEmail(options: SendEmailOptions): Promise<string> {
+  // Get the assistant for this user to determine the from email
+  const assistant = await getAssistantForUser(options.userId);
+
   const messageId = generateMessageId();
   const sendTime = calculateSendTime(options.immediate || false);
 
@@ -113,8 +118,8 @@ export async function queueEmail(options: SendEmailOptions): Promise<string> {
       inReplyTo: options.inReplyTo,
       referencesHeader: references || null,
       subject: options.subject,
-      fromEmail: config.rivaEmail,
-      fromName: 'Riva',
+      fromEmail: assistant.email,
+      fromName: assistant.name || 'Riva',
       toEmails: options.to,
       ccEmails: options.cc || [],
       bodyText: options.body,
@@ -155,12 +160,14 @@ export async function sendEmailNow(userId: string, emailThreadId: string): Promi
     return;
   }
 
-  // Use assistant's credentials (Riva sends emails, not individual users)
-  const assistant = await getAssistant();
+  // Use the user's assistant's credentials
+  const assistant = await getAssistantForUser(userId);
   const oauth2Client = await getAuthenticatedClient(assistant.id);
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
   const mimeMessage = buildMimeMessage({
+    fromEmail: emailRecord.fromEmail || assistant.email,
+    fromName: emailRecord.fromName || assistant.name || 'Riva',
     to: emailRecord.toEmails as string[],
     cc: emailRecord.ccEmails as string[] | undefined,
     subject: emailRecord.subject || '',

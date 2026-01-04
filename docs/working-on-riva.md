@@ -14,15 +14,16 @@ Riva is an AI email scheduling assistant. When CC'd on an email thread, it:
 
 ## Architecture
 
-### Multi-User Model
+### Per-User Assistant Model
 
 | Entity | Role | Access |
 |--------|------|--------|
-| **Assistant** (riva@semprehealth.com) | Riva email account | Gmail (read/send), OAuth tokens |
-| **Users** | People who use Riva | Calendar (shared with Riva), notification preferences |
+| **Users** | People who use Riva | Login identity, notification preferences |
+| **Assistants** | Per-user email account | Gmail (read/send), Calendar, OAuth tokens |
 
-- Assistant has one Google OAuth session for Gmail access
-- Each user shares their calendar with the assistant
+- Each user connects their own assistant Google account (1:1 relationship)
+- The assistant account is a separate Google account from the user's login
+- Assistants handle email sending and calendar management on behalf of their user
 - Users configure their notification preference (SMS or Telegram)
 
 ### Tech Stack
@@ -92,8 +93,8 @@ src/
 
 ## Database Schema
 
-- **assistants** - Riva email account (OAuth tokens)
-- **users** - Individual users (calendar ID, notification preference, settings)
+- **assistants** - Per-user assistant accounts (Gmail/Calendar OAuth tokens)
+- **users** - Individual users (assistantId FK, notification preference, settings)
 - **scheduling_requests** - Meeting requests being processed
 - **email_threads** - Inbound/outbound emails
 - **notifications** - SMS/Telegram messages (replaced sms_messages)
@@ -173,8 +174,8 @@ See `.env.example` for full list. Key ones:
 
 ## Common Issues
 
-### "Assistant not found"
-The `sendEmailNow` function needs the assistant's OAuth tokens, not the user's. Fixed by using `getAssistant()`.
+### "Assistant not found" / "User has no assistant configured"
+The `sendEmailNow` function needs the assistant's OAuth tokens. Each user must connect their own assistant account via Settings. Use `getAssistantForUser(userId)` to get the user's linked assistant.
 
 ### Duplicate emails
 If immediate email send fails, the record stays in DB and worker sends it. Fixed by deleting record on failure.

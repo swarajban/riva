@@ -73,6 +73,7 @@ export async function checkAvailability(
 
   // Find slots
   const slots = await findAvailableSlots({
+    assistantId: context.assistantId,
     calendarId: user.calendarId,
     settings,
     startDate,

@@ -1,18 +1,13 @@
 import { cookies } from 'next/headers';
 import { config } from '../config';
 import { db } from '../db';
-import { assistants, users } from '../db/schema';
+import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
-// Session cookie names
-const ASSISTANT_SESSION_COOKIE = 'riva_assistant_session';
+// Session cookie name
 const USER_SESSION_COOKIE = 'riva_user_session';
 
-// Session data types
-export interface AssistantSession {
-  assistantId: string;
-}
-
+// Session data type
 export interface UserSession {
   userId: string;
 }
@@ -45,58 +40,6 @@ function decodeSession<T>(encoded: string): T | null {
     return null;
   }
 }
-
-// ============ Assistant Session Functions ============
-
-// Create a session for the assistant
-export async function createAssistantSession(assistantId: string): Promise<void> {
-  const session: AssistantSession = { assistantId };
-  const encoded = encodeSession(session);
-
-  const cookieStore = await cookies();
-  cookieStore.set(ASSISTANT_SESSION_COOKIE, encoded, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 30, // 30 days
-    path: '/',
-  });
-}
-
-// Get the current assistant session
-export async function getAssistantSession(): Promise<AssistantSession | null> {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get(ASSISTANT_SESSION_COOKIE);
-
-  if (!sessionCookie) {
-    return null;
-  }
-
-  return decodeSession<AssistantSession>(sessionCookie.value);
-}
-
-// Get the current assistant from session
-export async function getCurrentAssistant() {
-  const session = await getAssistantSession();
-
-  if (!session) {
-    return null;
-  }
-
-  const assistant = await db.query.assistants.findFirst({
-    where: eq(assistants.id, session.assistantId),
-  });
-
-  return assistant || null;
-}
-
-// Clear the assistant session (logout)
-export async function clearAssistantSession(): Promise<void> {
-  const cookieStore = await cookies();
-  cookieStore.delete(ASSISTANT_SESSION_COOKIE);
-}
-
-// ============ User Session Functions ============
 
 // Create a session for a user
 export async function createUserSession(userId: string): Promise<void> {
@@ -146,22 +89,6 @@ export async function clearUserSession(): Promise<void> {
   cookieStore.delete(USER_SESSION_COOKIE);
 }
 
-// ============ Legacy/Compatibility Functions ============
-
-// Legacy function for backwards compatibility with existing code
-// that expects assistant sessions via old naming
-export async function getSession(): Promise<AssistantSession | null> {
-  return getAssistantSession();
-}
-
-export async function createSession(assistantId: string): Promise<void> {
-  return createAssistantSession(assistantId);
-}
-
-export async function clearSession(): Promise<void> {
-  return clearAssistantSession();
-}
-
 // Require user authentication - throws if not logged in
 export async function requireUserAuth() {
   const user = await getCurrentUser();
@@ -172,17 +99,3 @@ export async function requireUserAuth() {
 
   return user;
 }
-
-// Require assistant authentication - throws if not logged in
-export async function requireAssistantAuth() {
-  const assistant = await getCurrentAssistant();
-
-  if (!assistant) {
-    throw new Error('Unauthorized');
-  }
-
-  return assistant;
-}
-
-// Legacy alias
-export const requireAuth = requireAssistantAuth;

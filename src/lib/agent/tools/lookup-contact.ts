@@ -28,7 +28,7 @@ export async function lookupContact(
   const params = input as LookupContactInput;
 
   try {
-    const oauth2Client = await getAuthenticatedClient(context.userId);
+    const oauth2Client = await getAuthenticatedClient(context.assistantId);
     const people = google.people({ version: 'v1', auth: oauth2Client });
 
     // Search for the contact

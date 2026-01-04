@@ -38,7 +38,7 @@ export async function cancelEvent(
     return { success: false, error: 'User not found' };
   }
 
-  await cancelCalendarEvent(user.calendarId, params.event_id);
+  await cancelCalendarEvent(context.assistantId, user.calendarId, params.event_id);
 
   // Update scheduling request if we have one
   if (context.schedulingRequestId) {

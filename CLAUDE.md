@@ -47,13 +47,17 @@ ngrok http 3000
 - `src/lib/integrations/` - Gmail, Calendar, Twilio, Telegram clients
 - `src/lib/jobs/` - Background job processor and handlers
 - `src/app/api/webhooks/` - Gmail, Twilio, Telegram webhook routes
+- `src/app/auth/user/` - User login OAuth (identity only)
+- `src/app/auth/assistant/` - Assistant setup OAuth (full Gmail+Calendar scopes)
 
 ## Architecture Notes
 
-### Multi-User Model
-- One assistant account (riva@semprehealth.com) with Gmail OAuth
-- Users share their calendars with the assistant
-- Users configure notification preference (SMS or Telegram)
+### Per-User Assistant Model
+- Each user has their own assistant (1:1 relationship via `users.assistantId`)
+- User logs in with their Google account (identity verification)
+- User separately connects an assistant Google account (full Gmail+Calendar OAuth)
+- The assistant account is a different Google account that handles email sending/calendar access
+- Users configure notification preference (SMS or Telegram via shared Twilio/Telegram)
 
 ### Scheduling Request Status Flow
 ```
@@ -75,7 +79,8 @@ pending → proposing → awaiting_confirmation → confirmed
 
 ## Common Gotchas
 
-- **"Assistant not found"**: `sendEmailNow` needs the assistant's OAuth tokens, not user's. Use `getAssistant()`.
+- **"User has no assistant"**: User must connect an assistant account via `/auth/assistant/login` before using the system.
+- **Assistant vs User OAuth**: Users have minimal scopes (identity only). Assistants have full Gmail+Calendar scopes.
 - **Duplicate emails**: If immediate send fails, record stays in DB and worker resends. Delete record on failure.
 - **Timezone parsing**: `new Date('2026-01-06')` parses as UTC midnight = Jan 5th in PT. Parse with explicit timezone.
 - **Telegram "chat not found"**: User must send `/start` to bot first. Ensure numeric chat ID, not username.

@@ -47,14 +47,21 @@ async function main() {
       continue;
     }
 
-    // Get assistant ID (we need this for sending)
-    const { getAssistant } = await import('../src/lib/auth/google-oauth');
-    const assistant = await getAssistant();
+    // Get the user for this request
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, request.userId),
+      with: { assistant: true },
+    });
 
-    console.log(`  Sending as assistant: ${assistant.email}`);
+    if (!user?.assistant) {
+      console.log('  User has no assistant configured, skipping');
+      continue;
+    }
+
+    console.log(`  Sending as assistant: ${user.assistant.email}`);
 
     try {
-      await sendEmailNow(assistant.id, email.id);
+      await sendEmailNow(request.userId, email.id);
       console.log('  Email sent successfully!');
     } catch (error) {
       console.error('  Failed to send:', error);

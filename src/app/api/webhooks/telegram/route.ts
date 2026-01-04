@@ -48,6 +48,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: 'user_not_found' });
     }
 
+    if (!user.assistantId) {
+      console.log('User has no assistant configured:', user.email);
+      await sendTelegramMessage(
+        chatId,
+        'Your account is not fully set up. Please configure your assistant first.'
+      );
+      return NextResponse.json({ status: 'no_assistant' });
+    }
+
     // Find the most recent notification awaiting response
     const awaitingNotification = await getMostRecentAwaiting(user.id);
 
@@ -69,6 +78,7 @@ export async function POST(request: NextRequest) {
     try {
       await runAgent({
         userId: user.id,
+        assistantId: user.assistantId,
         schedulingRequestId: awaitingNotification?.schedulingRequestId || undefined,
         triggerType: 'sms', // Keep as 'sms' for prompt compatibility
         triggerContent: text,

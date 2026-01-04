@@ -16,17 +16,23 @@ const MAX_ITERATIONS = 10;
 export async function runAgent(context: AgentContext): Promise<void> {
   console.log('Running agent with context:', {
     userId: context.userId,
+    assistantId: context.assistantId,
     triggerType: context.triggerType,
     schedulingRequestId: context.schedulingRequestId,
   });
 
-  // Get user
+  // Get user with assistant
   const user = await db.query.users.findFirst({
     where: eq(users.id, context.userId),
+    with: { assistant: true },
   });
 
   if (!user) {
     throw new Error('User not found');
+  }
+
+  if (!user.assistant) {
+    throw new Error('User has no assistant configured');
   }
 
   // Build system prompt

@@ -69,7 +69,7 @@ export async function getThreadEmails(
   // If thread_id provided, fetch from Gmail
   if (params.thread_id) {
     try {
-      const thread = await getThread(context.userId, params.thread_id);
+      const thread = await getThread(params.thread_id, context.assistantId);
       const messages = thread.messages || [];
 
       return {

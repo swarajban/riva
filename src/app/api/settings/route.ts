@@ -12,11 +12,23 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Get user with assistant relation
+  const userWithAssistant = await db.query.users.findFirst({
+    where: eq(users.id, user.id),
+    with: { assistant: true },
+  });
+
   return NextResponse.json({
     user,
     settings: user.settings,
     notificationPreference: user.notificationPreference || 'sms',
     telegramChatId: user.telegramChatId || '',
+    assistant: userWithAssistant?.assistant
+      ? {
+          email: userWithAssistant.assistant.email,
+          name: userWithAssistant.assistant.name,
+        }
+      : null,
   });
 }
 

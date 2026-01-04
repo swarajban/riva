@@ -60,11 +60,9 @@ async function main() {
     console.log("Calendar ID:", user.calendarId);
     console.log("");
     console.log("Next steps:");
-    console.log(
-      "1. Make sure Riva has access to this user's calendar (calendar sharing)",
-    );
-    console.log("2. Complete Riva's OAuth at http://localhost:3000/auth/login");
-    console.log("3. Send a test email with Riva CC'd");
+    console.log("1. Log in at http://localhost:3000/auth/user/login");
+    console.log("2. Go to Settings and connect an assistant Google account");
+    console.log("3. Send a test email with the assistant CC'd");
   } catch (error) {
     if ((error as Error).message.includes("duplicate key")) {
       console.log("User already exists");

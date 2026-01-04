@@ -23,7 +23,7 @@ async function main() {
   const assistant = await db.query.assistants.findFirst();
 
   if (!assistant) {
-    console.error('No assistant found. Please complete OAuth first at /auth/login');
+    console.error('No assistant found. Please connect an assistant account in Settings first.');
     process.exit(1);
   }
 

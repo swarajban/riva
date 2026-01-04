@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { assistants, users, emailThreads, schedulingRequests } from '@/lib/db/schema';
-import { eq, or, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import {
   getHistory,
   getMessage,
   parseGmailMessage,
-  isRivaAddressed,
+  isAssistantAddressed,
   parseHeaders,
-  parseEmailAddresses,
 } from '@/lib/integrations/gmail/client';
 import { runAgent } from '@/lib/agent';
-import { config } from '@/lib/config';
 
 // Gmail Pub/Sub push notification format
 interface PubSubMessage {
@@ -28,30 +26,6 @@ interface GmailNotification {
   historyId: string;
 }
 
-// Find user by matching email addresses in the message
-async function findUserFromEmail(
-  fromEmail: string,
-  toEmails: string[],
-  ccEmails: string[]
-): Promise<typeof users.$inferSelect | null> {
-  // Collect all emails to check (excluding Riva's email)
-  const rivaEmail = config.rivaEmail.toLowerCase();
-  const allEmails = [fromEmail, ...toEmails, ...ccEmails]
-    .map((e) => e.toLowerCase())
-    .filter((e) => e !== rivaEmail);
-
-  if (allEmails.length === 0) return null;
-
-  // Find a user whose email matches any of the participants
-  const user = await db.query.users.findFirst({
-    where: or(
-      ...allEmails.map((email) => eq(users.email, email))
-    ),
-  });
-
-  return user || null;
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body: PubSubMessage = await request.json();
@@ -62,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Gmail notification received:', notification);
 
-    // Find assistant by email (this should be Riva's email)
+    // Find assistant by email
     const assistant = await db.query.assistants.findFirst({
       where: eq(assistants.email, notification.emailAddress),
     });
@@ -70,6 +44,16 @@ export async function POST(request: NextRequest) {
     if (!assistant) {
       console.log('Assistant not found for email:', notification.emailAddress);
       return NextResponse.json({ status: 'assistant_not_found' });
+    }
+
+    // Find the user who owns this assistant
+    const user = await db.query.users.findFirst({
+      where: eq(users.assistantId, assistant.id),
+    });
+
+    if (!user) {
+      console.log('No user found for assistant:', assistant.email);
+      return NextResponse.json({ status: 'user_not_found' });
     }
 
     // Get the stored history ID or use a default
@@ -109,30 +93,18 @@ export async function POST(request: NextRequest) {
         const fullMessage = await getMessage(messageId, assistant.id);
         const headers = parseHeaders(fullMessage.payload?.headers);
 
-        // Check if Riva is addressed
-        if (!isRivaAddressed(headers)) {
-          console.log('Riva not addressed in message:', messageId);
+        // Check if assistant is addressed
+        if (!isAssistantAddressed(headers, assistant.email)) {
+          console.log('Assistant not addressed in message:', messageId);
           continue;
         }
 
         // Parse the message
         const parsed = parseGmailMessage(fullMessage);
 
-        // Check if this is from the assistant/Riva (ignore our own sent messages)
-        if (parsed.fromEmail.toLowerCase() === config.rivaEmail.toLowerCase()) {
-          console.log('Message from Riva, ignoring:', messageId);
-          continue;
-        }
-
-        // Find which user this email is for
-        const user = await findUserFromEmail(
-          parsed.fromEmail,
-          parsed.toEmails,
-          parsed.ccEmails
-        );
-
-        if (!user) {
-          console.log('No matching user found for message participants:', messageId);
+        // Check if this is from the assistant (ignore our own sent messages)
+        if (parsed.fromEmail.toLowerCase() === assistant.email.toLowerCase()) {
+          console.log('Message from assistant, ignoring:', messageId);
           continue;
         }
 
@@ -145,8 +117,8 @@ export async function POST(request: NextRequest) {
 
         // If no existing request, create one
         if (!schedulingRequestId) {
-          // Identify external parties (not user, not Riva)
-          const rivaEmail = config.rivaEmail.toLowerCase();
+          // Identify external parties (not user, not assistant)
+          const assistantEmail = assistant.email.toLowerCase();
           const userEmail = user.email.toLowerCase();
 
           const externalParties = [
@@ -154,7 +126,7 @@ export async function POST(request: NextRequest) {
             ...parsed.ccEmails.map(email => ({ email, name: undefined as string | undefined })),
           ].filter(p => {
             const email = p.email.toLowerCase();
-            return email !== rivaEmail && email !== userEmail;
+            return email !== assistantEmail && email !== userEmail;
           });
 
           // If sender is external (not the user), add them too
@@ -205,6 +177,7 @@ export async function POST(request: NextRequest) {
         try {
           await runAgent({
             userId: user.id,
+            assistantId: assistant.id,
             schedulingRequestId,
             triggerType: 'email',
             triggerContent: JSON.stringify({

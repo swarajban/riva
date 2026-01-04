@@ -2,6 +2,7 @@ import { Anthropic } from '@anthropic-ai/sdk';
 
 export interface AgentContext {
   userId: string;
+  assistantId: string;
   schedulingRequestId?: string;
   triggerType: 'email' | 'sms';
   triggerContent: string;

@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Twilio SMS received:', { from, messageSid });
 
-    // Find user by phone number
+    // Find user by phone number (with assistant)
     const user = await findUserByNotificationId(from, 'twilio');
 
     if (!user) {
@@ -48,6 +48,14 @@ export async function POST(request: NextRequest) {
       // Return TwiML response
       return new NextResponse(
         '<?xml version="1.0" encoding="UTF-8"?><Response><Message>Sorry, your phone number is not registered with Riva.</Message></Response>',
+        { headers: { 'Content-Type': 'text/xml' } }
+      );
+    }
+
+    if (!user.assistantId) {
+      console.log('User has no assistant configured:', user.email);
+      return new NextResponse(
+        '<?xml version="1.0" encoding="UTF-8"?><Response><Message>Your account is not fully set up. Please configure your assistant first.</Message></Response>',
         { headers: { 'Content-Type': 'text/xml' } }
       );
     }
@@ -73,6 +81,7 @@ export async function POST(request: NextRequest) {
     try {
       await runAgent({
         userId: user.id,
+        assistantId: user.assistantId,
         schedulingRequestId: awaitingNotification?.schedulingRequestId || undefined,
         triggerType: 'sms',
         triggerContent: body,

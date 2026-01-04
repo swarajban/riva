@@ -4,7 +4,6 @@
 export const config = {
   // App
   appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  rivaEmail: process.env.RIVA_EMAIL || 'riva@semprehealth.com',
 
   // Database
   databaseUrl: process.env.DATABASE_URL!,
@@ -13,8 +12,8 @@ export const config = {
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    redirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/callback',
     userRedirectUri: process.env.GOOGLE_USER_REDIRECT_URI || 'http://localhost:3000/auth/user/callback',
+    assistantRedirectUri: process.env.GOOGLE_ASSISTANT_REDIRECT_URI || 'http://localhost:3000/auth/assistant/callback',
     pubsubTopic: process.env.GOOGLE_PUBSUB_TOPIC!,
     // Full scopes for assistant (Gmail + Calendar access)
     assistantScopes: [

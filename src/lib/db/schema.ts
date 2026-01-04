@@ -81,8 +81,8 @@ export type ProposedTime = {
   round: number;
 };
 
-// Assistants table - stores Riva's OAuth credentials
-// Single row for the assistant (riva@semprehealth.com)
+// Assistants table - stores OAuth credentials for each user's assistant
+// Each user has their own assistant (1:1 relationship)
 export const assistants = pgTable('assistants', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 255 }).unique().notNull(),
@@ -96,32 +96,36 @@ export const assistants = pgTable('assistants', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
-// Users table - actual users whose calendars Riva manages
-// (e.g., Swaraj, Anurati)
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  email: varchar('email', { length: 255 }).unique().notNull(),
-  name: varchar('name', { length: 255 }),
-  phone: varchar('phone', { length: 20 }),
-  telegramChatId: varchar('telegram_chat_id', { length: 255 }),
-  notificationPreference: notificationPreferenceEnum('notification_preference').default('sms'),
-  calendarId: varchar('calendar_id', { length: 255 }).notNull(), // Google Calendar ID (usually same as email)
-  settings: jsonb('settings').$type<UserSettings>().default({
-    defaultMeetingLengthMinutes: 30,
-    zoomPersonalLink: null,
-    workingHoursStart: '10:00',
-    workingHoursEnd: '17:00',
-    workingDays: ['mon', 'tue', 'wed', 'thu', 'fri'],
-    timezone: 'America/Los_Angeles',
-    bufferMinutes: 15,
-    lookaheadDays: 10,
-    numOptionsToSuggest: 4,
-    maxSlotsPerDay: 2,
-    keywordRules: [],
-  }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+// Users table - actual users whose calendars are managed
+// Each user has their own assistant (1:1 relationship)
+export const users = pgTable(
+  'users',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    email: varchar('email', { length: 255 }).unique().notNull(),
+    name: varchar('name', { length: 255 }),
+    phone: varchar('phone', { length: 20 }),
+    telegramChatId: varchar('telegram_chat_id', { length: 255 }),
+    notificationPreference: notificationPreferenceEnum('notification_preference').default('sms'),
+    calendarId: varchar('calendar_id', { length: 255 }).notNull(), // Google Calendar ID (usually same as email)
+    assistantId: uuid('assistant_id').unique().references(() => assistants.id, { onDelete: 'set null' }),
+    settings: jsonb('settings').$type<UserSettings>().default({
+      defaultMeetingLengthMinutes: 30,
+      zoomPersonalLink: null,
+      workingHoursStart: '10:00',
+      workingHoursEnd: '17:00',
+      workingDays: ['mon', 'tue', 'wed', 'thu', 'fri'],
+      timezone: 'America/Los_Angeles',
+      bufferMinutes: 15,
+      lookaheadDays: 10,
+      numOptionsToSuggest: 4,
+      maxSlotsPerDay: 2,
+      keywordRules: [],
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  }
+);
 
 export const schedulingRequests = pgTable(
   'scheduling_requests',
@@ -223,9 +227,18 @@ export const notifications = pgTable(
 );
 
 // Relations
-export const assistantsRelations = relations(assistants, ({ }) => ({}));
+export const assistantsRelations = relations(assistants, ({ one }) => ({
+  user: one(users, {
+    fields: [assistants.id],
+    references: [users.assistantId],
+  }),
+}));
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
+  assistant: one(assistants, {
+    fields: [users.assistantId],
+    references: [assistants.id],
+  }),
   schedulingRequests: many(schedulingRequests),
   notifications: many(notifications),
 }));

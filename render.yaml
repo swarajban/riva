@@ -16,10 +16,10 @@ services:
           property: connectionString
       - key: NEXT_PUBLIC_APP_URL
         value: https://app.riva.systems
-      - key: GOOGLE_REDIRECT_URI
-        value: https://app.riva.systems/auth/callback
       - key: GOOGLE_USER_REDIRECT_URI
         value: https://app.riva.systems/auth/user/callback
+      - key: GOOGLE_ASSISTANT_REDIRECT_URI
+        value: https://app.riva.systems/auth/assistant/callback
       # Secrets - add values in Render Dashboard
       - key: GOOGLE_CLIENT_ID
         sync: false
@@ -38,8 +38,6 @@ services:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
-        sync: false
-      - key: RIVA_EMAIL
         sync: false
       - key: SESSION_SECRET
         sync: false

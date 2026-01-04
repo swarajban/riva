@@ -1,29 +1,8 @@
 import { google } from 'googleapis';
 import { config } from '../config';
 import { db } from '../db';
-import { assistants } from '../db/schema';
+import { assistants, users } from '../db/schema';
 import { eq } from 'drizzle-orm';
-
-// Create OAuth2 client
-export function createOAuth2Client() {
-  return new google.auth.OAuth2(
-    config.google.clientId,
-    config.google.clientSecret,
-    config.google.redirectUri
-  );
-}
-
-// Generate authorization URL for assistant to visit (full Gmail/Calendar permissions)
-export function getAssistantAuthUrl(state?: string): string {
-  const oauth2Client = createOAuth2Client();
-
-  return oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: [...config.google.assistantScopes],
-    prompt: 'consent', // Force to get refresh token
-    state,
-  });
-}
 
 // Create OAuth2 client for user authentication
 export function createUserOAuth2Client() {
@@ -46,6 +25,34 @@ export function getUserAuthUrl(state?: string): string {
   });
 }
 
+// Create OAuth2 client for assistant authentication (per-user assistant setup)
+export function createAssistantOAuth2Client() {
+  return new google.auth.OAuth2(
+    config.google.clientId,
+    config.google.clientSecret,
+    config.google.assistantRedirectUri
+  );
+}
+
+// Generate authorization URL for assistant setup (full Gmail+Calendar permissions)
+export function getAssistantSetupAuthUrl(userId: string): string {
+  const oauth2Client = createAssistantOAuth2Client();
+
+  return oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: [...config.google.assistantScopes],
+    prompt: 'consent', // Force to get refresh token
+    state: userId, // Store userId in state to link after callback
+  });
+}
+
+// Exchange authorization code for tokens (for assistant setup)
+export async function exchangeAssistantCodeForTokens(code: string) {
+  const oauth2Client = createAssistantOAuth2Client();
+  const { tokens } = await oauth2Client.getToken(code);
+  return tokens;
+}
+
 // Exchange authorization code for tokens (for user login)
 export async function exchangeUserCodeForTokens(code: string) {
   const oauth2Client = createUserOAuth2Client();
@@ -53,16 +60,9 @@ export async function exchangeUserCodeForTokens(code: string) {
   return tokens;
 }
 
-// Exchange authorization code for tokens
-export async function exchangeCodeForTokens(code: string) {
-  const oauth2Client = createOAuth2Client();
-  const { tokens } = await oauth2Client.getToken(code);
-  return tokens;
-}
-
 // Get user info from access token
 export async function getUserInfo(accessToken: string) {
-  const oauth2Client = createOAuth2Client();
+  const oauth2Client = createAssistantOAuth2Client();
   oauth2Client.setCredentials({ access_token: accessToken });
 
   const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
@@ -99,7 +99,7 @@ export async function getValidAccessToken(assistantId: string): Promise<string> 
   }
 
   // Token expired or expiring soon - refresh it
-  const oauth2Client = createOAuth2Client();
+  const oauth2Client = createAssistantOAuth2Client();
   oauth2Client.setCredentials({
     refresh_token: assistant.googleRefreshToken,
   });
@@ -122,24 +122,44 @@ export async function getValidAccessToken(assistantId: string): Promise<string> 
 // Get an authenticated OAuth2 client for the assistant
 export async function getAuthenticatedClient(assistantId: string) {
   const accessToken = await getValidAccessToken(assistantId);
-  const oauth2Client = createOAuth2Client();
+  const oauth2Client = createAssistantOAuth2Client();
   oauth2Client.setCredentials({ access_token: accessToken });
   return oauth2Client;
 }
 
-// Get the single assistant (Riva) - convenience function
-export async function getAssistant() {
-  const assistant = await db.query.assistants.findFirst();
-  if (!assistant) {
-    throw new Error('No assistant configured - please complete OAuth setup');
+// Get the assistant for a specific user
+export async function getAssistantForUser(userId: string) {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    with: { assistant: true },
+  });
+
+  if (!user) {
+    throw new Error('User not found');
   }
-  return assistant;
+
+  if (!user.assistant) {
+    throw new Error('User has no assistant configured - please complete assistant setup');
+  }
+
+  return user.assistant;
 }
 
-// Get authenticated client for the default assistant
-export async function getDefaultAuthenticatedClient() {
-  const assistant = await getAssistant();
+// Get authenticated client for a user's assistant
+export async function getAuthenticatedClientForUser(userId: string) {
+  const assistant = await getAssistantForUser(userId);
   return getAuthenticatedClient(assistant.id);
+}
+
+// Link an assistant to a user
+export async function linkAssistantToUser(userId: string, assistantId: string) {
+  await db
+    .update(users)
+    .set({
+      assistantId,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId));
 }
 
 // Store tokens for the assistant (after OAuth callback)

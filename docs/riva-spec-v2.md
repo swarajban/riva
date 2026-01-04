@@ -332,14 +332,14 @@ User can define keyword rules that override defaults:
 DATABASE_URL
 GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET
-GOOGLE_REDIRECT_URI=https://app.riva.systems/auth/callback
+GOOGLE_USER_REDIRECT_URI=https://app.riva.systems/auth/user/callback
+GOOGLE_ASSISTANT_REDIRECT_URI=https://app.riva.systems/auth/assistant/callback
 GOOGLE_PUBSUB_TOPIC=projects/{project}/topics/gmail-push
 TWILIO_ACCOUNT_SID
 TWILIO_AUTH_TOKEN
 TWILIO_PHONE_NUMBER
 ANTHROPIC_API_KEY
 NEXT_PUBLIC_APP_URL=https://app.riva.systems
-RIVA_EMAIL=riva@semprehealth.com
 SESSION_SECRET
 ```
 
