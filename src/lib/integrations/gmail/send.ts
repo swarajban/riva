@@ -2,7 +2,7 @@ import { google } from 'googleapis';
 import { getAuthenticatedClient, getAssistantForUser } from '@/lib/auth/google-oauth';
 import { config, getRandomEmailDelay } from '@/lib/config';
 import { db } from '@/lib/db';
-import { emailThreads } from '@/lib/db/schema';
+import { emailThreads, users, UserSettings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
@@ -60,8 +60,8 @@ function buildMimeMessage(options: {
   return lines.join('\r\n');
 }
 
-// Calculate when to send (respecting blackout hours)
-function calculateSendTime(immediate: boolean): Date {
+// Calculate when to send (respecting blackout hours in user's timezone)
+function calculateSendTime(immediate: boolean, timezone: string): Date {
   if (immediate) {
     return new Date();
   }
@@ -70,22 +70,22 @@ function calculateSendTime(immediate: boolean): Date {
   const delay = getRandomEmailDelay();
   let sendTime = new Date(now.getTime() + delay);
 
-  // Check if in blackout period (12am-5am PT)
-  const ptFormatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Los_Angeles',
+  // Check if in blackout period (12am-5am in user's timezone)
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
     hour: 'numeric',
     hour12: false,
   });
-  const ptHour = parseInt(ptFormatter.format(sendTime), 10);
+  const hour = parseInt(formatter.format(sendTime), 10);
 
-  if (ptHour >= config.timing.blackoutStartHour && ptHour < config.timing.blackoutEndHour) {
-    // Push to 5am PT
-    const ptDate = new Date(sendTime.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-    ptDate.setHours(config.timing.blackoutEndHour, 0, 0, 0);
+  if (hour >= config.timing.blackoutStartHour && hour < config.timing.blackoutEndHour) {
+    // Push to 5am in user's timezone
+    const localDate = new Date(sendTime.toLocaleString('en-US', { timeZone: timezone }));
+    localDate.setHours(config.timing.blackoutEndHour, 0, 0, 0);
 
     // Convert back to UTC
-    const ptOffset = sendTime.getTimezoneOffset();
-    sendTime = new Date(ptDate.getTime() - ptOffset * 60 * 1000);
+    const localOffset = sendTime.getTimezoneOffset();
+    sendTime = new Date(localDate.getTime() - localOffset * 60 * 1000);
 
     // Add random delay on top
     sendTime = new Date(sendTime.getTime() + getRandomEmailDelay());
@@ -99,8 +99,14 @@ export async function queueEmail(options: SendEmailOptions): Promise<string> {
   // Get the assistant for this user to determine the from email
   const assistant = await getAssistantForUser(options.userId);
 
+  // Fetch user's timezone for blackout hours
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, options.userId),
+  });
+  const timezone = (user?.settings as UserSettings)?.timezone || 'America/Los_Angeles';
+
   const messageId = generateMessageId();
-  const sendTime = calculateSendTime(options.immediate || false);
+  const sendTime = calculateSendTime(options.immediate || false, timezone);
 
   // Build references header
   let references = options.references || '';

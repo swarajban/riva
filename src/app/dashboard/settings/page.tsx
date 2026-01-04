@@ -78,6 +78,16 @@ export default function SettingsPage() {
     }
   }, [searchParams, router]);
 
+  // Auto-detect timezone on first load if still default
+  useEffect(() => {
+    if (settings && settings.timezone === 'America/Los_Angeles') {
+      const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (browserTimezone !== 'America/Los_Angeles') {
+        updateSetting('timezone', browserTimezone);
+      }
+    }
+  }, [settings?.timezone]);
+
   async function fetchSettings() {
     try {
       const res = await fetch('/api/settings');
@@ -220,6 +230,25 @@ export default function SettingsPage() {
               </a>
             </div>
           )}
+        </div>
+
+        {/* Timezone */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Timezone</h2>
+          <select
+            value={settings.timezone}
+            onChange={(e) => updateSetting('timezone', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {Intl.supportedValuesOf('timeZone').map((tz) => (
+              <option key={tz} value={tz}>
+                {tz.replace(/_/g, ' ')}
+              </option>
+            ))}
+          </select>
+          <p className="mt-2 text-sm text-gray-500">
+            Used for working hours and to avoid sending emails during your nighttime (12am-5am).
+          </p>
         </div>
 
         {/* Working Hours */}
