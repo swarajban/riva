@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { schedulingRequests, emailThreads, smsMessages } from '@/lib/db/schema';
 import { getCurrentUser } from '@/lib/auth/session';
-import { eq, asc, and } from 'drizzle-orm';
+import { eq, asc, desc, and } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { formatDateTimePT } from '@/lib/utils/time';
@@ -37,7 +37,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
   // Get email threads
   const emails = await db.query.emailThreads.findMany({
     where: eq(emailThreads.schedulingRequestId, id),
-    orderBy: asc(emailThreads.createdAt),
+    orderBy: desc(emailThreads.createdAt),
   });
 
   // Get SMS messages
