@@ -7,6 +7,7 @@
     "build": "drizzle-kit migrate && next build",
     "start": "next start",
     "lint": "eslint .",
+    "worker": "DOTENV_CONFIG_PATH=.env.local tsx -r dotenv/config src/lib/jobs/worker.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
