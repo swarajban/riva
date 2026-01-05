@@ -1,0 +1,39 @@
+{
+  "allowedTools": [
+    "Bash(git add:*)",
+    "Bash(git commit:*)",
+    "Bash(git push:*)",
+    "Bash(git pull:*)",
+    "Bash(git config:*)",
+    "Bash(git log:*)",
+    "Bash(git show:*)",
+    "Bash(git cat-file:*)",
+    "Bash(git --version:*)",
+    "Bash(git diff:*)",
+    "Bash(git status:*)",
+    "Bash(git branch:*)",
+    "Bash(git checkout:*)",
+    "Bash(git stash:*)",
+
+    "Bash(gh pr view:*)",
+    "Bash(gh pr diff:*)",
+    "Bash(gh pr checks:*)",
+    "Bash(gh pr merge:*)",
+    "Bash(gh pr create:*)",
+
+    "Bash(npm install:*)",
+    "Bash(npm uninstall:*)",
+    "Bash(npm run:*)",
+    "Bash(npm ls:*)",
+
+    "Bash(npx tsc:*)",
+    "Bash(npx tsx:*)",
+    "Bash(npx prettier:*)",
+    "Bash(npx drizzle-kit:*)",
+    "Bash(npx next:*)",
+
+    "Bash(docker exec:*)",
+
+    "WebSearch"
+  ]
+}
