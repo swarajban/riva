@@ -2,7 +2,7 @@ import { ToolDefinition, ToolResult, AgentContext } from '../types';
 import { queueEmail } from '@/lib/integrations/gmail/send';
 import { db } from '@/lib/db';
 import { emailThreads } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, isNotNull } from 'drizzle-orm';
 
 interface SendEmailInput {
   to: string[];
@@ -60,8 +60,12 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
 
   // Auto-resolve thread ID from scheduling request if not provided
   if (!threadId && context.schedulingRequestId) {
+    // Find an email with gmailThreadId set (filter out pending outbound emails without thread ID)
     const requestEmail = await db.query.emailThreads.findFirst({
-      where: eq(emailThreads.schedulingRequestId, context.schedulingRequestId),
+      where: and(
+        eq(emailThreads.schedulingRequestId, context.schedulingRequestId),
+        isNotNull(emailThreads.gmailThreadId)
+      ),
       orderBy: desc(emailThreads.createdAt),
     });
 
