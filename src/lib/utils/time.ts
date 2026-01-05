@@ -1,6 +1,34 @@
-// Time formatting utilities for Pacific Time
+// Time formatting utilities
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 
 const PT_TIMEZONE = 'America/Los_Angeles';
+
+// Create a Date from a date string and time string in a specific timezone
+// Handles DST automatically via IANA timezone
+export function createDateInTimezone(dateStr: string, timeStr: string, timezone: string): Date {
+  // dateStr: "2026-01-05", timeStr: "10:00"
+  // Creates a Date object representing that local time in the given timezone
+  return fromZonedTime(`${dateStr}T${timeStr}:00`, timezone);
+}
+
+// Create start of day (midnight) in a specific timezone
+export function startOfDayInTimezone(dateStr: string, timezone: string): Date {
+  return createDateInTimezone(dateStr, '00:00', timezone);
+}
+
+// Create end of day (23:59:59) in a specific timezone
+export function endOfDayInTimezone(dateStr: string, timezone: string): Date {
+  return fromZonedTime(`${dateStr}T23:59:59`, timezone);
+}
+
+// Get the date string (YYYY-MM-DD) for a Date in a specific timezone
+export function getDateStringInTimezone(date: Date, timezone: string): string {
+  const zoned = toZonedTime(date, timezone);
+  const year = zoned.getFullYear();
+  const month = String(zoned.getMonth() + 1).padStart(2, '0');
+  const day = String(zoned.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 // Format time in PT (e.g., "2:30" or "10am")
 export function formatTimePT(date: Date): string {

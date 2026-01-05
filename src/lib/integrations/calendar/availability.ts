@@ -1,5 +1,6 @@
 import { getFreeBusy } from './client';
 import { UserSettings } from '@/lib/db/schema';
+import { createDateInTimezone, getDateStringInTimezone } from '@/lib/utils/time';
 
 export interface TimeSlot {
   start: Date;
@@ -40,43 +41,26 @@ function isWorkingDay(date: Date, workingDays: string[]): boolean {
   return workingDays.some((day) => dayNameToNumber[day] === dayOfWeek);
 }
 
-// Get working hours for a specific day in PT timezone
+// Get working hours for a specific day in user's timezone
 function getWorkingHoursForDay(
   date: Date,
   workingHoursStart: string,
   workingHoursEnd: string,
+  timezone: string,
   preferredTimeRange?: { start: string; end: string }
 ): { start: Date; end: Date } {
   // Use preferred time range if specified, otherwise use default working hours
   const startTime = preferredTimeRange?.start || workingHoursStart;
   const endTime = preferredTimeRange?.end || workingHoursEnd;
 
-  const startMinutes = parseTimeToMinutes(startTime);
-  const endMinutes = parseTimeToMinutes(endTime);
+  // Get the date string in user's timezone
+  const dateStr = getDateStringInTimezone(date, timezone);
 
-  // Create dates in PT timezone
-  const ptDateStr = date.toLocaleDateString('en-US', {
-    timeZone: 'America/Los_Angeles',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
+  // Create dates in user's timezone (handles DST automatically)
+  const start = createDateInTimezone(dateStr, startTime, timezone);
+  const end = createDateInTimezone(dateStr, endTime, timezone);
 
-  const [month, day, year] = ptDateStr.split('/');
-  const startHour = Math.floor(startMinutes / 60);
-  const startMin = startMinutes % 60;
-  const endHour = Math.floor(endMinutes / 60);
-  const endMin = endMinutes % 60;
-
-  // Create PT date strings
-  const startPT = new Date(
-    `${year}-${month}-${day}T${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}:00-08:00`
-  );
-  const endPT = new Date(
-    `${year}-${month}-${day}T${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}:00-08:00`
-  );
-
-  return { start: startPT, end: endPT };
+  return { start, end };
 }
 
 // Merge overlapping busy intervals
@@ -206,6 +190,7 @@ export async function findAvailableSlots(options: FindSlotsOptions): Promise<Tim
       currentDate,
       workingHoursStart,
       workingHoursEnd,
+      settings.timezone,
       preferredTimeRange
     );
 

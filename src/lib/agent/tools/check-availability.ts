@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { users, UserSettings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { findAvailableSlots, TimeSlot } from '@/lib/integrations/calendar/availability';
-import { formatTimeSlot } from '@/lib/utils/time';
+import { formatTimeSlot, startOfDayInTimezone, endOfDayInTimezone } from '@/lib/utils/time';
 
 interface CheckAvailabilityInput {
   start_date: string;
@@ -64,9 +64,9 @@ export async function checkAvailability(input: unknown, context: AgentContext): 
 
   const settings = user.settings as UserSettings;
 
-  // Parse dates as PT timezone (explicit offset avoids UTC parsing issues)
-  const startDate = new Date(`${params.start_date}T00:00:00-08:00`);
-  const endDate = new Date(`${params.end_date}T23:59:59-08:00`);
+  // Parse dates in user's timezone (handles DST automatically)
+  const startDate = startOfDayInTimezone(params.start_date, settings.timezone);
+  const endDate = endOfDayInTimezone(params.end_date, settings.timezone);
 
   // Find slots
   const slots = await findAvailableSlots({
