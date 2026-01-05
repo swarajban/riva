@@ -40,13 +40,18 @@ export async function getThreadEmails(input: unknown, context: AgentContext): Pr
     });
 
     if (emails.length > 0) {
+      // Get the thread ID from the first email that has one
+      const threadId = emails.find((e) => e.gmailThreadId)?.gmailThreadId;
+
       return {
         success: true,
         data: {
           source: 'database',
+          gmailThreadId: threadId,
           emails: emails.map((e) => ({
             id: e.id,
             gmailMessageId: e.gmailMessageId,
+            gmailThreadId: e.gmailThreadId,
             direction: e.direction,
             from: e.fromEmail,
             fromName: e.fromName,
@@ -73,10 +78,12 @@ export async function getThreadEmails(input: unknown, context: AgentContext): Pr
         success: true,
         data: {
           source: 'gmail',
+          gmailThreadId: params.thread_id,
           emails: messages.map((m) => {
             const parsed = parseGmailMessage(m);
             return {
               gmailMessageId: parsed.gmailMessageId,
+              gmailThreadId: parsed.gmailThreadId,
               from: parsed.fromEmail,
               fromName: parsed.fromName,
               to: parsed.toEmails,
