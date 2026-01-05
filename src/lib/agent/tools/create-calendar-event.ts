@@ -10,6 +10,7 @@ interface CreateEventInput {
   end_time: string;
   attendees: { email: string; name?: string }[];
   include_zoom_link?: boolean;
+  location?: string;
 }
 
 export const createEventDef: ToolDefinition = {
@@ -45,6 +46,10 @@ export const createEventDef: ToolDefinition = {
       include_zoom_link: {
         type: 'boolean',
         description: 'Include Zoom personal meeting room link in description. Defaults to true.',
+      },
+      location: {
+        type: 'string',
+        description: 'Physical meeting location (e.g., office address, conference room). Optional - omit for virtual-only meetings.',
       },
     },
     required: ['title', 'start_time', 'end_time', 'attendees'],
@@ -84,6 +89,7 @@ export async function createEvent(input: unknown, context: AgentContext): Promis
     endTime: new Date(params.end_time),
     attendees: allAttendees,
     description: description || undefined,
+    location: params.location,
     timezone: settings.timezone,
   });
 

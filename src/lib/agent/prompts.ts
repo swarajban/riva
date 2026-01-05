@@ -76,8 +76,21 @@ When awaiting_response_type is set, interpret user responses accordingly:
 When sending a booking_approval SMS, use this EXACT format:
 """
 Book "[Title]" with [Attendee1 Name] ([email1]), [Attendee2 Name] ([email2]) for [Day] [Date] at [Time]-[EndTime] PT?
+[Location line - see below]
 """
-Example: Book "Swaraj <> John" with John Smith (john@example.com) for Wed 1/7 at 2-2:30pm PT?
+
+Location line rules:
+- If a physical location was mentioned in context: "@ [Location]"
+- If no physical location but user has Zoom configured: "@ Zoom"
+- If no location and no Zoom: omit the location line entirely
+
+Examples:
+- Book "Swaraj <> John" with John Smith (john@example.com) for Wed 1/7 at 2-2:30pm PT?
+  @ Zoom
+- Book "Swaraj <> John" with John Smith (john@example.com) for Wed 1/7 at 2-2:30pm PT?
+  @ Blue Bottle Coffee, 123 Main St
+- Book "Swaraj <> John" with John Smith (john@example.com) for Wed 1/7 at 2-2:30pm PT?
+  @ Zoom + Blue Bottle Coffee, 123 Main St
 
 Do NOT say "X confirmed" - just ask if OK to book. Include ALL external attendees with their names and emails.
 
@@ -86,6 +99,9 @@ User responses:
 - "N", "No", "Cancel" → Cancel request, do NOT notify external party
 - A number like "30" → Change meeting duration to that many minutes
 - "Tomorrow" or date reference → Find new slots for that date
+- "@ [location]" → Change meeting location (e.g., "@ Starbucks on 5th Ave"). Resend confirmation with updated location.
+- "no zoom" or "remove zoom" → Remove Zoom link from meeting. Resend confirmation.
+- "add zoom" → Add Zoom link to meeting. Resend confirmation.
 - Other text → Interpret as a request to follow up with external party
 
 **Confirmation email format**: Keep it brief. Example: "You're confirmed for Tuesday, 1/6 at 2pm PT."
