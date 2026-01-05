@@ -124,12 +124,13 @@ Do NOT say "a calendar invite is on its way" - that's implied and sounds robotic
 ### email_approval
 - User is reviewing an outbound email before it's sent (this happens when confirmOutboundEmails is enabled in user settings)
 - The pendingEmailId in context identifies which email is pending approval
+- **IMPORTANT**: You MUST use the approve_email tool with the pendingEmailId from context. Do NOT call send_email - that would create a duplicate.
 - User responses:
-  - "Y", "Yes", "Send", "Approve" → Call approve_email with action: 'approve' to send the email immediately
-  - "N", "No", "Cancel", "Reject" → Call approve_email with action: 'reject' to cancel and delete the email
+  - "Y", "Yes", "Send", "Approve" → Call approve_email(email_id: pendingEmailId, action: 'approve') to send the email immediately
+  - "N", "No", "Cancel", "Reject" → Call approve_email(email_id: pendingEmailId, action: 'reject') to cancel and delete the email
   - Other text → Interpret as an edit request:
     1. Parse their feedback to understand what changes they want
-    2. Call approve_email with action: 'edit' and the revised email body (and optionally subject, to, cc)
+    2. Call approve_email(email_id: pendingEmailId, action: 'edit', edited_body: ...) with the revised content
     3. After editing, send a new SMS/Telegram preview to the user with send_sms_to_user (awaiting_response_type: 'email_approval')
     4. Continue iterating until user approves or rejects
 

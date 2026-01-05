@@ -72,48 +72,99 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
             <div className="px-4 py-3 border-b border-gray-200">
               <h2 className="font-medium text-gray-900">Email Thread</h2>
             </div>
-            {emails.length === 0 ? (
-              <div className="p-4 text-gray-500 text-sm">No emails yet</div>
-            ) : (
-              <div className="divide-y divide-gray-100">
-                {emails.map((email) => {
-                  const toEmails = (email.toEmails as string[]) || [];
-                  const ccEmails = (email.ccEmails as string[]) || [];
+            {(() => {
+              // Find the most recent sent email timestamp to filter out stale pending emails
+              const mostRecentSentAt = emails
+                .filter((e) => e.sentAt)
+                .map((e) => e.sentAt!.getTime())
+                .sort((a, b) => b - a)[0];
+
+              // Filter out stale pending emails (pending emails created before the most recent sent email)
+              const visibleEmails = emails.filter((email) => {
+                const isPending = !email.sentAt && !email.receivedAt && !email.scheduledSendAt && email.direction === 'outbound';
+                if (isPending && mostRecentSentAt && email.createdAt && email.createdAt.getTime() < mostRecentSentAt) {
+                  return false; // Hide stale pending emails
+                }
+                return true;
+              });
+
+              return visibleEmails.length === 0 ? (
+                <div className="p-4 text-gray-500 text-sm">No emails yet</div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {visibleEmails.map((email) => {
+                    const toEmails = (email.toEmails as string[]) || [];
+                    const ccEmails = (email.ccEmails as string[]) || [];
+
+                    // Determine email status
+                    const isSent = !!email.sentAt;
+                    const isReceived = !!email.receivedAt;
+                    const isScheduled = !isSent && !!email.scheduledSendAt;
+                    const isPendingApproval = !isSent && !isReceived && !email.scheduledSendAt && email.direction === 'outbound';
+
                   return (
-                    <div key={email.id} className="p-4">
+                    <div
+                      key={email.id}
+                      className={`p-4 ${
+                        isPendingApproval
+                          ? 'border-2 border-dashed border-orange-300 bg-orange-50/50 m-2 rounded-lg'
+                          : ''
+                      }`}
+                    >
                       <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <span className="font-medium text-gray-900">{email.fromName || email.fromEmail}</span>
-                          <span className="text-gray-500 text-sm ml-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-medium ${isPendingApproval ? 'text-gray-600' : 'text-gray-900'}`}>
+                            {email.fromName || email.fromEmail}
+                          </span>
+                          <span className="text-gray-500 text-sm">
                             {email.direction === 'outbound' ? '(Assistant)' : ''}
                           </span>
+                          {isPendingApproval && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 rounded-full">
+                              Pending Approval
+                            </span>
+                          )}
+                          {isScheduled && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">
+                              Scheduled
+                            </span>
+                          )}
                         </div>
-                        <span className="text-xs text-gray-400 flex items-center">
-                          {email.sentAt || email.receivedAt ? (
+                        <span className="text-xs text-gray-400 flex items-center gap-1">
+                          {isSent || isReceived ? (
                             <LocalTimestamp date={(email.sentAt || email.receivedAt)!} />
-                          ) : email.scheduledSendAt ? (
+                          ) : isScheduled ? (
                             <>
-                              Scheduled: <LocalTimestamp date={email.scheduledSendAt} />
+                              <LocalTimestamp date={email.scheduledSendAt!} />
                               <SendNowButton emailId={email.id} />
                             </>
-                          ) : (
-                            ''
-                          )}
+                          ) : null}
                         </span>
                       </div>
                       {toEmails.length > 0 && (
-                        <div className="text-sm text-gray-500 mb-1">To: {toEmails.join(', ')}</div>
+                        <div className={`text-sm mb-1 ${isPendingApproval ? 'text-gray-400' : 'text-gray-500'}`}>
+                          To: {toEmails.join(', ')}
+                        </div>
                       )}
                       {ccEmails.length > 0 && (
-                        <div className="text-sm text-gray-500 mb-1">Cc: {ccEmails.join(', ')}</div>
+                        <div className={`text-sm mb-1 ${isPendingApproval ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Cc: {ccEmails.join(', ')}
+                        </div>
                       )}
-                      {email.subject && <div className="text-sm text-gray-600 mb-2">Subject: {email.subject}</div>}
-                      <div className="text-sm text-gray-800 whitespace-pre-wrap">{email.bodyText}</div>
+                      {email.subject && (
+                        <div className={`text-sm mb-2 ${isPendingApproval ? 'text-gray-500' : 'text-gray-600'}`}>
+                          Subject: {email.subject}
+                        </div>
+                      )}
+                      <div className={`text-sm whitespace-pre-wrap ${isPendingApproval ? 'text-gray-600' : 'text-gray-800'}`}>
+                        {email.bodyText}
+                      </div>
                     </div>
                   );
-                })}
-              </div>
-            )}
+                  })}
+                </div>
+              );
+            })()}
           </div>
 
           {/* SMS history */}
