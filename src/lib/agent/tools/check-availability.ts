@@ -64,8 +64,8 @@ export async function checkAvailability(input: unknown, context: AgentContext): 
 
   const settings = user.settings as UserSettings;
 
-  // Parse dates as PT timezone (add noon to avoid timezone day-shift issues)
-  const startDate = new Date(`${params.start_date}T12:00:00-08:00`);
+  // Parse dates as PT timezone (explicit offset avoids UTC parsing issues)
+  const startDate = new Date(`${params.start_date}T00:00:00-08:00`);
   const endDate = new Date(`${params.end_date}T23:59:59-08:00`);
 
   // Find slots
