@@ -39,7 +39,7 @@ export const sendEmailDef: ToolDefinition = {
       },
       thread_id: {
         type: 'string',
-        description: 'Gmail thread ID to reply to. If not provided, starts a new thread.',
+        description: 'Gmail thread ID to reply to. If not provided, auto-resolved from the scheduling request emails.',
       },
       immediate: {
         type: 'boolean',
@@ -56,11 +56,24 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
   // Get threading info if replying to a thread
   let inReplyTo: string | undefined;
   let references: string | undefined;
+  let threadId = params.thread_id;
 
-  if (params.thread_id) {
+  // Auto-resolve thread ID from scheduling request if not provided
+  if (!threadId && context.schedulingRequestId) {
+    const requestEmail = await db.query.emailThreads.findFirst({
+      where: eq(emailThreads.schedulingRequestId, context.schedulingRequestId),
+      orderBy: desc(emailThreads.createdAt),
+    });
+
+    if (requestEmail?.gmailThreadId) {
+      threadId = requestEmail.gmailThreadId;
+    }
+  }
+
+  if (threadId) {
     // Find the most recent message in this thread
     const recentMessage = await db.query.emailThreads.findFirst({
-      where: eq(emailThreads.gmailThreadId, params.thread_id),
+      where: eq(emailThreads.gmailThreadId, threadId),
       orderBy: desc(emailThreads.createdAt),
     });
 
@@ -79,7 +92,7 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
     body: params.body,
     inReplyTo,
     references,
-    threadId: params.thread_id,
+    threadId,
     schedulingRequestId: context.schedulingRequestId,
     immediate: params.immediate,
   });
