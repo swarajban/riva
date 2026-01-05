@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
         triggerType: 'sms',
         triggerContent: body,
         awaitingResponseType: awaitingNotification?.awaitingResponseType || undefined,
+        pendingEmailId: awaitingNotification?.pendingEmailId || undefined,
       });
     } catch (agentError) {
       logger.error('Agent error', agentError, { schedulingRequestId: awaitingNotification?.schedulingRequestId || undefined });

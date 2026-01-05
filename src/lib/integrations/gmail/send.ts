@@ -95,6 +95,42 @@ function calculateSendTime(immediate: boolean, timezone: string): Date {
   return sendTime;
 }
 
+// Queue an email for confirmation (won't be sent until approved)
+export async function queueEmailForConfirmation(options: Omit<SendEmailOptions, 'immediate'>): Promise<string> {
+  // Get the assistant for this user to determine the from email
+  const assistant = await getAssistantForUser(options.userId);
+
+  const messageId = generateMessageId();
+
+  // Build references header
+  let references = options.references || '';
+  if (options.inReplyTo && !references.includes(options.inReplyTo)) {
+    references = references ? `${references} ${options.inReplyTo}` : options.inReplyTo;
+  }
+
+  // Insert email record with null scheduledSendAt (won't be picked up by worker)
+  const [emailThread] = await db
+    .insert(emailThreads)
+    .values({
+      schedulingRequestId: options.schedulingRequestId,
+      gmailThreadId: options.threadId,
+      messageIdHeader: messageId,
+      inReplyTo: options.inReplyTo,
+      referencesHeader: references || null,
+      subject: options.subject,
+      fromEmail: assistant.email,
+      fromName: assistant.name || 'Riva',
+      toEmails: options.to,
+      ccEmails: options.cc || [],
+      bodyText: options.body,
+      direction: 'outbound',
+      scheduledSendAt: null, // Won't be picked up by worker until approved
+    })
+    .returning({ id: emailThreads.id });
+
+  return emailThread.id;
+}
+
 // Queue an email for sending
 export async function queueEmail(options: SendEmailOptions): Promise<string> {
   // Get the assistant for this user to determine the from email

@@ -14,13 +14,15 @@ export type AwaitingResponseType =
   | 'stale_slot_decision'
   | 'reschedule_approval'
   | 'cancel_approval'
-  | 'meeting_title';
+  | 'meeting_title'
+  | 'email_approval';
 
 export interface SendNotificationOptions {
   userId: string;
   body: string;
   schedulingRequestId?: string;
   awaitingResponseType?: AwaitingResponseType;
+  pendingEmailId?: string;
 }
 
 // Get Twilio client
@@ -62,7 +64,7 @@ export async function getProviderForUser(userId: string): Promise<{
 
 // Send notification via the appropriate provider
 export async function sendNotification(options: SendNotificationOptions): Promise<string> {
-  const { userId, body, schedulingRequestId, awaitingResponseType } = options;
+  const { userId, body, schedulingRequestId, awaitingResponseType, pendingEmailId } = options;
 
   const { provider, user } = await getProviderForUser(userId);
 
@@ -93,6 +95,7 @@ export async function sendNotification(options: SendNotificationOptions): Promis
       body,
       awaitingResponseType,
       providerMessageId,
+      pendingEmailId,
       sentAt: new Date(),
     })
     .returning({ id: notifications.id });

@@ -8,6 +8,7 @@ import { updateRequest, updateRequestDef } from './update-scheduling-request';
 import { lookupContact, lookupContactDef } from './lookup-contact';
 import { getThreadEmails, getThreadEmailsDef } from './get-thread-emails';
 import { linkThreads, linkThreadsDef } from './link-threads';
+import { approveEmail, approveEmailDef } from './approve-email';
 import { logger } from '@/lib/utils/logger';
 
 // All tool definitions
@@ -21,6 +22,7 @@ export const toolDefinitions: ToolDefinition[] = [
   lookupContactDef,
   getThreadEmailsDef,
   linkThreadsDef,
+  approveEmailDef,
 ];
 
 // Tool executor map
@@ -34,6 +36,7 @@ const toolExecutors: Record<ToolName, (input: unknown, context: AgentContext) =>
   lookup_contact: lookupContact,
   get_thread_emails: getThreadEmails,
   link_threads: linkThreads,
+  approve_email: approveEmail,
 };
 
 // Execute a tool by name

@@ -1,0 +1,4 @@
+ALTER TYPE "public"."awaiting_response_type" ADD VALUE 'email_approval';--> statement-breakpoint
+ALTER TABLE "users" ALTER COLUMN "settings" SET DEFAULT '{"defaultMeetingLengthMinutes":30,"zoomPersonalLink":null,"workingHoursStart":"10:00","workingHoursEnd":"17:00","workingDays":["mon","tue","wed","thu","fri"],"timezone":"America/Los_Angeles","bufferMinutes":15,"lookaheadDays":10,"numOptionsToSuggest":4,"maxSlotsPerDay":4,"keywordRules":[]}'::jsonb;--> statement-breakpoint
+ALTER TABLE "notifications" ADD COLUMN "pending_email_id" uuid;--> statement-breakpoint
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_pending_email_id_email_threads_id_fk" FOREIGN KEY ("pending_email_id") REFERENCES "public"."email_threads"("id") ON DELETE set null ON UPDATE no action;

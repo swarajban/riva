@@ -1,7 +1,8 @@
 import { ToolDefinition, ToolResult, AgentContext } from '../types';
-import { queueEmail } from '@/lib/integrations/gmail/send';
+import { queueEmail, queueEmailForConfirmation } from '@/lib/integrations/gmail/send';
+import { sendNotification } from '@/lib/integrations/notification/service';
 import { db } from '@/lib/db';
-import { emailThreads } from '@/lib/db/schema';
+import { emailThreads, users, UserSettings } from '@/lib/db/schema';
 import { eq, desc, and, isNotNull } from 'drizzle-orm';
 
 interface SendEmailInput {
@@ -62,8 +63,31 @@ export const sendEmailDef: ToolDefinition = {
   },
 };
 
+// Format email preview for SMS/Telegram confirmation
+function formatEmailPreview(to: string[], cc: string[] | undefined, subject: string, body: string): string {
+  const recipients = [...to];
+  if (cc && cc.length > 0) {
+    recipients.push(...cc.map((e) => `${e} (CC)`));
+  }
+
+  return `Email to send:
+To: ${recipients.join(', ')}
+Subject: ${subject}
+---
+${body}
+---
+Reply: Y to send, N to cancel, or describe changes`;
+}
+
 export async function sendEmail(input: unknown, context: AgentContext): Promise<ToolResult> {
   const params = input as SendEmailInput;
+
+  // Check if user has email confirmation enabled
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, context.userId),
+  });
+  const settings = user?.settings as UserSettings | undefined;
+  const confirmOutboundEmails = settings?.confirmOutboundEmails ?? false;
 
   // Get threading info if replying to a thread
   let inReplyTo: string | undefined;
@@ -105,12 +129,48 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
     }
   }
 
-  // Queue the email (use resolved subject for threading, fall back to agent-provided subject)
+  const finalSubject = resolvedSubject || params.subject;
+
+  // If email confirmation is enabled, queue for confirmation instead of sending
+  if (confirmOutboundEmails && !params.immediate) {
+    const emailId = await queueEmailForConfirmation({
+      userId: context.userId,
+      to: params.to,
+      cc: params.cc,
+      subject: finalSubject,
+      body: params.body,
+      inReplyTo,
+      references,
+      threadId,
+      schedulingRequestId: context.schedulingRequestId,
+    });
+
+    // Send SMS/Telegram notification asking for approval
+    const preview = formatEmailPreview(params.to, params.cc, finalSubject, params.body);
+    await sendNotification({
+      userId: context.userId,
+      body: preview,
+      schedulingRequestId: context.schedulingRequestId,
+      awaitingResponseType: 'email_approval',
+      pendingEmailId: emailId,
+    });
+
+    return {
+      success: true,
+      data: {
+        emailId,
+        awaitingConfirmation: true,
+        message: 'Email queued for user approval. User will receive SMS/Telegram preview and must approve before sending.',
+      },
+    };
+  }
+
+  // Normal flow: queue the email for sending
   const emailId = await queueEmail({
     userId: context.userId,
     to: params.to,
     cc: params.cc,
-    subject: resolvedSubject || params.subject,
+    subject: finalSubject,
     body: params.body,
     inReplyTo,
     references,

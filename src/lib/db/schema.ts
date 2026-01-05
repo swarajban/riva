@@ -21,6 +21,7 @@ export const awaitingResponseTypeEnum = pgEnum('awaiting_response_type', [
   'reschedule_approval',
   'cancel_approval',
   'meeting_title',
+  'email_approval',
 ]);
 
 export const notificationPreferenceEnum = pgEnum('notification_preference', ['sms', 'telegram']);
@@ -40,6 +41,7 @@ export type UserSettings = {
   numOptionsToSuggest: number;
   maxSlotsPerDay: number;
   keywordRules: KeywordRule[];
+  confirmOutboundEmails?: boolean;
 };
 
 export type KeywordRule = {
@@ -187,6 +189,7 @@ export const notifications = pgTable(
     body: text('body').notNull(),
     awaitingResponseType: awaitingResponseTypeEnum('awaiting_response_type'),
     providerMessageId: varchar('provider_message_id', { length: 255 }),
+    pendingEmailId: uuid('pending_email_id').references(() => emailThreads.id, { onDelete: 'set null' }),
     sentAt: timestamp('sent_at', { withTimezone: true }),
     receivedAt: timestamp('received_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

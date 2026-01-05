@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
         triggerType: 'sms', // Keep as 'sms' for prompt compatibility
         triggerContent: text,
         awaitingResponseType: awaitingNotification?.awaitingResponseType || undefined,
+        pendingEmailId: awaitingNotification?.pendingEmailId || undefined,
       });
     } catch (agentError) {
       logger.error('Agent error', agentError, { schedulingRequestId: awaitingNotification?.schedulingRequestId || undefined });

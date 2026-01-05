@@ -7,6 +7,7 @@ export interface AgentContext {
   triggerType: 'email' | 'sms';
   triggerContent: string;
   awaitingResponseType?: string;
+  pendingEmailId?: string;
 }
 
 export type ToolName =
@@ -18,7 +19,8 @@ export type ToolName =
   | 'update_scheduling_request'
   | 'lookup_contact'
   | 'get_thread_emails'
-  | 'link_threads';
+  | 'link_threads'
+  | 'approve_email';
 
 export interface ToolDefinition {
   name: ToolName;

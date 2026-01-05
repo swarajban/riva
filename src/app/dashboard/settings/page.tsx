@@ -15,6 +15,7 @@ interface UserSettings {
   numOptionsToSuggest: number;
   maxSlotsPerDay: number;
   keywordRules: KeywordRule[];
+  confirmOutboundEmails?: boolean;
 }
 
 interface KeywordRule {
@@ -360,6 +361,24 @@ export default function SettingsPage() {
           />
           <p className="mt-2 text-sm text-gray-500">
             This link will be included in calendar invites when video is enabled.
+          </p>
+        </div>
+
+        {/* Email Confirmation */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Email Confirmation</h2>
+          <label className="flex items-center space-x-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={settings.confirmOutboundEmails || false}
+              onChange={(e) => updateSetting('confirmOutboundEmails', e.target.checked)}
+              className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Confirm all outbound emails before sending</span>
+          </label>
+          <p className="mt-3 text-sm text-gray-500">
+            When enabled, you will receive a preview of every email via SMS/Telegram and must approve it before it is
+            sent. You can also request edits to the email content or recipients.
           </p>
         </div>
 
