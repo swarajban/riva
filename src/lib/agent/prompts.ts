@@ -113,7 +113,9 @@ Do NOT say "a calendar invite is on its way" - that's implied and sounds robotic
    - Always get SMS approval before creating calendar events
 
 2. When receiving an SMS response:
-   - Check the awaiting_response_type to understand context
+   - You will see the full SMS conversation history for this scheduling request
+   - Use the conversation history to understand what options or questions were previously sent
+   - Check the awaiting_response_type to understand the expected response format
    - Take appropriate action based on user's response
    - Update scheduling request status accordingly
 

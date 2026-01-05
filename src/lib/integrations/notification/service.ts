@@ -168,6 +168,24 @@ export async function clearAwaitingResponse(notificationId: string): Promise<voi
   await db.update(notifications).set({ awaitingResponseType: null }).where(eq(notifications.id, notificationId));
 }
 
+// Get conversation history for a scheduling request
+export async function getConversationHistory(
+  schedulingRequestId: string
+): Promise<Array<{ direction: 'inbound' | 'outbound'; body: string; createdAt: Date }>> {
+  const messages = await db.query.notifications.findMany({
+    where: eq(notifications.schedulingRequestId, schedulingRequestId),
+    orderBy: notifications.createdAt,
+  });
+
+  return messages
+    .filter((m) => m.body !== null && m.createdAt !== null)
+    .map((m) => ({
+      direction: m.direction,
+      body: m.body!,
+      createdAt: m.createdAt!,
+    }));
+}
+
 // Validate Twilio webhook signature
 export function validateTwilioSignature(signature: string, url: string, params: Record<string, string>): boolean {
   return Twilio.validateRequest(config.twilio.authToken, signature, url, params);

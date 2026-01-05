@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { AgentContext, ToolName } from './types';
 import { buildSystemPrompt } from './prompts';
 import { toolDefinitions, executeTool } from './tools';
+import { getConversationHistory } from '@/lib/integrations/notification/service';
 
 const anthropic = new Anthropic({
   apiKey: config.anthropic.apiKey,
@@ -49,7 +50,7 @@ export async function runAgent(context: AgentContext): Promise<void> {
   const messages: Anthropic.Messages.MessageParam[] = [
     {
       role: 'user',
-      content: buildInitialMessage(context),
+      content: await buildInitialMessage(context),
     },
   ];
 
@@ -127,7 +128,7 @@ export async function runAgent(context: AgentContext): Promise<void> {
   }
 }
 
-function buildInitialMessage(context: AgentContext): string {
+async function buildInitialMessage(context: AgentContext): Promise<string> {
   if (context.triggerType === 'email') {
     const emailData = JSON.parse(context.triggerContent);
     const attendeesInfo =
@@ -145,15 +146,27 @@ The attendees list above shows who the meeting should be scheduled with. Use the
   }
 
   if (context.triggerType === 'sms') {
+    // Fetch conversation history for this scheduling request
+    let conversationSection = '';
+    if (context.schedulingRequestId) {
+      const history = await getConversationHistory(context.schedulingRequestId);
+      if (history.length > 0) {
+        const formattedHistory = history
+          .map((msg) => `[${msg.direction === 'outbound' ? 'Assistant' : 'User'}]: ${msg.body}`)
+          .join('\n');
+        conversationSection = `\n\n## SMS conversation history:\n${formattedHistory}`;
+      }
+    }
+
     if (context.awaitingResponseType) {
       return `User responded to SMS. Their message: "${context.triggerContent}"
 
-Awaiting response type: ${context.awaitingResponseType}
+Awaiting response type: ${context.awaitingResponseType}${conversationSection}
 
 Process this response and take the appropriate action based on the response type.`;
     }
 
-    return `Received SMS from user: "${context.triggerContent}"
+    return `Received SMS from user: "${context.triggerContent}"${conversationSection}
 
 Process this message. Note: There was no pending SMS awaiting response, so this may be a new instruction or query.`;
   }
