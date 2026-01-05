@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { emailThreads, schedulingRequests } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { sendEmailNow } from '@/lib/integrations/gmail/send';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Send now error:', error);
+    logger.error('Send now error', error, { emailId: id });
     return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
   }
 }

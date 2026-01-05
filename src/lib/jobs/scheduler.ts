@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { schedulingRequests } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { config } from '@/lib/config';
+import { logger } from '@/lib/utils/logger';
 
 // Schedule SMS reminder for a request (sets reminder time on the request)
 export async function scheduleSmsReminder(schedulingRequestId: string): Promise<void> {
@@ -27,5 +28,5 @@ export async function scheduleRequestExpiration(schedulingRequestId: string): Pr
 export async function scheduleGmailWatchRenewal(assistantId: string): Promise<void> {
   // This is now a no-op - the worker will check gmailWatchExpiresAt on assistants
   // The expiration is set when setupGmailWatch is called
-  console.log(`Gmail watch renewal will be handled by worker for assistant ${assistantId}`);
+  logger.debug('Gmail watch renewal will be handled by worker', { assistantId });
 }

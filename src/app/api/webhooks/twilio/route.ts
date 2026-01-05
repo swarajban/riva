@@ -11,6 +11,7 @@ import { db } from '@/lib/db';
 import { schedulingRequests } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { config } from '@/lib/config';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!validateTwilioSignature(signature, url, params)) {
-        console.error('Invalid Twilio signature');
+        logger.error('Invalid Twilio signature');
         return new NextResponse('Forbidden', { status: 403 });
       }
     }
@@ -38,13 +39,13 @@ export async function POST(request: NextRequest) {
     const body = formData.get('Body') as string;
     const messageSid = formData.get('MessageSid') as string;
 
-    console.log('Twilio SMS received:', { from, messageSid });
+    logger.info('Twilio SMS received', { from, messageSid });
 
     // Find user by phone number (with assistant)
     const user = await findUserByNotificationId(from, 'twilio');
 
     if (!user) {
-      console.log('User not found for phone:', from);
+      logger.info('User not found for phone', { from });
       // Return TwiML response
       return new NextResponse(
         '<?xml version="1.0" encoding="UTF-8"?><Response><Message>Sorry, your phone number is not registered with Riva.</Message></Response>',
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user.assistantId) {
-      console.log('User has no assistant configured:', user.email);
+      logger.info('User has no assistant configured', { email: user.email });
       return new NextResponse(
         '<?xml version="1.0" encoding="UTF-8"?><Response><Message>Your account is not fully set up. Please configure your assistant first.</Message></Response>',
         { headers: { 'Content-Type': 'text/xml' } }
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
         awaitingResponseType: awaitingNotification?.awaitingResponseType || undefined,
       });
     } catch (agentError) {
-      console.error('Agent error:', agentError);
+      logger.error('Agent error', agentError, { schedulingRequestId: awaitingNotification?.schedulingRequestId || undefined });
       // Update request with error if we have one
       if (awaitingNotification?.schedulingRequestId) {
         await db
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'text/xml' },
     });
   } catch (error) {
-    console.error('Twilio webhook error:', error);
+    logger.error('Twilio webhook error', error);
     return new NextResponse(
       '<?xml version="1.0" encoding="UTF-8"?><Response><Message>An error occurred. Please try again.</Message></Response>',
       { headers: { 'Content-Type': 'text/xml' }, status: 500 }

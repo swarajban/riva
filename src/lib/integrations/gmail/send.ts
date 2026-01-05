@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { emailThreads, users, UserSettings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import { logger } from '@/lib/utils/logger';
 
 interface SendEmailOptions {
   userId: string;
@@ -162,7 +163,7 @@ export async function sendEmailNow(userId: string, emailThreadId: string): Promi
   // Check if already sent (epoch timestamp = claimed but not sent yet)
   const epochTime = new Date(0).getTime();
   if (emailRecord.sentAt && emailRecord.sentAt.getTime() !== epochTime) {
-    console.log(`Email ${emailThreadId} already sent, skipping`);
+    logger.info('Email already sent, skipping', { emailId: emailThreadId });
     return;
   }
 
@@ -205,9 +206,9 @@ export async function sendEmailNow(userId: string, emailThreadId: string): Promi
     // The In-Reply-To and References headers will still thread correctly for recipients
     const gaxiosError = error as { code?: number };
     if (gaxiosError.code === 404 && emailRecord.gmailThreadId) {
-      console.log(
-        `Thread ${emailRecord.gmailThreadId} not found in sender's mailbox, sending without threadId`
-      );
+      logger.info('Thread not found in sender mailbox, sending without threadId', {
+        gmailThreadId: emailRecord.gmailThreadId,
+      });
       response = await gmail.users.messages.send({
         userId: 'me',
         requestBody: {

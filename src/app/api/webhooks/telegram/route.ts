@@ -10,12 +10,13 @@ import { runAgent } from '@/lib/agent';
 import { db } from '@/lib/db';
 import { schedulingRequests } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    console.log('Telegram update received:', JSON.stringify(body));
+    logger.debug('Telegram update received', { body });
 
     // Parse the Telegram update
     const update = parseTelegramUpdate(body);
@@ -27,11 +28,11 @@ export async function POST(request: NextRequest) {
 
     const { chatId, text, messageId } = update;
 
-    console.log('Telegram message:', { chatId, text, messageId });
+    logger.info('Telegram message received', { chatId, messageId });
 
     // Handle /start command - send welcome message
     if (text.startsWith('/start')) {
-      console.log(`User started bot with chat ID: ${chatId}`);
+      logger.info('User started Telegram bot', { chatId });
       await sendTelegramMessage(chatId, `You're ready to receive meeting confirmation notifications from Riva.`);
       return NextResponse.json({ status: 'ok', chatId });
     }
@@ -40,13 +41,13 @@ export async function POST(request: NextRequest) {
     const user = await findUserByNotificationId(chatId, 'telegram');
 
     if (!user) {
-      console.log('User not found for Telegram chat ID:', chatId);
+      logger.info('User not found for Telegram chat ID', { chatId });
       // Optionally send a message back - for now just acknowledge
       return NextResponse.json({ status: 'user_not_found' });
     }
 
     if (!user.assistantId) {
-      console.log('User has no assistant configured:', user.email);
+      logger.info('User has no assistant configured', { email: user.email });
       await sendTelegramMessage(chatId, 'Your account is not fully set up. Please configure your assistant first.');
       return NextResponse.json({ status: 'no_assistant' });
     }
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
         awaitingResponseType: awaitingNotification?.awaitingResponseType || undefined,
       });
     } catch (agentError) {
-      console.error('Agent error:', agentError);
+      logger.error('Agent error', agentError, { schedulingRequestId: awaitingNotification?.schedulingRequestId || undefined });
       // Update request with error if we have one
       if (awaitingNotification?.schedulingRequestId) {
         await db
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ status: 'ok' });
   } catch (error) {
-    console.error('Telegram webhook error:', error);
+    logger.error('Telegram webhook error', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

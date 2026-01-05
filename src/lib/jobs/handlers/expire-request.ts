@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { schedulingRequests, smsMessages } from '@/lib/db/schema';
 import { eq, and, isNotNull } from 'drizzle-orm';
+import { logger } from '@/lib/utils/logger';
 
 interface ExpireRequestJobData {
   schedulingRequestId: string;
@@ -15,14 +16,14 @@ export async function handleExpireRequest(data: ExpireRequestJobData): Promise<v
   });
 
   if (!request) {
-    console.log(`Request ${schedulingRequestId} not found, skipping expiration`);
+    logger.info('Request not found, skipping expiration', { schedulingRequestId });
     return;
   }
 
   // Only expire if still in a pending state
   const pendingStates = ['pending', 'proposing', 'awaiting_confirmation'];
   if (!pendingStates.includes(request.status)) {
-    console.log(`Request ${schedulingRequestId} is ${request.status}, skipping expiration`);
+    logger.info('Request not in pending state, skipping expiration', { schedulingRequestId, status: request.status });
     return;
   }
 
@@ -43,5 +44,5 @@ export async function handleExpireRequest(data: ExpireRequestJobData): Promise<v
     })
     .where(and(eq(smsMessages.schedulingRequestId, schedulingRequestId), isNotNull(smsMessages.awaitingResponseType)));
 
-  console.log(`Request ${schedulingRequestId} expired`);
+  logger.info('Request expired', { schedulingRequestId });
 }

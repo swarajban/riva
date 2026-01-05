@@ -4,6 +4,7 @@ import { config } from '@/lib/config';
 import { db } from '@/lib/db';
 import { assistants } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from '@/lib/utils/logger';
 
 // Note: config is still imported for pubsubTopic in setupGmailWatch
 
@@ -85,7 +86,7 @@ export async function getHistory(startHistoryId: string, assistantId: string): P
   } catch (error: unknown) {
     // If historyId is too old, we need to do a full sync
     if (error instanceof Error && (error as { code?: number }).code === 404) {
-      console.warn('History ID too old, requires full sync');
+      logger.warn('History ID too old, requires full sync', { startHistoryId });
       return [];
     }
     throw error;

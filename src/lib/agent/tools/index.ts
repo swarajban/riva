@@ -8,6 +8,7 @@ import { updateRequest, updateRequestDef } from './update-scheduling-request';
 import { lookupContact, lookupContactDef } from './lookup-contact';
 import { getThreadEmails, getThreadEmailsDef } from './get-thread-emails';
 import { linkThreads, linkThreadsDef } from './link-threads';
+import { logger } from '@/lib/utils/logger';
 
 // All tool definitions
 export const toolDefinitions: ToolDefinition[] = [
@@ -49,7 +50,7 @@ export async function executeTool(toolName: ToolName, input: unknown, context: A
   try {
     return await executor(input, context);
   } catch (error) {
-    console.error(`Tool ${toolName} error:`, error);
+    logger.error('Tool execution error', error, { tool: toolName });
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Tool execution failed',

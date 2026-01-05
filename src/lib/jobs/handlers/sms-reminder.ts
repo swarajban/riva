@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { schedulingRequests, notifications } from '@/lib/db/schema';
 import { eq, and, isNotNull } from 'drizzle-orm';
 import { sendNotification } from '@/lib/integrations/notification/service';
+import { logger } from '@/lib/utils/logger';
 
 interface SmsReminderJobData {
   schedulingRequestId: string;
@@ -16,13 +17,13 @@ export async function handleSmsReminder(data: SmsReminderJobData): Promise<void>
   });
 
   if (!request) {
-    console.log(`Request ${schedulingRequestId} not found, skipping reminder`);
+    logger.info('Request not found, skipping reminder', { schedulingRequestId });
     return;
   }
 
   // Only send reminder if still awaiting confirmation
   if (request.status !== 'awaiting_confirmation') {
-    console.log(`Request ${schedulingRequestId} is ${request.status}, skipping reminder`);
+    logger.info('Request not awaiting confirmation, skipping reminder', { schedulingRequestId, status: request.status });
     return;
   }
 
@@ -36,7 +37,7 @@ export async function handleSmsReminder(data: SmsReminderJobData): Promise<void>
   });
 
   if (!awaitingNotification) {
-    console.log(`No awaiting notification for request ${schedulingRequestId}, skipping reminder`);
+    logger.info('No awaiting notification, skipping reminder', { schedulingRequestId });
     return;
   }
 
@@ -57,5 +58,5 @@ export async function handleSmsReminder(data: SmsReminderJobData): Promise<void>
     })
     .where(eq(schedulingRequests.id, schedulingRequestId));
 
-  console.log(`Reminder sent for request ${schedulingRequestId}`);
+  logger.info('Reminder sent', { schedulingRequestId });
 }

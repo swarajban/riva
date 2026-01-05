@@ -5,6 +5,7 @@ import { config } from '@/lib/config';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   // Handle OAuth errors
   if (error) {
-    console.error('OAuth error:', error);
+    logger.error('OAuth error', undefined, { error });
     return NextResponse.redirect(new URL('/auth/user/login?error=oauth_failed', config.appUrl));
   }
 
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       // Auto-create new user
-      console.log('Creating new user:', userInfo.email);
+      logger.info('Creating new user', { email: userInfo.email });
       const [newUser] = await db
         .insert(users)
         .values({
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
     // Redirect to dashboard
     return NextResponse.redirect(new URL('/dashboard', config.appUrl));
   } catch (error) {
-    console.error('OAuth callback error:', error);
+    logger.error('OAuth callback error', error);
     return NextResponse.redirect(new URL('/auth/user/login?error=callback_failed', config.appUrl));
   }
 }

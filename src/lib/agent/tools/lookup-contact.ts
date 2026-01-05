@@ -1,6 +1,7 @@
 import { google } from 'googleapis';
 import { ToolDefinition, ToolResult, AgentContext } from '../types';
 import { getAuthenticatedClient } from '@/lib/auth/google-oauth';
+import { logger } from '@/lib/utils/logger';
 
 interface LookupContactInput {
   email: string;
@@ -67,7 +68,7 @@ export async function lookupContact(input: unknown, context: AgentContext): Prom
       },
     };
   } catch (error) {
-    console.error('Contact lookup error:', error);
+    logger.error('Contact lookup error', error, { email: params.email });
     return {
       success: true,
       data: {

@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { notifications, users } from '@/lib/db/schema';
 import { eq, and, isNotNull, desc } from 'drizzle-orm';
 import { sendTelegramMessage } from '../telegram/client';
+import { logger } from '@/lib/utils/logger';
 
 export type NotificationProvider = 'twilio' | 'telegram';
 
@@ -46,7 +47,7 @@ export async function getProviderForUser(userId: string): Promise<{
   // Check if user has required credentials for their preference
   if (preference === 'telegram') {
     if (!user.telegramChatId) {
-      console.warn(`User ${userId} prefers Telegram but has no chat ID, falling back to SMS`);
+      logger.warn('User prefers Telegram but has no chat ID, falling back to SMS', { userId });
       return { provider: 'twilio', user };
     }
     return { provider: 'telegram', user };

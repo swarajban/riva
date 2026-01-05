@@ -8,6 +8,8 @@ services:
     startCommand: npx pm2-runtime ecosystem.config.js
     healthCheckPath: /api/health
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: NODE_VERSION
         value: "20"
       - key: DATABASE_URL

@@ -5,6 +5,7 @@ import { sendEmailNow } from '@/lib/integrations/gmail/send';
 import { setupGmailWatch } from '@/lib/integrations/gmail/client';
 import { handleSmsReminder } from './handlers/sms-reminder';
 import { handleExpireRequest } from './handlers/expire-request';
+import { logger } from '@/lib/utils/logger';
 
 const POLL_INTERVAL_MS = 10_000; // 10 seconds
 
@@ -21,7 +22,7 @@ async function processPendingEmails(): Promise<void> {
   });
 
   for (const email of pendingEmails) {
-    console.log(`Processing pending email: ${email.id}`);
+    logger.info('Processing pending email', { emailId: email.id });
 
     try {
       // Atomically claim the email by setting sentAt to a placeholder
@@ -38,13 +39,13 @@ async function processPendingEmails(): Promise<void> {
         .returning({ id: emailThreads.id });
 
       if (claimed.length === 0) {
-        console.log(`Email ${email.id} already claimed, skipping`);
+        logger.info('Email already claimed, skipping', { emailId: email.id });
         continue;
       }
 
       // Get the user from the scheduling request
       if (!email.schedulingRequestId) {
-        console.error(`Email ${email.id} has no scheduling request, cannot send`);
+        logger.error('Email has no scheduling request, cannot send', undefined, { emailId: email.id });
         await db.update(emailThreads).set({ sentAt: null }).where(eq(emailThreads.id, email.id));
         continue;
       }
@@ -54,7 +55,7 @@ async function processPendingEmails(): Promise<void> {
       });
 
       if (!request) {
-        console.error(`Scheduling request ${email.schedulingRequestId} not found`);
+        logger.error('Scheduling request not found', undefined, { schedulingRequestId: email.schedulingRequestId });
         await db.update(emailThreads).set({ sentAt: null }).where(eq(emailThreads.id, email.id));
         continue;
       }
@@ -70,9 +71,10 @@ async function processPendingEmails(): Promise<void> {
       });
 
       if (newerInbound) {
-        console.log(
-          `Email ${email.id} cancelled at send time - newer inbound email ${newerInbound.id} arrived after it was queued`
-        );
+        logger.info('Email cancelled at send time - newer inbound email arrived after it was queued', {
+          emailId: email.id,
+          newerInboundId: newerInbound.id,
+        });
         await db
           .update(emailThreads)
           .set({
@@ -85,9 +87,9 @@ async function processPendingEmails(): Promise<void> {
       }
 
       await sendEmailNow(request.userId, email.id);
-      console.log(`Email sent: ${email.id}`);
+      logger.info('Email sent', { emailId: email.id });
     } catch (error) {
-      console.error(`Failed to send email ${email.id}:`, error);
+      logger.error('Failed to send email', error, { emailId: email.id });
       // Reset sentAt on failure so it can be retried
       await db.update(emailThreads).set({ sentAt: null }).where(eq(emailThreads.id, email.id));
     }
@@ -108,13 +110,13 @@ async function processSmsReminders(): Promise<void> {
   });
 
   for (const request of pendingReminders) {
-    console.log(`Processing SMS reminder for request: ${request.id}`);
+    logger.info('Processing SMS reminder', { schedulingRequestId: request.id });
 
     try {
       await handleSmsReminder({ schedulingRequestId: request.id });
-      console.log(`SMS reminder sent for request: ${request.id}`);
+      logger.info('SMS reminder sent', { schedulingRequestId: request.id });
     } catch (error) {
-      console.error(`Failed to send SMS reminder for ${request.id}:`, error);
+      logger.error('Failed to send SMS reminder', error, { schedulingRequestId: request.id });
     }
   }
 }
@@ -132,13 +134,13 @@ async function processExpiredRequests(): Promise<void> {
   });
 
   for (const request of expiredRequests) {
-    console.log(`Processing expired request: ${request.id}`);
+    logger.info('Processing expired request', { schedulingRequestId: request.id });
 
     try {
       await handleExpireRequest({ schedulingRequestId: request.id });
-      console.log(`Request expired: ${request.id}`);
+      logger.info('Request expired', { schedulingRequestId: request.id });
     } catch (error) {
-      console.error(`Failed to expire request ${request.id}:`, error);
+      logger.error('Failed to expire request', error, { schedulingRequestId: request.id });
     }
   }
 }
@@ -152,13 +154,13 @@ async function processGmailWatchRenewals(): Promise<void> {
   });
 
   for (const assistant of expiringAssistants) {
-    console.log(`Renewing Gmail watch for assistant: ${assistant.email}`);
+    logger.info('Renewing Gmail watch', { assistantEmail: assistant.email, assistantId: assistant.id });
 
     try {
       await setupGmailWatch(assistant.id);
-      console.log(`Gmail watch renewed for: ${assistant.email}`);
+      logger.info('Gmail watch renewed', { assistantEmail: assistant.email });
     } catch (error) {
-      console.error(`Failed to renew Gmail watch for ${assistant.email}:`, error);
+      logger.error('Failed to renew Gmail watch', error, { assistantEmail: assistant.email });
     }
   }
 }
@@ -171,14 +173,13 @@ async function pollOnce(): Promise<void> {
     await processExpiredRequests();
     await processGmailWatchRenewals();
   } catch (error) {
-    console.error('Worker poll error:', error);
+    logger.error('Worker poll error', error);
   }
 }
 
 // Start the worker
 export async function startWorker(): Promise<void> {
-  console.log('Starting polling worker...');
-  console.log(`Poll interval: ${POLL_INTERVAL_MS}ms`);
+  logger.info('Starting polling worker', { pollIntervalMs: POLL_INTERVAL_MS });
 
   // Run immediately on start
   await pollOnce();
@@ -186,8 +187,8 @@ export async function startWorker(): Promise<void> {
   // Then poll on interval
   setInterval(pollOnce, POLL_INTERVAL_MS);
 
-  console.log('Worker started');
+  logger.info('Worker started');
 }
 
 // Run if executed directly
-startWorker().catch(console.error);
+startWorker().catch((error) => logger.error('Worker failed to start', error));

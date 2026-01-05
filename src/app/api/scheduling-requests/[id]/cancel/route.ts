@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { schedulingRequests, users } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { cancelCalendarEvent } from '@/lib/integrations/calendar/client';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             schedulingRequest.googleCalendarEventId
           );
         } catch (calendarError) {
-          console.error('Failed to cancel calendar event:', calendarError);
+          logger.error('Failed to cancel calendar event', calendarError, { schedulingRequestId: id });
           // Continue with status update even if calendar deletion fails
         }
       }
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Cancel scheduling request error:', error);
+    logger.error('Cancel scheduling request error', error, { schedulingRequestId: id });
     return NextResponse.json({ error: 'Failed to cancel scheduling request' }, { status: 500 });
   }
 }

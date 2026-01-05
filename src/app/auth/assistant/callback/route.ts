@@ -10,6 +10,7 @@ import { setupGmailWatch } from '@/lib/integrations/gmail/client';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   // Handle OAuth errors
   if (error) {
-    console.error('OAuth error:', error);
+    logger.error('OAuth error', undefined, { error });
     return NextResponse.redirect(new URL('/dashboard/settings?error=oauth_failed', config.appUrl));
   }
 
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      console.error('User not found:', userId);
+      logger.error('User not found', undefined, { userId });
       return NextResponse.redirect(new URL('/dashboard/settings?error=user_not_found', config.appUrl));
     }
 
@@ -68,16 +69,16 @@ export async function GET(request: NextRequest) {
     // Set up Gmail watch for push notifications
     try {
       await setupGmailWatch(assistantId);
-      console.log('Gmail watch setup complete for assistant:', assistantId);
+      logger.info('Gmail watch setup complete', { assistantId });
     } catch (watchError) {
       // Non-fatal - user can still use the app, just won't get push notifications
-      console.error('Failed to setup Gmail watch:', watchError);
+      logger.error('Failed to setup Gmail watch', watchError, { assistantId });
     }
 
     // Redirect to settings with success
     return NextResponse.redirect(new URL('/dashboard/settings?success=assistant_connected', config.appUrl));
   } catch (error) {
-    console.error('OAuth callback error:', error);
+    logger.error('OAuth callback error', error);
     return NextResponse.redirect(new URL('/dashboard/settings?error=callback_failed', config.appUrl));
   }
 }

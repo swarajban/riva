@@ -10,6 +10,7 @@ import {
   parseHeaders,
 } from '@/lib/integrations/gmail/client';
 import { runAgent } from '@/lib/agent';
+import { logger } from '@/lib/utils/logger';
 
 // Gmail Pub/Sub push notification format
 interface PubSubMessage {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     const data = Buffer.from(body.message.data, 'base64').toString('utf-8');
     const notification: GmailNotification = JSON.parse(data);
 
-    console.log('Gmail notification received:', notification);
+    logger.info('Gmail notification received', { email: notification.emailAddress, historyId: notification.historyId });
 
     // Find assistant by email
     const assistant = await db.query.assistants.findFirst({
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!assistant) {
-      console.log('Assistant not found for email:', notification.emailAddress);
+      logger.info('Assistant not found for email', { email: notification.emailAddress });
       return NextResponse.json({ status: 'assistant_not_found' });
     }
 
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      console.log('No user found for assistant:', assistant.email);
+      logger.info('No user found for assistant', { assistantEmail: assistant.email });
       return NextResponse.json({ status: 'user_not_found' });
     }
 
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (existing) {
-          console.log('Message already processed:', messageId);
+          logger.debug('Message already processed', { messageId });
           continue;
         }
 
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
 
         // Check if assistant is addressed
         if (!isAssistantAddressed(headers, assistant.email)) {
-          console.log('Assistant not addressed in message:', messageId);
+          logger.debug('Assistant not addressed in message', { messageId });
           continue;
         }
 
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
 
         // Check if this is from the assistant (ignore our own sent messages)
         if (parsed.fromEmail.toLowerCase() === assistant.email.toLowerCase()) {
-          console.log('Message from assistant, ignoring:', messageId);
+          logger.debug('Message from assistant, ignoring', { messageId });
           continue;
         }
 
@@ -188,9 +189,10 @@ export async function POST(request: NextRequest) {
           .returning({ id: emailThreads.id });
 
         if (cancelledEmails.length > 0) {
-          console.log(
-            `Cancelled ${cancelledEmails.length} pending outbound email(s) for request ${schedulingRequestId} due to new inbound`
-          );
+          logger.info('Cancelled pending outbound emails due to new inbound', {
+            count: cancelledEmails.length,
+            schedulingRequestId,
+          });
         }
 
         // Get the scheduling request to pass attendees to agent
@@ -217,7 +219,7 @@ export async function POST(request: NextRequest) {
             }),
           });
         } catch (agentError) {
-          console.error('Agent error:', agentError);
+          logger.error('Agent error', agentError, { schedulingRequestId });
           // Update request with error
           await db
             .update(schedulingRequests)
@@ -233,7 +235,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ status: 'ok' });
   } catch (error) {
-    console.error('Gmail webhook error:', error);
+    logger.error('Gmail webhook error', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -7,6 +7,7 @@ import { AgentContext, ToolName } from './types';
 import { buildSystemPrompt } from './prompts';
 import { toolDefinitions, executeTool } from './tools';
 import { getConversationHistory } from '@/lib/integrations/notification/service';
+import { logger } from '@/lib/utils/logger';
 
 const anthropic = new Anthropic({
   apiKey: config.anthropic.apiKey,
@@ -15,7 +16,7 @@ const anthropic = new Anthropic({
 const MAX_ITERATIONS = 10;
 
 export async function runAgent(context: AgentContext): Promise<void> {
-  console.log('Running agent with context:', {
+  logger.info('Running agent', {
     userId: context.userId,
     assistantId: context.assistantId,
     triggerType: context.triggerType,
@@ -58,7 +59,7 @@ export async function runAgent(context: AgentContext): Promise<void> {
 
   while (iterations < MAX_ITERATIONS) {
     iterations++;
-    console.log(`Agent iteration ${iterations}`);
+    logger.info('Agent iteration', { iteration: iterations });
 
     // Call Claude with optional extended thinking
     const response = await anthropic.messages.create({
@@ -75,14 +76,14 @@ export async function runAgent(context: AgentContext): Promise<void> {
       }),
     });
 
-    console.log('Agent response:', {
+    logger.info('Agent response', {
       stopReason: response.stop_reason,
       contentBlocks: response.content.length,
     });
 
     // Check if we're done
     if (response.stop_reason === 'end_turn') {
-      console.log('Agent completed naturally');
+      logger.info('Agent completed naturally');
       break;
     }
 
@@ -95,11 +96,11 @@ export async function runAgent(context: AgentContext): Promise<void> {
 
       for (const block of assistantContent) {
         if (block.type === 'tool_use') {
-          console.log(`Executing tool: ${block.name}`, block.input);
+          logger.info('Executing tool', { tool: block.name, input: block.input });
 
           const result = await executeTool(block.name as ToolName, block.input, context);
 
-          console.log(`Tool result:`, result);
+          logger.info('Tool result', { tool: block.name, result });
 
           // Critical tool failure - stop execution entirely
           if (!result.success && block.name === 'send_sms_to_user') {
@@ -118,13 +119,13 @@ export async function runAgent(context: AgentContext): Promise<void> {
       messages.push({ role: 'user', content: toolResults });
     } else {
       // Unknown stop reason
-      console.warn('Unknown stop reason:', response.stop_reason);
+      logger.warn('Unknown stop reason', { stopReason: response.stop_reason });
       break;
     }
   }
 
   if (iterations >= MAX_ITERATIONS) {
-    console.warn('Agent hit max iterations limit');
+    logger.warn('Agent hit max iterations limit', { maxIterations: MAX_ITERATIONS });
   }
 }
 
