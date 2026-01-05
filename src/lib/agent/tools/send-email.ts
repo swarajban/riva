@@ -13,6 +13,18 @@ interface SendEmailInput {
   immediate?: boolean;
 }
 
+/**
+ * Normalize subject for reply threading.
+ * Strips existing Re:/Fwd:/[Ext] prefixes and adds a single "Re: " prefix.
+ */
+function normalizeReplySubject(originalSubject: string): string {
+  // Remove existing Re:/RE:/Fwd:/FWD:/[Ext] prefixes
+  const base = originalSubject
+    .replace(/^(\s*(re:|fwd?:|\[ext\])\s*)+/gi, '')
+    .trim();
+  return `Re: ${base}`;
+}
+
 export const sendEmailDef: ToolDefinition = {
   name: 'send_email',
   description: `Queue an email to be sent. By default, emails are delayed 5-15 minutes to appear more human. Use immediate: true only for confirmation emails after SMS approval.`,
@@ -57,8 +69,9 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
   let inReplyTo: string | undefined;
   let references: string | undefined;
   let threadId = params.thread_id;
+  let resolvedSubject: string | undefined;
 
-  // Auto-resolve thread ID from scheduling request if not provided
+  // Auto-resolve thread ID and subject from scheduling request if not provided
   if (!threadId && context.schedulingRequestId) {
     // Find an email with gmailThreadId set (filter out pending outbound emails without thread ID)
     const requestEmail = await db.query.emailThreads.findFirst({
@@ -71,6 +84,11 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
 
     if (requestEmail?.gmailThreadId) {
       threadId = requestEmail.gmailThreadId;
+
+      // Auto-resolve subject for proper threading (Gmail uses subject + headers for threading)
+      if (requestEmail.subject) {
+        resolvedSubject = normalizeReplySubject(requestEmail.subject);
+      }
     }
   }
 
@@ -87,12 +105,12 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
     }
   }
 
-  // Queue the email
+  // Queue the email (use resolved subject for threading, fall back to agent-provided subject)
   const emailId = await queueEmail({
     userId: context.userId,
     to: params.to,
     cc: params.cc,
-    subject: params.subject,
+    subject: resolvedSubject || params.subject,
     body: params.body,
     inReplyTo,
     references,
