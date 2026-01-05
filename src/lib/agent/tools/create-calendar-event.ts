@@ -1,7 +1,7 @@
 import { ToolDefinition, ToolResult, AgentContext } from '../types';
 import { createCalendarEvent } from '@/lib/integrations/calendar/client';
 import { db } from '@/lib/db';
-import { schedulingRequests, users } from '@/lib/db/schema';
+import { schedulingRequests, users, UserSettings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 interface CreateEventInput {
@@ -63,7 +63,7 @@ export async function createEvent(input: unknown, context: AgentContext): Promis
     return { success: false, error: 'User not found' };
   }
 
-  const settings = user.settings as { zoomPersonalLink?: string };
+  const settings = user.settings as UserSettings;
   const includeZoom = params.include_zoom_link !== false;
 
   // Build description
@@ -84,6 +84,7 @@ export async function createEvent(input: unknown, context: AgentContext): Promis
     endTime: new Date(params.end_time),
     attendees: allAttendees,
     description: description || undefined,
+    timezone: settings.timezone,
   });
 
   // Update scheduling request

@@ -30,6 +30,79 @@ export function getDateStringInTimezone(date: Date, timezone: string): string {
   return `${year}-${month}-${day}`;
 }
 
+// Format time in a specific timezone (e.g., "2:30" or "10")
+export function formatTimeInTimezone(date: Date, timezone: string): string {
+  const hours = parseInt(
+    date.toLocaleString('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hour12: false,
+    })
+  );
+
+  const minutes = parseInt(
+    date.toLocaleString('en-US', {
+      timeZone: timezone,
+      minute: '2-digit',
+    })
+  );
+
+  let timeStr = hours > 12 ? String(hours - 12) : String(hours);
+  if (hours === 0) timeStr = '12';
+
+  if (minutes > 0) {
+    timeStr += `:${String(minutes).padStart(2, '0')}`;
+  }
+
+  return timeStr;
+}
+
+// Format time range in a specific timezone (e.g., "2-2:30pm" or "10:30-11am")
+export function formatTimeSlotInTimezone(start: Date, end: Date, timezone: string): string {
+  const startHour = parseInt(
+    start.toLocaleString('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hour12: false,
+    })
+  );
+
+  const endHour = parseInt(
+    end.toLocaleString('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hour12: false,
+    })
+  );
+
+  const startStr = formatTimeInTimezone(start, timezone);
+  const endStr = formatTimeInTimezone(end, timezone);
+
+  const startAmPm = startHour >= 12 ? 'pm' : 'am';
+  const endAmPm = endHour >= 12 ? 'pm' : 'am';
+
+  // Always show am/pm - include start's am/pm only if different from end
+  if (startAmPm !== endAmPm) {
+    return `${startStr}${startAmPm}-${endStr}${endAmPm}`;
+  }
+  return `${startStr}-${endStr}${endAmPm}`;
+}
+
+// Get timezone abbreviation (e.g., "PT", "ET", "CT")
+export function getTimezoneAbbreviation(timezone: string): string {
+  // Common US timezone mappings
+  const abbreviations: Record<string, string> = {
+    'America/Los_Angeles': 'PT',
+    'America/Denver': 'MT',
+    'America/Chicago': 'CT',
+    'America/New_York': 'ET',
+    'America/Phoenix': 'MST',
+    'Pacific/Honolulu': 'HST',
+    'America/Anchorage': 'AKT',
+  };
+  return abbreviations[timezone] || timezone;
+}
+
 // Format time in PT (e.g., "2:30" or "10am")
 export function formatTimePT(date: Date): string {
   const hours = parseInt(
@@ -149,7 +222,7 @@ export function getStartOfTodayPT(): Date {
     day: '2-digit',
   });
   const [month, day, year] = ptDateStr.split('/');
-  return new Date(`${year}-${month}-${day}T00:00:00-08:00`);
+  return fromZonedTime(`${year}-${month}-${day}T00:00:00`, PT_TIMEZONE);
 }
 
 // Add days to a date

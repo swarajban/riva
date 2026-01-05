@@ -39,6 +39,7 @@ export interface CreateEventOptions {
   attendees: { email: string; name?: string }[];
   description?: string;
   location?: string;
+  timezone: string;
 }
 
 export async function createCalendarEvent(options: CreateEventOptions): Promise<string> {
@@ -53,11 +54,11 @@ export async function createCalendarEvent(options: CreateEventOptions): Promise<
       location: options.location,
       start: {
         dateTime: options.startTime.toISOString(),
-        timeZone: 'America/Los_Angeles',
+        timeZone: options.timezone,
       },
       end: {
         dateTime: options.endTime.toISOString(),
-        timeZone: 'America/Los_Angeles',
+        timeZone: options.timezone,
       },
       attendees: options.attendees.map((a) => ({
         email: a.email,
@@ -105,6 +106,7 @@ export interface UpdateEventOptions {
   startTime?: Date;
   endTime?: Date;
   description?: string;
+  timezone: string;
 }
 
 export async function updateCalendarEvent(options: UpdateEventOptions): Promise<void> {
@@ -120,10 +122,10 @@ export async function updateCalendarEvent(options: UpdateEventOptions): Promise<
       summary: options.title || existing.summary,
       description: options.description ?? existing.description,
       start: options.startTime
-        ? { dateTime: options.startTime.toISOString(), timeZone: 'America/Los_Angeles' }
+        ? { dateTime: options.startTime.toISOString(), timeZone: options.timezone }
         : existing.start,
       end: options.endTime
-        ? { dateTime: options.endTime.toISOString(), timeZone: 'America/Los_Angeles' }
+        ? { dateTime: options.endTime.toISOString(), timeZone: options.timezone }
         : existing.end,
     },
   });

@@ -45,7 +45,7 @@ When proposing times, use this format:
 - For 3+ attendees: Ask user via SMS for meeting title
 
 ## Current Context
-- Today's date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Los_Angeles' })}
+- Today's date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: settings.timezone })}
 - Trigger type: ${context.triggerType}
 - Scheduling request ID: ${context.schedulingRequestId || 'None (new request)'}
 ${context.awaitingResponseType ? `- Awaiting response type: ${context.awaitingResponseType}` : ''}

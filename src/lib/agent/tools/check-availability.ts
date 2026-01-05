@@ -3,7 +3,12 @@ import { db } from '@/lib/db';
 import { users, UserSettings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { findAvailableSlots, TimeSlot } from '@/lib/integrations/calendar/availability';
-import { formatTimeSlot, startOfDayInTimezone, endOfDayInTimezone } from '@/lib/utils/time';
+import {
+  startOfDayInTimezone,
+  endOfDayInTimezone,
+  formatTimeSlotInTimezone,
+  getTimezoneAbbreviation,
+} from '@/lib/utils/time';
 
 interface CheckAvailabilityInput {
   start_date: string;
@@ -95,7 +100,7 @@ export async function checkAvailability(input: unknown, context: AgentContext): 
   }
 
   // Format slots for display
-  const formattedSlots = formatSlotsForEmail(slots);
+  const formattedSlots = formatSlotsForEmail(slots, settings.timezone);
 
   return {
     success: true,
@@ -111,13 +116,13 @@ export async function checkAvailability(input: unknown, context: AgentContext): 
 }
 
 // Format slots in the email style: "Monday, 1/6: 2-2:30, 4-5 PT"
-function formatSlotsForEmail(slots: TimeSlot[]): string {
+function formatSlotsForEmail(slots: TimeSlot[], timezone: string): string {
   // Group by day
   const byDay: Record<string, TimeSlot[]> = {};
 
   for (const slot of slots) {
     const dayKey = slot.start.toLocaleDateString('en-US', {
-      timeZone: 'America/Los_Angeles',
+      timeZone: timezone,
       weekday: 'long',
       month: 'numeric',
       day: 'numeric',
@@ -131,10 +136,11 @@ function formatSlotsForEmail(slots: TimeSlot[]): string {
 
   // Format each day
   const lines: string[] = [];
+  const tzAbbrev = getTimezoneAbbreviation(timezone);
 
   for (const [day, daySlots] of Object.entries(byDay)) {
-    const timeRanges = daySlots.map((slot) => formatTimeSlot(slot.start, slot.end));
-    lines.push(`- ${day}: ${timeRanges.join(', ')} PT`);
+    const timeRanges = daySlots.map((slot) => formatTimeSlotInTimezone(slot.start, slot.end, timezone));
+    lines.push(`- ${day}: ${timeRanges.join(', ')} ${tzAbbrev}`);
   }
 
   return lines.join('\n');
