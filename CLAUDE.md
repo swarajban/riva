@@ -31,7 +31,7 @@ DATABASE_URL="postgresql://postgres:riva@localhost:5432/riva" npm run db:migrate
 npm run dev
 
 # Start background worker (separate terminal)
-DATABASE_URL="postgresql://postgres:riva@localhost:5432/riva" npx tsx src/lib/jobs/worker.ts
+npm run worker
 
 # Start ngrok for webhooks
 ngrok http 3000

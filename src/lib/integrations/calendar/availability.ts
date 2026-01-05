@@ -86,6 +86,56 @@ function mergeBusyIntervals(intervals: TimeSlot[]): TimeSlot[] {
   return merged;
 }
 
+// Find multiple slots in a gap, spread out across the available time
+function findSlotsInGap(gapStart: number, gapEnd: number, meetingLengthMs: number): TimeSlot[] {
+  const slots: TimeSlot[] = [];
+  const thirtyMin = 30 * 60 * 1000;
+
+  // Round gap start to nearest 30-minute boundary
+  const roundedGapStart = Math.ceil(gapStart / thirtyMin) * thirtyMin;
+  const availableTime = gapEnd - roundedGapStart;
+
+  if (availableTime < meetingLengthMs) return slots;
+
+  // Calculate how many slots could fit (at 30-min intervals)
+  const possibleSlotStarts: number[] = [];
+  let slotStart = roundedGapStart;
+  while (slotStart + meetingLengthMs <= gapEnd) {
+    possibleSlotStarts.push(slotStart);
+    slotStart += thirtyMin;
+  }
+
+  if (possibleSlotStarts.length === 0) return slots;
+
+  // If only 1-2 possible slots, return them all
+  if (possibleSlotStarts.length <= 2) {
+    return possibleSlotStarts.map((start) => ({
+      start: new Date(start),
+      end: new Date(start + meetingLengthMs),
+    }));
+  }
+
+  // Otherwise, pick slots spread across the gap: first, middle, last
+  const first = possibleSlotStarts[0];
+  const last = possibleSlotStarts[possibleSlotStarts.length - 1];
+  const midIndex = Math.floor(possibleSlotStarts.length / 2);
+  const mid = possibleSlotStarts[midIndex];
+
+  // Return up to 3 well-spread slots per gap
+  const selected = [first];
+  if (mid !== first && mid !== last) {
+    selected.push(mid);
+  }
+  if (last !== first) {
+    selected.push(last);
+  }
+
+  return selected.map((start) => ({
+    start: new Date(start),
+    end: new Date(start + meetingLengthMs),
+  }));
+}
+
 // Find free slots in a day given busy intervals
 function findFreeSlotsInDay(
   workingStart: Date,
@@ -106,31 +156,20 @@ function findFreeSlotsInDay(
     const busyStart = Math.max(busy.start.getTime(), workingStart.getTime());
     const gapEnd = busyStart;
 
-    // Check if there's enough time before this busy slot
+    // Find multiple slots in this gap
     if (gapEnd - searchStart >= meetingLengthMs) {
-      // Round searchStart to nearest 30-minute boundary
-      const roundedStart = Math.ceil(searchStart / (30 * 60 * 1000)) * (30 * 60 * 1000);
-      if (roundedStart + meetingLengthMs <= gapEnd) {
-        slots.push({
-          start: new Date(roundedStart),
-          end: new Date(roundedStart + meetingLengthMs),
-        });
-      }
+      const gapSlots = findSlotsInGap(searchStart, gapEnd, meetingLengthMs);
+      slots.push(...gapSlots);
     }
 
     // Move search start to after this busy slot
     searchStart = Math.max(searchStart, busy.end.getTime());
   }
 
-  // Check for slot after last busy period
+  // Check for slots after last busy period
   if (workingEndMs - searchStart >= meetingLengthMs) {
-    const roundedStart = Math.ceil(searchStart / (30 * 60 * 1000)) * (30 * 60 * 1000);
-    if (roundedStart + meetingLengthMs <= workingEndMs) {
-      slots.push({
-        start: new Date(roundedStart),
-        end: new Date(roundedStart + meetingLengthMs),
-      });
-    }
+    const gapSlots = findSlotsInGap(searchStart, workingEndMs, meetingLengthMs);
+    slots.push(...gapSlots);
   }
 
   return slots;

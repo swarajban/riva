@@ -101,7 +101,7 @@ export const users = pgTable('users', {
       bufferMinutes: 15,
       lookaheadDays: 10,
       numOptionsToSuggest: 4,
-      maxSlotsPerDay: 2,
+      maxSlotsPerDay: 4,
       keywordRules: [],
     }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
