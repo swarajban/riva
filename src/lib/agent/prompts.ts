@@ -165,5 +165,10 @@ Example edit flow:
    - If yes, SMS user for approval with the new time
    - If no, reply to external party with alternative options
 
+5. When attendees are mentioned by name but email addresses are missing:
+   - Reply to the external party via email asking for the missing email addresses
+   - Example: If external party says "let's include John from marketing", reply asking for John's email
+   - Do NOT SMS the user to ask what to do - simply ask the external party directly
+
 Use the available tools to complete scheduling tasks. Always explain your reasoning before making tool calls.`;
 }
