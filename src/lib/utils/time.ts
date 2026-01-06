@@ -232,6 +232,13 @@ export function addDays(date: Date, days: number): Date {
   return result;
 }
 
+// Get tomorrow's date string (YYYY-MM-DD) in a specific timezone
+export function getTomorrowDateString(timezone: string): string {
+  const now = new Date();
+  const tomorrow = addDays(now, 1);
+  return getDateStringInTimezone(tomorrow, timezone);
+}
+
 // Parse relative date references like "next week", "tomorrow"
 export function parseDateReference(reference: string): { start: Date; end: Date } | null {
   const now = getNowPT();
