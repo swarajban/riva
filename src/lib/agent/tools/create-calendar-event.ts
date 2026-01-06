@@ -11,6 +11,7 @@ interface CreateEventInput {
   attendees: { email: string; name?: string }[];
   include_zoom_link?: boolean;
   location?: string;
+  scheduling_request_id?: string; // Override context's default when processing specific confirmation
 }
 
 export const createEventDef: ToolDefinition = {
@@ -50,6 +51,10 @@ export const createEventDef: ToolDefinition = {
       location: {
         type: 'string',
         description: 'Physical meeting location (e.g., office address, conference room). Optional - omit for virtual-only meetings.',
+      },
+      scheduling_request_id: {
+        type: 'string',
+        description: 'Override the default scheduling request ID. Use this when processing a specific numbered confirmation from allPendingConfirmations.',
       },
     },
     required: ['title', 'start_time', 'end_time', 'attendees'],
@@ -93,8 +98,9 @@ export async function createEvent(input: unknown, context: AgentContext): Promis
     timezone: settings.timezone,
   });
 
-  // Update scheduling request
-  if (context.schedulingRequestId) {
+  // Update scheduling request (use override if provided, otherwise fall back to context)
+  const requestIdToUpdate = params.scheduling_request_id || context.schedulingRequestId;
+  if (requestIdToUpdate) {
     await db
       .update(schedulingRequests)
       .set({
@@ -105,7 +111,7 @@ export async function createEvent(input: unknown, context: AgentContext): Promis
         meetingTitle: params.title,
         updatedAt: new Date(),
       })
-      .where(eq(schedulingRequests.id, context.schedulingRequestId));
+      .where(eq(schedulingRequests.id, requestIdToUpdate));
   }
 
   return {

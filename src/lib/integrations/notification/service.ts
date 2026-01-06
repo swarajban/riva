@@ -62,22 +62,65 @@ export async function getProviderForUser(userId: string): Promise<{
   return { provider: 'twilio', user };
 }
 
+// Find the lowest available reference number for a user
+async function getNextReferenceNumber(userId: string): Promise<number> {
+  const existingPending = await getAllPendingConfirmations(userId);
+  const usedNumbers = new Set(existingPending.map((p) => p.referenceNumber).filter(Boolean));
+
+  // Find lowest available number starting from 1
+  let refNumber = 1;
+  while (usedNumbers.has(refNumber)) {
+    refNumber++;
+  }
+  return refNumber;
+}
+
 // Send notification via the appropriate provider
 export async function sendNotification(options: SendNotificationOptions): Promise<string> {
   const { userId, body, schedulingRequestId, awaitingResponseType, pendingEmailId } = options;
 
   const { provider, user } = await getProviderForUser(userId);
 
+  // Check for existing pending confirmations if this is a confirmation request
+  let messageBody = body;
+  let referenceNumber: number | undefined;
+
+  if (awaitingResponseType) {
+    const existingPending = await getAllPendingConfirmations(userId);
+
+    // Assign a stable reference number (reuses lowest available)
+    referenceNumber = await getNextReferenceNumber(userId);
+
+    if (existingPending.length > 0) {
+      // Build summary of other pending confirmations using their stored reference numbers
+      const pendingSummary = existingPending
+        .map((p) => {
+          const attendee =
+            p.schedulingRequest?.attendees?.[0]?.name ||
+            p.schedulingRequest?.attendees?.[0]?.email ||
+            'Unknown';
+          return `#${p.referenceNumber} ${attendee}`;
+        })
+        .join(', ');
+
+      // Format message with reference number
+      messageBody = `#${referenceNumber}: ${body}\n\n---\nPending: ${pendingSummary}\nReply # then Y/N (e.g., "${referenceNumber} Y")`;
+    } else {
+      // First/only confirmation - still assign ref number but don't show pending list
+      messageBody = body;
+    }
+  }
+
   let providerMessageId: string;
 
   if (provider === 'telegram') {
     // Send via Telegram
-    providerMessageId = await sendTelegramMessage(user.telegramChatId!, body);
+    providerMessageId = await sendTelegramMessage(user.telegramChatId!, messageBody);
   } else {
     // Send via Twilio
     const client = getTwilioClient();
     const message = await client.messages.create({
-      body,
+      body: messageBody,
       to: user.phone!,
       from: config.twilio.phoneNumber,
     });
@@ -96,6 +139,7 @@ export async function sendNotification(options: SendNotificationOptions): Promis
       awaitingResponseType,
       providerMessageId,
       pendingEmailId,
+      referenceNumber,
       sentAt: new Date(),
     })
     .returning({ id: notifications.id });
@@ -143,6 +187,30 @@ export async function getMostRecentAwaiting(userId: string) {
   return notification;
 }
 
+// Terminal statuses where confirmations are no longer relevant
+const TERMINAL_STATUSES = ['confirmed', 'expired', 'cancelled', 'error'];
+
+// Get all notifications awaiting response for a user (oldest first for reference numbering)
+export async function getAllPendingConfirmations(userId: string) {
+  const pending = await db.query.notifications.findMany({
+    where: and(
+      eq(notifications.userId, userId),
+      eq(notifications.direction, 'outbound'),
+      isNotNull(notifications.awaitingResponseType)
+    ),
+    orderBy: notifications.createdAt, // oldest first = #1
+    with: {
+      schedulingRequest: true,
+    },
+  });
+
+  // Filter out notifications where the scheduling request is in a terminal state
+  return pending.filter((p) => {
+    if (!p.schedulingRequest) return true; // Keep if no associated request (e.g., standalone notifications)
+    return !TERMINAL_STATUSES.includes(p.schedulingRequest.status);
+  });
+}
+
 // Store an inbound notification
 export async function storeInboundNotification(
   userId: string,
@@ -170,6 +238,22 @@ export async function storeInboundNotification(
 // Clear awaiting response type after user responds
 export async function clearAwaitingResponse(notificationId: string): Promise<void> {
   await db.update(notifications).set({ awaitingResponseType: null }).where(eq(notifications.id, notificationId));
+}
+
+// Update an existing notification (for edits that should preserve reference number)
+export async function updateNotification(
+  notificationId: string,
+  newBody: string,
+  providerMessageId?: string
+): Promise<void> {
+  await db
+    .update(notifications)
+    .set({
+      body: newBody,
+      ...(providerMessageId && { providerMessageId }),
+      sentAt: new Date(),
+    })
+    .where(eq(notifications.id, notificationId));
 }
 
 // Get conversation history for a scheduling request

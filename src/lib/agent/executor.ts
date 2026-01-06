@@ -147,9 +147,22 @@ The attendees list above shows who the meeting should be scheduled with. Use the
   }
 
   if (context.triggerType === 'sms') {
-    // Fetch conversation history for this scheduling request
+    // Fetch conversation history - either for single request or all pending if multiple
     let conversationSection = '';
-    if (context.schedulingRequestId) {
+    const allPending = context.allPendingConfirmations || [];
+
+    if (allPending.length > 1) {
+      // Multiple pending - fetch recent notifications for context
+      const pendingList = allPending
+        .map((p) => {
+          const attendee = p.attendees?.[0]?.name || p.attendees?.[0]?.email || 'Unknown';
+          const emailIdInfo = p.pendingEmailId ? `, pendingEmailId: ${p.pendingEmailId}` : '';
+          return `#${p.referenceNumber}: ${p.awaitingResponseType} with ${attendee} (notificationId: ${p.notificationId}, schedulingRequestId: ${p.schedulingRequestId || 'N/A'}${emailIdInfo})`;
+        })
+        .join('\n');
+      conversationSection = `\n\n## Pending confirmations (${allPending.length}):\n${pendingList}`;
+    } else if (context.schedulingRequestId) {
+      // Single request - fetch full conversation history
       const history = await getConversationHistory(context.schedulingRequestId);
       if (history.length > 0) {
         const formattedHistory = history
@@ -160,9 +173,23 @@ The attendees list above shows who the meeting should be scheduled with. Use the
     }
 
     if (context.awaitingResponseType) {
+      // Provide IDs for tools (notification_id, scheduling_request_id, pendingEmailId)
+      const singlePendingInfo = allPending.length === 1
+        ? `\n\nIDs for this confirmation:
+- notificationId: ${allPending[0].notificationId}
+- schedulingRequestId: ${allPending[0].schedulingRequestId || 'N/A'}${allPending[0].pendingEmailId ? `\n- pendingEmailId: ${allPending[0].pendingEmailId}` : ''}`
+        : '';
+
+      const notificationIdNote =
+        allPending.length === 1
+          ? singlePendingInfo
+          : allPending.length > 1
+            ? `\n\nIMPORTANT: ${allPending.length} confirmations are pending. Determine which one the user is responding to. Use the correct IDs from the pending list when calling tools.`
+            : '';
+
       return `User responded to SMS. Their message: "${context.triggerContent}"
 
-Awaiting response type: ${context.awaitingResponseType}${conversationSection}
+Awaiting response type: ${context.awaitingResponseType}${conversationSection}${notificationIdNote}
 
 Process this response and take the appropriate action based on the response type.`;
     }

@@ -190,6 +190,7 @@ export const notifications = pgTable(
     awaitingResponseType: awaitingResponseTypeEnum('awaiting_response_type'),
     providerMessageId: varchar('provider_message_id', { length: 255 }),
     pendingEmailId: uuid('pending_email_id').references(() => emailThreads.id, { onDelete: 'set null' }),
+    referenceNumber: integer('reference_number'), // Stable ref # for multi-confirmation disambiguation
     sentAt: timestamp('sent_at', { withTimezone: true }),
     receivedAt: timestamp('received_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

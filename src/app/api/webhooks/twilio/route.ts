@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   findUserByNotificationId,
-  getMostRecentAwaiting,
+  getAllPendingConfirmations,
   storeInboundNotification,
-  clearAwaitingResponse,
   validateTwilioSignature,
 } from '@/lib/integrations/notification/service';
 import { runAgent } from '@/lib/agent';
@@ -12,6 +11,7 @@ import { schedulingRequests } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { config } from '@/lib/config';
 import { logger } from '@/lib/utils/logger';
+import { PendingConfirmation } from '@/lib/agent/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,38 +61,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find the most recent notification awaiting response
-    const awaitingNotification = await getMostRecentAwaiting(user.id);
+    // Get all pending confirmations for this user
+    const allPending = await getAllPendingConfirmations(user.id);
 
-    // Store the inbound notification
+    // Use most recent as default (backward compatible for single pending case)
+    const defaultPending = allPending.length > 0 ? allPending[allPending.length - 1] : null;
+
+    // Store the inbound notification (associate with default pending request)
     await storeInboundNotification(
       user.id,
       body,
       'twilio',
       messageSid,
-      awaitingNotification?.schedulingRequestId || undefined
+      defaultPending?.schedulingRequestId || undefined
     );
 
-    // Clear the awaiting response flag if there was one
-    if (awaitingNotification) {
-      await clearAwaitingResponse(awaitingNotification.id);
-    }
+    // Build pending confirmations list for agent context (using stored reference numbers)
+    const pendingConfirmations: PendingConfirmation[] = allPending.map((p) => ({
+      referenceNumber: p.referenceNumber || 0,
+      notificationId: p.id,
+      schedulingRequestId: p.schedulingRequestId,
+      awaitingResponseType: p.awaitingResponseType,
+      pendingEmailId: p.pendingEmailId,
+      body: p.body || '',
+      attendees: p.schedulingRequest?.attendees || undefined,
+      meetingTitle: p.schedulingRequest?.meetingTitle || undefined,
+    }));
+
+    // NOTE: Do NOT clear awaiting response here - let agent do it after disambiguation
+    // This is important when there are multiple pending confirmations
 
     // Run the agent to process this SMS
     try {
       await runAgent({
         userId: user.id,
         assistantId: user.assistantId,
-        schedulingRequestId: awaitingNotification?.schedulingRequestId || undefined,
+        schedulingRequestId: defaultPending?.schedulingRequestId || undefined,
         triggerType: 'sms',
         triggerContent: body,
-        awaitingResponseType: awaitingNotification?.awaitingResponseType || undefined,
-        pendingEmailId: awaitingNotification?.pendingEmailId || undefined,
+        awaitingResponseType: defaultPending?.awaitingResponseType || undefined,
+        pendingEmailId: defaultPending?.pendingEmailId || undefined,
+        allPendingConfirmations: pendingConfirmations.length > 0 ? pendingConfirmations : undefined,
       });
     } catch (agentError) {
-      logger.error('Agent error', agentError, { schedulingRequestId: awaitingNotification?.schedulingRequestId || undefined });
+      logger.error('Agent error', agentError, { schedulingRequestId: defaultPending?.schedulingRequestId || undefined });
       // Update request with error if we have one
-      if (awaitingNotification?.schedulingRequestId) {
+      if (defaultPending?.schedulingRequestId) {
         await db
           .update(schedulingRequests)
           .set({
@@ -100,7 +114,7 @@ export async function POST(request: NextRequest) {
             errorMessage: agentError instanceof Error ? agentError.message : 'Agent processing failed',
             updatedAt: new Date(),
           })
-          .where(eq(schedulingRequests.id, awaitingNotification.schedulingRequestId));
+          .where(eq(schedulingRequests.id, defaultPending.schedulingRequestId));
       }
     }
 

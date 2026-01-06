@@ -1,5 +1,16 @@
 import { Anthropic } from '@anthropic-ai/sdk';
 
+export interface PendingConfirmation {
+  referenceNumber: number;
+  notificationId: string;
+  schedulingRequestId: string | null;
+  awaitingResponseType: string | null;
+  pendingEmailId?: string | null; // For email_approval confirmations
+  body: string;
+  attendees?: Array<{ email: string; name?: string }>;
+  meetingTitle?: string | null;
+}
+
 export interface AgentContext {
   userId: string;
   assistantId: string;
@@ -8,6 +19,7 @@ export interface AgentContext {
   triggerContent: string;
   awaitingResponseType?: string;
   pendingEmailId?: string;
+  allPendingConfirmations?: PendingConfirmation[];
 }
 
 export type ToolName =
@@ -20,7 +32,8 @@ export type ToolName =
   | 'lookup_contact'
   | 'get_thread_emails'
   | 'link_threads'
-  | 'approve_email';
+  | 'approve_email'
+  | 'clear_awaiting_response';
 
 export interface ToolDefinition {
   name: ToolName;
