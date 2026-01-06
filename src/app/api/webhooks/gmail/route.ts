@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { assistants, users, emailThreads, schedulingRequests } from '@/lib/db/schema';
+import { assistants, users, emailThreads, schedulingRequests, notifications } from '@/lib/db/schema';
 import { eq, and, isNotNull, isNull } from 'drizzle-orm';
 import {
   getHistory,
@@ -169,10 +169,10 @@ export async function POST(request: NextRequest) {
           receivedAt: parsed.receivedAt,
         });
 
-        // Cancel any pending outbound emails for this request
+        // Cancel any pending outbound emails for this request (both scheduled and awaiting confirmation)
         // They're now stale since new context has arrived - the agent will
         // run fresh and queue new responses with the updated context
-        const cancelledEmails = await db
+        const cancelledScheduledEmails = await db
           .update(emailThreads)
           .set({
             scheduledSendAt: null,
@@ -188,9 +188,38 @@ export async function POST(request: NextRequest) {
           )
           .returning({ id: emailThreads.id });
 
-        if (cancelledEmails.length > 0) {
-          logger.info('Cancelled pending outbound emails due to new inbound', {
-            count: cancelledEmails.length,
+        // Also cancel pending confirmation emails (scheduledSendAt is null, sentAt is null)
+        // and clear their associated notifications
+        const pendingConfirmationEmails = await db.query.emailThreads.findMany({
+          where: and(
+            eq(emailThreads.schedulingRequestId, schedulingRequestId),
+            eq(emailThreads.direction, 'outbound'),
+            isNull(emailThreads.scheduledSendAt),
+            isNull(emailThreads.sentAt)
+          ),
+        });
+
+        if (pendingConfirmationEmails.length > 0) {
+          // Delete the pending confirmation emails
+          for (const email of pendingConfirmationEmails) {
+            await db.delete(emailThreads).where(eq(emailThreads.id, email.id));
+
+            // Clear any notifications waiting for this email's approval
+            await db
+              .update(notifications)
+              .set({ awaitingResponseType: null })
+              .where(eq(notifications.pendingEmailId, email.id));
+          }
+
+          logger.info('Cancelled pending confirmation emails due to new inbound', {
+            count: pendingConfirmationEmails.length,
+            schedulingRequestId,
+          });
+        }
+
+        if (cancelledScheduledEmails.length > 0) {
+          logger.info('Cancelled pending scheduled emails due to new inbound', {
+            count: cancelledScheduledEmails.length,
             schedulingRequestId,
           });
         }

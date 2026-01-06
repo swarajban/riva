@@ -155,14 +155,24 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
     });
 
     // Send SMS/Telegram notification asking for approval
+    // If notification fails, delete the pending email to avoid orphaned records
     const preview = formatEmailPreview(params.to, params.cc, finalSubject, params.body);
-    await sendNotification({
-      userId: context.userId,
-      body: preview,
-      schedulingRequestId,
-      awaitingResponseType: 'email_approval',
-      pendingEmailId: emailId,
-    });
+    try {
+      await sendNotification({
+        userId: context.userId,
+        body: preview,
+        schedulingRequestId,
+        awaitingResponseType: 'email_approval',
+        pendingEmailId: emailId,
+      });
+    } catch (notificationError) {
+      // Clean up the pending email since user won't be able to approve it
+      await db.delete(emailThreads).where(eq(emailThreads.id, emailId));
+      return {
+        success: false,
+        error: `Failed to send notification for email approval: ${notificationError instanceof Error ? notificationError.message : 'Unknown error'}. Email was not queued.`,
+      };
+    }
 
     return {
       success: true,
