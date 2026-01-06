@@ -8,6 +8,7 @@ import {
   endOfDayInTimezone,
   formatTimeSlotInTimezone,
   getTimezoneAbbreviation,
+  getTomorrowDateString,
 } from '@/lib/utils/time';
 
 interface CheckAvailabilityInput {
@@ -69,9 +70,14 @@ export async function checkAvailability(input: unknown, context: AgentContext): 
 
   const settings = user.settings as UserSettings;
 
+  // Enforce that start_date is at least tomorrow (no same-day scheduling)
+  const tomorrowStr = getTomorrowDateString(settings.timezone);
+  const effectiveStartDate = params.start_date < tomorrowStr ? tomorrowStr : params.start_date;
+  const effectiveEndDate = params.end_date < tomorrowStr ? tomorrowStr : params.end_date;
+
   // Parse dates in user's timezone (handles DST automatically)
-  const startDate = startOfDayInTimezone(params.start_date, settings.timezone);
-  const endDate = endOfDayInTimezone(params.end_date, settings.timezone);
+  const startDate = startOfDayInTimezone(effectiveStartDate, settings.timezone);
+  const endDate = endOfDayInTimezone(effectiveEndDate, settings.timezone);
 
   // Find slots
   const slots = await findAvailableSlots({

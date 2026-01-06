@@ -248,7 +248,9 @@ export async function findAvailableSlots(options: FindSlotsOptions): Promise<Tim
     currentDate = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000);
   }
 
-  return allSlots;
+  // Filter out any slots that are in the past (defensive check)
+  const now = new Date();
+  return allSlots.filter((slot) => slot.start.getTime() > now.getTime());
 }
 
 // Check if a specific slot is still available
