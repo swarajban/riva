@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { assistants, users, emailThreads, schedulingRequests } from '@/lib/db/schema';
-import { eq, and, isNotNull, isNull } from 'drizzle-orm';
+import { assistants, users, emailThreads, schedulingRequests, notifications } from '@/lib/db/schema';
+import { eq, and, isNull, inArray } from 'drizzle-orm';
 import {
   getHistory,
   getMessage,
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
           receivedAt: parsed.receivedAt,
         });
 
-        // Cancel any pending outbound emails for this request
+        // Cancel ALL pending outbound emails for this request (both scheduled AND pending approval)
         // They're now stale since new context has arrived - the agent will
         // run fresh and queue new responses with the updated context
         const cancelledEmails = await db
@@ -182,13 +182,23 @@ export async function POST(request: NextRequest) {
             and(
               eq(emailThreads.schedulingRequestId, schedulingRequestId),
               eq(emailThreads.direction, 'outbound'),
-              isNotNull(emailThreads.scheduledSendAt),
               isNull(emailThreads.sentAt)
             )
           )
           .returning({ id: emailThreads.id });
 
+        // Clear awaiting response on associated notifications (for pending approval emails)
         if (cancelledEmails.length > 0) {
+          await db
+            .update(notifications)
+            .set({ awaitingResponseType: null })
+            .where(
+              inArray(
+                notifications.pendingEmailId,
+                cancelledEmails.map((e) => e.id)
+              )
+            );
+
           logger.info('Cancelled pending outbound emails due to new inbound', {
             count: cancelledEmails.length,
             schedulingRequestId,

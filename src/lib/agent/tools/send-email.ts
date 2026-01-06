@@ -4,6 +4,7 @@ import { sendNotification } from '@/lib/integrations/notification/service';
 import { db } from '@/lib/db';
 import { emailThreads, users, UserSettings } from '@/lib/db/schema';
 import { eq, desc, and, isNotNull } from 'drizzle-orm';
+import { logger } from '@/lib/utils/logger';
 
 interface SendEmailInput {
   to: string[];
@@ -153,16 +154,26 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
       threadId,
       schedulingRequestId,
     });
+    logger.info('Queued email for confirmation', { emailId, schedulingRequestId });
 
     // Send SMS/Telegram notification asking for approval
-    const preview = formatEmailPreview(params.to, params.cc, finalSubject, params.body);
-    await sendNotification({
-      userId: context.userId,
-      body: preview,
-      schedulingRequestId,
-      awaitingResponseType: 'email_approval',
-      pendingEmailId: emailId,
-    });
+    try {
+      const preview = formatEmailPreview(params.to, params.cc, finalSubject, params.body);
+      logger.info('Sending email confirmation notification', { emailId, schedulingRequestId });
+      await sendNotification({
+        userId: context.userId,
+        body: preview,
+        schedulingRequestId,
+        awaitingResponseType: 'email_approval',
+        pendingEmailId: emailId,
+      });
+      logger.info('Email confirmation notification sent', { emailId, schedulingRequestId });
+    } catch (error) {
+      logger.error('Failed to send email confirmation notification, rolling back', error, { emailId });
+      // Rollback: delete the pending email since notification failed
+      await db.delete(emailThreads).where(eq(emailThreads.id, emailId));
+      throw error;
+    }
 
     return {
       success: true,
