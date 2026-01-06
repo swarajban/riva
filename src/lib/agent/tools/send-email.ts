@@ -12,6 +12,7 @@ interface SendEmailInput {
   body: string;
   thread_id?: string;
   immediate?: boolean;
+  scheduling_request_id?: string;
 }
 
 /**
@@ -58,6 +59,11 @@ export const sendEmailDef: ToolDefinition = {
         type: 'boolean',
         description: 'Set to true to send immediately (only use after SMS confirmation)',
       },
+      scheduling_request_id: {
+        type: 'string',
+        description:
+          'Override the default scheduling request ID. Use this when processing a specific numbered confirmation to ensure the email goes to the correct thread.',
+      },
     },
     required: ['to', 'subject', 'body'],
   },
@@ -82,6 +88,9 @@ Reply: Y to send, N to cancel, or describe changes`;
 export async function sendEmail(input: unknown, context: AgentContext): Promise<ToolResult> {
   const params = input as SendEmailInput;
 
+  // Use override scheduling_request_id if provided, otherwise fall back to context
+  const schedulingRequestId = params.scheduling_request_id || context.schedulingRequestId;
+
   // Check if user has email confirmation enabled
   const user = await db.query.users.findFirst({
     where: eq(users.id, context.userId),
@@ -96,11 +105,11 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
   let resolvedSubject: string | undefined;
 
   // Auto-resolve thread ID and subject from scheduling request if not provided
-  if (!threadId && context.schedulingRequestId) {
+  if (!threadId && schedulingRequestId) {
     // Find an email with gmailThreadId set (filter out pending outbound emails without thread ID)
     const requestEmail = await db.query.emailThreads.findFirst({
       where: and(
-        eq(emailThreads.schedulingRequestId, context.schedulingRequestId),
+        eq(emailThreads.schedulingRequestId, schedulingRequestId),
         isNotNull(emailThreads.gmailThreadId)
       ),
       orderBy: desc(emailThreads.createdAt),
@@ -142,7 +151,7 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
       inReplyTo,
       references,
       threadId,
-      schedulingRequestId: context.schedulingRequestId,
+      schedulingRequestId,
     });
 
     // Send SMS/Telegram notification asking for approval
@@ -150,7 +159,7 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
     await sendNotification({
       userId: context.userId,
       body: preview,
-      schedulingRequestId: context.schedulingRequestId,
+      schedulingRequestId,
       awaitingResponseType: 'email_approval',
       pendingEmailId: emailId,
     });
@@ -175,7 +184,7 @@ export async function sendEmail(input: unknown, context: AgentContext): Promise<
     inReplyTo,
     references,
     threadId,
-    schedulingRequestId: context.schedulingRequestId,
+    schedulingRequestId,
     immediate: params.immediate,
   });
 

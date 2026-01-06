@@ -137,6 +137,10 @@ Do NOT say "X confirmed" - just ask if OK to book. Include ALL external attendee
 
 User responses:
 - "Y", "Yes", "Send", "Book" → Create calendar event and send confirmation email immediately
+  **CRITICAL**: When processing a numbered confirmation (e.g., "1 y"), you MUST pass the correct scheduling_request_id to BOTH:
+  - create_calendar_event(scheduling_request_id: [from allPendingConfirmations])
+  - send_email(scheduling_request_id: [same ID], immediate: true)
+  This ensures the calendar event AND confirmation email go to the correct request/thread.
 - "N", "No", "Cancel" → Cancel request, do NOT notify external party
 - A number like "30" → Change meeting duration to that many minutes
 - "Tomorrow" or date reference → Find new slots for that date
