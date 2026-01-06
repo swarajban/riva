@@ -79,11 +79,17 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                 .map((e) => e.sentAt!.getTime())
                 .sort((a, b) => b - a)[0];
 
-              // Filter out stale pending emails (pending emails created before the most recent sent email)
+              // Filter out cancelled and stale pending emails
               const visibleEmails = emails.filter((email) => {
+                // Hide cancelled emails (they have processingError set)
+                if (email.processingError) {
+                  return false;
+                }
+
+                // Hide stale pending emails (pending emails created before the most recent sent email)
                 const isPending = !email.sentAt && !email.receivedAt && !email.scheduledSendAt && email.direction === 'outbound';
                 if (isPending && mostRecentSentAt && email.createdAt && email.createdAt.getTime() < mostRecentSentAt) {
-                  return false; // Hide stale pending emails
+                  return false;
                 }
                 return true;
               });
