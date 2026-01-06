@@ -123,7 +123,11 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                             {email.fromName || email.fromEmail}
                           </span>
                           <span className="text-gray-500 text-sm">
-                            {email.direction === 'outbound' ? '(Assistant)' : ''}
+                            {email.direction === 'outbound'
+                              ? '(Assistant)'
+                              : email.fromName && email.fromEmail
+                                ? `<${email.fromEmail}>`
+                                : ''}
                           </span>
                           {isPendingApproval && (
                             <span className="px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 rounded-full">

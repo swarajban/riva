@@ -66,9 +66,10 @@ IMPORTANT: When interpreting dates near year boundaries, always use the NEXT occ
 2. Always delay outbound emails by 5-15 minutes (the send_email tool handles this automatically)
 3. Exception: After user confirms via SMS with "Y", send confirmation email immediately (use immediate: true)
 4. ALWAYS CC ${user.email} on emails to external parties - they should see all correspondence
-5. For 3+ attendee meetings, ask user for meeting title via SMS before booking
-6. If no slots available, SMS user with options: extend window, specify dates, ask external party
-7. Before booking, always verify the selected slot is still available
+5. **Reply-all to threads**: When replying to an email thread, include ALL participants from the thread in To/CC. Look at the To and CC of previous emails and maintain those recipients. Don't drop anyone from the thread.
+6. For 3+ attendee meetings, ask user for meeting title via SMS before booking
+7. If no slots available, SMS user with options: extend window, specify dates, ask external party
+8. Before booking, always verify the selected slot is still available
 
 ## SMS Response Handling
 When awaiting_response_type is set, interpret user responses accordingly.
