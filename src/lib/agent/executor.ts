@@ -152,7 +152,11 @@ Email details:
 ${context.triggerContent}
 ${attendeesInfo}
 
-The attendees list above shows who the meeting should be scheduled with. Use the available tools to check availability and propose times to the external party.`;
+IMPORTANT - Two different recipient lists:
+1. "attendees" = who the CALENDAR EVENT is with (actual meeting participants only)
+2. "to" and "cc" = who should receive EMAIL REPLIES (include ALL thread participants)
+
+When sending emails, use the raw "to" and "cc" fields to include everyone on the thread, including coordinators/assistants. Do not use the "attendees" list for email recipients.`;
   }
 
   if (context.triggerType === 'sms') {
@@ -210,7 +214,9 @@ The attendees list above shows who the meeting should be scheduled with. Use the
 
 Awaiting response type: ${context.awaitingResponseType}${conversationSection}${notificationIdNote}
 
-Process this response and take the appropriate action based on the response type.`;
+Process this response and take the appropriate action based on the response type.
+
+IMPORTANT: When sending confirmation emails after booking approval, you MUST use get_thread_emails first to get ALL thread participants (To/CC from all emails). Include everyone from the thread in your email reply, not just the "attendees" list.`;
     }
 
     return `Received SMS from user: "${context.triggerContent}"${conversationSection}
