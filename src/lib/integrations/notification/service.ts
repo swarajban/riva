@@ -240,20 +240,46 @@ export async function clearAwaitingResponse(notificationId: string): Promise<voi
   await db.update(notifications).set({ awaitingResponseType: null }).where(eq(notifications.id, notificationId));
 }
 
-// Update an existing notification (for edits that should preserve reference number)
-export async function updateNotification(
-  notificationId: string,
+// Create a new notification for an edit, preserving the reference number
+// This keeps full message history instead of updating in-place
+export async function createEditedNotification(
+  originalNotificationId: string,
   newBody: string,
-  providerMessageId?: string
-): Promise<void> {
+  providerMessageId: string
+): Promise<string> {
+  // Get the original notification to copy relevant fields
+  const original = await db.query.notifications.findFirst({
+    where: eq(notifications.id, originalNotificationId),
+  });
+
+  if (!original) {
+    throw new Error('Original notification not found');
+  }
+
+  // Clear the old notification's awaiting response (it's superseded)
   await db
     .update(notifications)
-    .set({
+    .set({ awaitingResponseType: null })
+    .where(eq(notifications.id, originalNotificationId));
+
+  // Create new notification with same reference number
+  const [record] = await db
+    .insert(notifications)
+    .values({
+      userId: original.userId,
+      schedulingRequestId: original.schedulingRequestId,
+      provider: original.provider,
+      direction: 'outbound',
       body: newBody,
-      ...(providerMessageId && { providerMessageId }),
+      awaitingResponseType: original.awaitingResponseType,
+      providerMessageId,
+      pendingEmailId: original.pendingEmailId,
+      referenceNumber: original.referenceNumber, // Preserve the reference number!
       sentAt: new Date(),
     })
-    .where(eq(notifications.id, notificationId));
+    .returning({ id: notifications.id });
+
+  return record.id;
 }
 
 // Get conversation history for a scheduling request

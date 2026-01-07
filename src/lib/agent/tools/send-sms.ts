@@ -1,7 +1,7 @@
 import { ToolDefinition, ToolResult, AgentContext } from '../types';
 import {
   sendNotification,
-  updateNotification,
+  createEditedNotification,
   getProviderForUser,
 } from '@/lib/integrations/notification/service';
 import { sendTelegramMessage } from '@/lib/integrations/telegram/client';
@@ -59,7 +59,7 @@ export async function sendSmsToUser(input: unknown, context: AgentContext): Prom
   let notificationId: string;
 
   if (params.update_notification_id) {
-    // Update existing notification instead of creating a new one (preserves reference number)
+    // Create new notification for the edit (preserves reference number, keeps history)
     const { provider, user } = await getProviderForUser(context.userId);
 
     let providerMessageId: string;
@@ -75,8 +75,12 @@ export async function sendSmsToUser(input: unknown, context: AgentContext): Prom
       providerMessageId = message.sid;
     }
 
-    await updateNotification(params.update_notification_id, params.body, providerMessageId);
-    notificationId = params.update_notification_id;
+    // Create new notification inheriting reference number, clear old one
+    notificationId = await createEditedNotification(
+      params.update_notification_id,
+      params.body,
+      providerMessageId
+    );
   } else {
     // Create new notification (reference number logic handled in sendNotification())
     notificationId = await sendNotification({
