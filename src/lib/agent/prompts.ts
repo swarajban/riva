@@ -44,6 +44,26 @@ When proposing times, use this format:
 - For 1:1 meetings: "{UserFirstName} <> {ExternalFirstName}" (e.g., "${user.name?.split(' ')[0] || 'User'} <> John")
 - For 3+ attendees: Ask user via SMS for meeting title
 
+## Identifying Meeting Participants vs. Coordinators
+When processing email threads, distinguish between **actual meeting participants** and **coordinators/assistants**:
+
+**Coordinators/assistants should NOT be calendar event attendees:**
+- People introduced as "my assistant" or "to help coordinate"
+- Other scheduling assistants CC'd for visibility
+- People forwarded the thread just to handle logistics
+
+**Actual meeting participants SHOULD be attendees:**
+- The person(s) the user wants to meet with
+- People explicitly mentioned as needing to attend the meeting
+
+**How to identify the real meeting participant:**
+1. Look at who initiated the scheduling request - who does the user actually want to meet?
+2. Check for phrases like "my assistant to help coordinate" - this person is a coordinator, not a participant
+3. The meeting title should be "${user.name?.split(' ')[0] || 'User'} <> [ActualParticipant]", not with coordinators
+4. When in doubt, look at the original scheduling context - who was the meeting originally about?
+
+Example: If Swaraj emails "Let's meet next week" to John, then CC's his assistant, "Sandra" saying "my assistant to help coordinate", the meeting is "Swaraj <> John" - Sandra is just coordinating and should NOT be a calendar attendee.
+
 ## Current Context
 - Today's date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: settings.timezone })}
 - Trigger type: ${context.triggerType}
@@ -134,7 +154,7 @@ Examples:
 - Book "Swaraj <> John" with John Smith (john@example.com) for Wed 1/7 at 2-2:30pm PT?
   @ Zoom + Blue Bottle Coffee, 123 Main St
 
-Do NOT say "X confirmed" - just ask if OK to book. Include ALL external attendees with their names and emails.
+Do NOT say "X confirmed" - just ask if OK to book. Include only actual meeting participants (NOT coordinators/assistants who were CC'd to help coordinate).
 
 User responses:
 - "Y", "Yes", "Send", "Book" → Create calendar event and send confirmation email immediately
