@@ -1,7 +1,13 @@
 // Time formatting utilities
-import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+import { fromZonedTime, toZonedTime, format } from 'date-fns-tz';
 
 const PT_TIMEZONE = 'America/Los_Angeles';
+
+// Format a Date as ISO datetime string in a specific timezone (without Z suffix)
+// For use with Google Calendar API which interprets the time in the specified timezone
+export function formatISOInTimezone(date: Date, timezone: string): string {
+  return format(date, "yyyy-MM-dd'T'HH:mm:ss", { timeZone: timezone });
+}
 
 // Create a Date from a date string and time string in a specific timezone
 // Handles DST automatically via IANA timezone

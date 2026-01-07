@@ -1,5 +1,6 @@
 import { google, calendar_v3 } from 'googleapis';
 import { getAuthenticatedClient } from '@/lib/auth/google-oauth';
+import { formatISOInTimezone } from '@/lib/utils/time';
 
 export type CalendarClient = calendar_v3.Calendar;
 
@@ -53,11 +54,11 @@ export async function createCalendarEvent(options: CreateEventOptions): Promise<
       description: options.description,
       location: options.location,
       start: {
-        dateTime: options.startTime.toISOString(),
+        dateTime: formatISOInTimezone(options.startTime, options.timezone),
         timeZone: options.timezone,
       },
       end: {
-        dateTime: options.endTime.toISOString(),
+        dateTime: formatISOInTimezone(options.endTime, options.timezone),
         timeZone: options.timezone,
       },
       attendees: options.attendees.map((a) => ({
@@ -122,10 +123,10 @@ export async function updateCalendarEvent(options: UpdateEventOptions): Promise<
       summary: options.title || existing.summary,
       description: options.description ?? existing.description,
       start: options.startTime
-        ? { dateTime: options.startTime.toISOString(), timeZone: options.timezone }
+        ? { dateTime: formatISOInTimezone(options.startTime, options.timezone), timeZone: options.timezone }
         : existing.start,
       end: options.endTime
-        ? { dateTime: options.endTime.toISOString(), timeZone: options.timezone }
+        ? { dateTime: formatISOInTimezone(options.endTime, options.timezone), timeZone: options.timezone }
         : existing.end,
     },
   });
