@@ -64,8 +64,8 @@ export const config = {
 
   // Timing constants
   timing: {
-    emailDelayMinMs: 5 * 60 * 1000, // 5 minutes
-    emailDelayMaxMs: 15 * 60 * 1000, // 15 minutes
+    emailDelayMinMs: 2 * 60 * 1000, // 2 minutes
+    emailDelayMaxMs: 7 * 60 * 1000, // 7 minutes
     smsReminderMs: 3 * 60 * 60 * 1000, // 3 hours
     requestExpirationMs: 2 * 24 * 60 * 60 * 1000, // 2 days
     gmailWatchRenewalMs: 6 * 24 * 60 * 60 * 1000, // 6 days
