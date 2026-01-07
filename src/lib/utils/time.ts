@@ -9,6 +9,14 @@ export function formatISOInTimezone(date: Date, timezone: string): string {
   return format(date, "yyyy-MM-dd'T'HH:mm:ss", { timeZone: timezone });
 }
 
+// Parse an ISO datetime string, interpreting times without timezone as being in the specified timezone
+// - With timezone (Z or offset): parsed as-is
+// - Without timezone: interpreted as local time in the given timezone
+export function parseISOWithTimezone(isoString: string, timezone: string): Date {
+  const hasTimezone = isoString.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(isoString);
+  return hasTimezone ? new Date(isoString) : fromZonedTime(isoString, timezone);
+}
+
 // Create a Date from a date string and time string in a specific timezone
 // Handles DST automatically via IANA timezone
 export function createDateInTimezone(dateStr: string, timeStr: string, timezone: string): Date {
