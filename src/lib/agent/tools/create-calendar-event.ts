@@ -3,6 +3,7 @@ import { createCalendarEvent } from '@/lib/integrations/calendar/client';
 import { db } from '@/lib/db';
 import { schedulingRequests, users, UserSettings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { parseISOWithTimezone } from '@/lib/utils/time';
 
 interface CreateEventInput {
   title: string;
@@ -26,11 +27,13 @@ export const createEventDef: ToolDefinition = {
       },
       start_time: {
         type: 'string',
-        description: 'Event start time in ISO format',
+        description:
+          "Event start time in ISO format. Use the exact ISO string from check_availability slots, or specify time in user's timezone (e.g., 2026-01-06T10:00:00 for 10am in user's timezone).",
       },
       end_time: {
         type: 'string',
-        description: 'Event end time in ISO format',
+        description:
+          "Event end time in ISO format. Use the exact ISO string from check_availability slots, or specify time in user's timezone.",
       },
       attendees: {
         type: 'array',
@@ -85,13 +88,18 @@ export async function createEvent(input: unknown, context: AgentContext): Promis
   // Include user as attendee
   const allAttendees = [{ email: user.email, name: user.name || undefined }, ...params.attendees];
 
+  // Parse times with proper timezone handling
+  // Times without timezone info are interpreted as being in the user's timezone
+  const startTime = parseISOWithTimezone(params.start_time, settings.timezone);
+  const endTime = parseISOWithTimezone(params.end_time, settings.timezone);
+
   // Create the event
   const eventId = await createCalendarEvent({
     assistantId: context.assistantId,
     calendarId: user.calendarId,
     title: params.title,
-    startTime: new Date(params.start_time),
-    endTime: new Date(params.end_time),
+    startTime,
+    endTime,
     attendees: allAttendees,
     description: description || undefined,
     location: params.location,
@@ -105,8 +113,8 @@ export async function createEvent(input: unknown, context: AgentContext): Promis
       .update(schedulingRequests)
       .set({
         status: 'confirmed',
-        confirmedStartTime: new Date(params.start_time),
-        confirmedEndTime: new Date(params.end_time),
+        confirmedStartTime: startTime,
+        confirmedEndTime: endTime,
         googleCalendarEventId: eventId,
         meetingTitle: params.title,
         updatedAt: new Date(),
