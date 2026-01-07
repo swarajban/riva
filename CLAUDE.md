@@ -37,6 +37,18 @@ npm run worker
 ngrok http 3000
 ```
 
+## Connecting to Production Database
+
+To query the production database, use the local Docker postgres container to run psql:
+
+```bash
+# Get prod connection string from .env.local (commented out as PROD_DATABASE_URL)
+# Then run psql via the local postgres container:
+docker exec riva-postgres psql "postgresql://riva_db_user:<password>@dpg-d5cb76h5pdvs73c69io0-a.oregon-postgres.render.com/riva_db?sslmode=require" -c "SELECT * FROM scheduling_requests LIMIT 5;"
+```
+
+The local postgres container has psql installed, so use `docker exec riva-postgres psql <connection_string>` to run queries against prod.
+
 ## Database Migrations
 
 Uses Drizzle ORM with migrations (same workflow for local and production):
@@ -98,6 +110,7 @@ pending → proposing → awaiting_confirmation → confirmed
 - **Assistant vs User OAuth**: Users have minimal scopes (identity only). Assistants have full Gmail+Calendar scopes.
 - **Duplicate emails**: If immediate send fails, record stays in DB and worker resends. Delete record on failure.
 - **Timezone parsing**: `new Date('2026-01-06')` parses as UTC midnight = Jan 5th in PT. Parse with explicit timezone.
+- **date-fns-tz v3**: `format()` with `timeZone` option does NOT convert dates - it only affects timezone display tokens. Use `toZonedTime()` first to convert UTC to local time before formatting.
 - **Telegram "chat not found"**: User must send `/start` to bot first. Ensure numeric chat ID, not username.
 
 ## Environment Variables
