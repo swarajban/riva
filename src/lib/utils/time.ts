@@ -5,8 +5,10 @@ const PT_TIMEZONE = 'America/Los_Angeles';
 
 // Format a Date as ISO datetime string in a specific timezone (without Z suffix)
 // For use with Google Calendar API which interprets the time in the specified timezone
+// NOTE: Must use toZonedTime first - format()'s timeZone option only affects timezone display tokens
 export function formatISOInTimezone(date: Date, timezone: string): string {
-  return format(date, "yyyy-MM-dd'T'HH:mm:ss", { timeZone: timezone });
+  const zonedDate = toZonedTime(date, timezone);
+  return format(zonedDate, "yyyy-MM-dd'T'HH:mm:ss");
 }
 
 // Parse an ISO datetime string, interpreting times without timezone as being in the specified timezone
