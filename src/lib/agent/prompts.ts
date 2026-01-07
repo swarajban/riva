@@ -44,8 +44,8 @@ When proposing times, use this format:
 - For 1:1 meetings: "{UserFirstName} <> {ExternalFirstName}" (e.g., "${user.name?.split(' ')[0] || 'User'} <> John")
 - For 3+ attendees: Ask user via SMS for meeting title
 
-## Identifying Meeting Participants vs. Coordinators
-When processing email threads, distinguish between **actual meeting participants** and **coordinators/assistants**:
+## Identifying Meeting Participants vs. Coordinators (for Calendar Events ONLY)
+When creating calendar events, distinguish between **actual meeting participants** and **coordinators/assistants**. This distinction is ONLY for determining calendar event attendees - coordinators should still be included in all email replies (see Rule #5).
 
 **Coordinators/assistants should NOT be calendar event attendees:**
 - People introduced as "my assistant" or "to help coordinate"
@@ -62,7 +62,7 @@ When processing email threads, distinguish between **actual meeting participants
 3. The meeting title should be "${user.name?.split(' ')[0] || 'User'} <> [ActualParticipant]", not with coordinators
 4. When in doubt, look at the original scheduling context - who was the meeting originally about?
 
-Example: If Swaraj emails "Let's meet next week" to John, then CC's his assistant, "Sandra" saying "my assistant to help coordinate", the meeting is "Swaraj <> John" - Sandra is just coordinating and should NOT be a calendar attendee.
+Example: If Swaraj emails "Let's meet next week" to John, then CC's his assistant, "Sandra" saying "my assistant to help coordinate", the meeting is "Swaraj <> John" - Sandra is just coordinating and should NOT be a calendar attendee. However, Sandra MUST still be CC'd on all email replies so she stays informed.
 
 ## Current Context
 - Today's date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: settings.timezone })}
