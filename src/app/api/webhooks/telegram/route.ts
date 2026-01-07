@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     const { chatId, text, messageId } = update;
 
-    logger.info('Telegram message received', { chatId, messageId });
+    logger.info('Telegram message received', { chatId, messageId, body: text });
 
     // Handle /start command - send welcome message
     if (text.startsWith('/start')) {
@@ -59,13 +59,20 @@ export async function POST(request: NextRequest) {
     const defaultPending = allPending.length > 0 ? allPending[allPending.length - 1] : null;
 
     // Store the inbound notification (associate with default pending request)
-    await storeInboundNotification(
+    const inboundNotificationId = await storeInboundNotification(
       user.id,
       text,
       'telegram',
       String(messageId),
       defaultPending?.schedulingRequestId || undefined
     );
+
+    logger.info('Stored inbound Telegram notification', {
+      notificationId: inboundNotificationId,
+      userId: user.id,
+      schedulingRequestId: defaultPending?.schedulingRequestId ?? undefined,
+      body: text,
+    });
 
     // Build pending confirmations list for agent context (using stored reference numbers)
     const pendingConfirmations: PendingConfirmation[] = allPending.map((p) => ({
@@ -81,6 +88,13 @@ export async function POST(request: NextRequest) {
 
     // NOTE: Do NOT clear awaiting response here - let agent do it after disambiguation
     // This is important when there are multiple pending confirmations
+
+    logger.info('Running agent for Telegram', {
+      userId: user.id,
+      schedulingRequestId: defaultPending?.schedulingRequestId ?? undefined,
+      pendingConfirmationsCount: pendingConfirmations.length,
+      awaitingResponseType: defaultPending?.awaitingResponseType ?? undefined,
+    });
 
     // Run the agent to process this message
     try {

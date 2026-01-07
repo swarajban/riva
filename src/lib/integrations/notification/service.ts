@@ -144,6 +144,16 @@ export async function sendNotification(options: SendNotificationOptions): Promis
     })
     .returning({ id: notifications.id });
 
+  logger.info('Sent outbound notification', {
+    notificationId: record.id,
+    userId,
+    schedulingRequestId,
+    provider,
+    awaitingResponseType,
+    referenceNumber,
+    body,
+  });
+
   return record.id;
 }
 
@@ -231,6 +241,14 @@ export async function storeInboundNotification(
       receivedAt: new Date(),
     })
     .returning({ id: notifications.id });
+
+  logger.info('Stored inbound notification', {
+    notificationId: record.id,
+    userId,
+    schedulingRequestId,
+    provider,
+    body,
+  });
 
   return record.id;
 }

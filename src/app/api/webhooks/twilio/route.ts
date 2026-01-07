@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const body = formData.get('Body') as string;
     const messageSid = formData.get('MessageSid') as string;
 
-    logger.info('Twilio SMS received', { from, messageSid });
+    logger.info('Twilio SMS received', { from, messageSid, body });
 
     // Find user by phone number (with assistant)
     const user = await findUserByNotificationId(from, 'twilio');
@@ -68,13 +68,20 @@ export async function POST(request: NextRequest) {
     const defaultPending = allPending.length > 0 ? allPending[allPending.length - 1] : null;
 
     // Store the inbound notification (associate with default pending request)
-    await storeInboundNotification(
+    const inboundNotificationId = await storeInboundNotification(
       user.id,
       body,
       'twilio',
       messageSid,
       defaultPending?.schedulingRequestId || undefined
     );
+
+    logger.info('Stored inbound SMS notification', {
+      notificationId: inboundNotificationId,
+      userId: user.id,
+      schedulingRequestId: defaultPending?.schedulingRequestId ?? undefined,
+      body,
+    });
 
     // Build pending confirmations list for agent context (using stored reference numbers)
     const pendingConfirmations: PendingConfirmation[] = allPending.map((p) => ({
@@ -90,6 +97,13 @@ export async function POST(request: NextRequest) {
 
     // NOTE: Do NOT clear awaiting response here - let agent do it after disambiguation
     // This is important when there are multiple pending confirmations
+
+    logger.info('Running agent for SMS', {
+      userId: user.id,
+      schedulingRequestId: defaultPending?.schedulingRequestId ?? undefined,
+      pendingConfirmationsCount: pendingConfirmations.length,
+      awaitingResponseType: defaultPending?.awaitingResponseType ?? undefined,
+    });
 
     // Run the agent to process this SMS
     try {

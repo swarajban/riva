@@ -3,6 +3,7 @@ import { cancelCalendarEvent } from '@/lib/integrations/calendar/client';
 import { db } from '@/lib/db';
 import { schedulingRequests, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from '@/lib/utils/logger';
 
 interface CancelEventInput {
   event_id: string;
@@ -36,6 +37,11 @@ export async function cancelEvent(input: unknown, context: AgentContext): Promis
   }
 
   await cancelCalendarEvent(context.assistantId, user.calendarId, params.event_id);
+
+  logger.info('Calendar event cancelled', {
+    eventId: params.event_id,
+    schedulingRequestId: context.schedulingRequestId,
+  });
 
   // Update scheduling request if we have one
   if (context.schedulingRequestId) {

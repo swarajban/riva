@@ -16,11 +16,13 @@ const anthropic = new Anthropic({
 const MAX_ITERATIONS = 10;
 
 export async function runAgent(context: AgentContext): Promise<void> {
-  logger.info('Running agent', {
+  // Create child logger with schedulingRequestId for consistent context
+  const log = logger.child({ schedulingRequestId: context.schedulingRequestId });
+
+  log.info('Running agent', {
     userId: context.userId,
     assistantId: context.assistantId,
     triggerType: context.triggerType,
-    schedulingRequestId: context.schedulingRequestId,
   });
 
   // Get user with assistant
@@ -59,7 +61,7 @@ export async function runAgent(context: AgentContext): Promise<void> {
 
   while (iterations < MAX_ITERATIONS) {
     iterations++;
-    logger.info('Agent iteration', { iteration: iterations });
+    log.info('Agent iteration', { iteration: iterations });
 
     // Call Claude with optional extended thinking
     const response = await anthropic.messages.create({
@@ -76,14 +78,14 @@ export async function runAgent(context: AgentContext): Promise<void> {
       }),
     });
 
-    logger.info('Agent response', {
+    log.info('Agent response', {
       stopReason: response.stop_reason,
       contentBlocks: response.content.length,
     });
 
     // Check if we're done
     if (response.stop_reason === 'end_turn') {
-      logger.info('Agent completed naturally');
+      log.info('Agent completed naturally');
       break;
     }
 
@@ -96,11 +98,11 @@ export async function runAgent(context: AgentContext): Promise<void> {
 
       for (const block of assistantContent) {
         if (block.type === 'tool_use') {
-          logger.info('Executing tool', { tool: block.name, input: block.input });
+          log.info('Executing tool', { tool: block.name, input: block.input });
 
           const result = await executeTool(block.name as ToolName, block.input, context);
 
-          logger.info('Tool result', { tool: block.name, result });
+          log.info('Tool result', { tool: block.name, result });
 
           // Critical tool failure - stop execution entirely
           if (!result.success && block.name === 'send_sms_to_user') {
@@ -119,13 +121,13 @@ export async function runAgent(context: AgentContext): Promise<void> {
       messages.push({ role: 'user', content: toolResults });
     } else {
       // Unknown stop reason
-      logger.warn('Unknown stop reason', { stopReason: response.stop_reason });
+      log.warn('Unknown stop reason', { stopReason: response.stop_reason });
       break;
     }
   }
 
   if (iterations >= MAX_ITERATIONS) {
-    logger.warn('Agent hit max iterations limit', { maxIterations: MAX_ITERATIONS });
+    log.warn('Agent hit max iterations limit', { maxIterations: MAX_ITERATIONS });
   }
 }
 
@@ -136,6 +138,13 @@ async function buildInitialMessage(context: AgentContext): Promise<string> {
       emailData.attendees?.length > 0
         ? `\nExternal party to schedule with: ${emailData.attendees.map((a: { email: string; name?: string }) => (a.name ? `${a.name} <${a.email}>` : a.email)).join(', ')}`
         : '';
+
+    logger.info('Building agent context', {
+      schedulingRequestId: context.schedulingRequestId,
+      triggerType: 'email',
+      hasAttendees: emailData.attendees?.length > 0,
+      threadId: emailData.threadId,
+    });
 
     return `New inbound email received. Process this email and take appropriate action.
 
@@ -150,6 +159,7 @@ The attendees list above shows who the meeting should be scheduled with. Use the
     // Fetch conversation history - either for single request or all pending if multiple
     let conversationSection = '';
     const allPending = context.allPendingConfirmations || [];
+    let smsHistoryCount = 0;
 
     if (allPending.length > 1) {
       // Multiple pending - fetch recent notifications for context
@@ -164,6 +174,7 @@ The attendees list above shows who the meeting should be scheduled with. Use the
     } else if (context.schedulingRequestId) {
       // Single request - fetch full conversation history
       const history = await getConversationHistory(context.schedulingRequestId);
+      smsHistoryCount = history.length;
       if (history.length > 0) {
         const formattedHistory = history
           .map((msg) => `[${msg.direction === 'outbound' ? 'Assistant' : 'User'}]: ${msg.body}`)
@@ -171,6 +182,14 @@ The attendees list above shows who the meeting should be scheduled with. Use the
         conversationSection = `\n\n## SMS conversation history:\n${formattedHistory}`;
       }
     }
+
+    logger.info('Building agent context', {
+      schedulingRequestId: context.schedulingRequestId,
+      triggerType: 'sms',
+      smsHistoryCount,
+      pendingConfirmationsCount: allPending.length,
+      awaitingResponseType: context.awaitingResponseType,
+    });
 
     if (context.awaitingResponseType) {
       // Provide IDs for tools (notification_id, scheduling_request_id, pendingEmailId)

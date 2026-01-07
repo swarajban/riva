@@ -22,7 +22,12 @@ async function processPendingEmails(): Promise<void> {
   });
 
   for (const email of pendingEmails) {
-    logger.info('Processing pending email', { emailId: email.id });
+    logger.info('Processing pending email', {
+      emailId: email.id,
+      schedulingRequestId: email.schedulingRequestId ?? undefined,
+      subject: email.subject,
+      to: email.toEmails,
+    });
 
     try {
       // Atomically claim the email by setting sentAt to a placeholder
@@ -39,7 +44,10 @@ async function processPendingEmails(): Promise<void> {
         .returning({ id: emailThreads.id });
 
       if (claimed.length === 0) {
-        logger.info('Email already claimed, skipping', { emailId: email.id });
+        logger.info('Email already claimed, skipping', {
+          emailId: email.id,
+          schedulingRequestId: email.schedulingRequestId ?? undefined,
+        });
         continue;
       }
 
@@ -73,6 +81,7 @@ async function processPendingEmails(): Promise<void> {
       if (newerInbound) {
         logger.info('Email cancelled at send time - newer inbound email arrived after it was queued', {
           emailId: email.id,
+          schedulingRequestId: email.schedulingRequestId ?? undefined,
           newerInboundId: newerInbound.id,
         });
         await db
@@ -87,9 +96,17 @@ async function processPendingEmails(): Promise<void> {
       }
 
       await sendEmailNow(request.userId, email.id);
-      logger.info('Email sent', { emailId: email.id });
+      logger.info('Email sent', {
+        emailId: email.id,
+        schedulingRequestId: email.schedulingRequestId ?? undefined,
+        subject: email.subject,
+        to: email.toEmails,
+      });
     } catch (error) {
-      logger.error('Failed to send email', error, { emailId: email.id });
+      logger.error('Failed to send email', error, {
+        emailId: email.id,
+        schedulingRequestId: email.schedulingRequestId ?? undefined,
+      });
       // Reset sentAt on failure so it can be retried
       await db.update(emailThreads).set({ sentAt: null }).where(eq(emailThreads.id, email.id));
     }

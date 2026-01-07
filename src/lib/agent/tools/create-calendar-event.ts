@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { schedulingRequests, users, UserSettings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { parseISOWithTimezone } from '@/lib/utils/time';
+import { logger } from '@/lib/utils/logger';
 
 interface CreateEventInput {
   title: string;
@@ -108,6 +109,15 @@ export async function createEvent(input: unknown, context: AgentContext): Promis
 
   // Update scheduling request (use override if provided, otherwise fall back to context)
   const requestIdToUpdate = params.scheduling_request_id || context.schedulingRequestId;
+
+  logger.info('Calendar event created', {
+    eventId,
+    schedulingRequestId: requestIdToUpdate,
+    title: params.title,
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
+    attendeeCount: allAttendees.length,
+  });
   if (requestIdToUpdate) {
     await db
       .update(schedulingRequests)

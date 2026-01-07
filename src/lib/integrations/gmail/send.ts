@@ -128,6 +128,13 @@ export async function queueEmailForConfirmation(options: Omit<SendEmailOptions, 
     })
     .returning({ id: emailThreads.id });
 
+  logger.info('Email queued for confirmation', {
+    emailId: emailThread.id,
+    schedulingRequestId: options.schedulingRequestId,
+    subject: options.subject,
+    to: options.to,
+  });
+
   return emailThread.id;
 }
 
@@ -170,6 +177,15 @@ export async function queueEmail(options: SendEmailOptions): Promise<string> {
       scheduledSendAt: sendTime,
     })
     .returning({ id: emailThreads.id });
+
+  logger.info('Email queued', {
+    emailId: emailThread.id,
+    schedulingRequestId: options.schedulingRequestId,
+    subject: options.subject,
+    to: options.to,
+    scheduledSendAt: sendTime.toISOString(),
+    immediate: options.immediate || false,
+  });
 
   // If immediate, send now; otherwise leave for worker to pick up
   if (options.immediate) {
@@ -266,4 +282,13 @@ export async function sendEmailNow(userId: string, emailThreadId: string): Promi
       scheduledSendAt: null,
     })
     .where(eq(emailThreads.id, emailThreadId));
+
+  logger.info('Email sent via Gmail', {
+    emailId: emailThreadId,
+    schedulingRequestId: emailRecord.schedulingRequestId ?? undefined,
+    subject: emailRecord.subject,
+    to: emailRecord.toEmails,
+    gmailMessageId: response.data.id,
+    gmailThreadId: response.data.threadId,
+  });
 }
