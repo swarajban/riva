@@ -279,34 +279,6 @@
             animation: fadeInUp 0.8s ease forwards;
         }
 
-        .hero__badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: var(--color-bg-alt);
-            border: 1px solid var(--color-border);
-            border-radius: 100px;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            color: var(--color-text-secondary);
-            margin-bottom: var(--space-md);
-        }
-
-        .hero__badge::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: #22c55e;
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
         .hero h1 {
             margin-bottom: var(--space-md);
         }
@@ -1038,13 +1010,53 @@
                 display: flex;
             }
 
+            .hero {
+                min-height: auto;
+                padding: calc(60px + var(--space-lg)) 0 var(--space-xl);
+            }
+
             .hero__grid {
                 grid-template-columns: 1fr;
-                gap: var(--space-xl);
+                gap: var(--space-lg);
             }
 
             .hero__visual {
-                order: -1;
+                order: 1;
+            }
+
+            .hero__content {
+                order: 0;
+            }
+
+            .hero__subtitle {
+                font-size: 1.0625rem;
+            }
+
+            .email-mockup__content {
+                padding: var(--space-sm);
+            }
+
+            .email-item {
+                padding: 0.625rem;
+            }
+
+            .email-item__avatar {
+                width: 24px;
+                height: 24px;
+                font-size: 0.6875rem;
+            }
+
+            .email-item__body {
+                padding-left: calc(24px + var(--space-xs));
+                font-size: 0.8125rem;
+            }
+
+            .email-item__times {
+                padding-left: calc(24px + var(--space-xs));
+            }
+
+            .email-item__time-slot {
+                font-size: 0.75rem;
             }
 
             .step {
@@ -1116,7 +1128,6 @@
         <div class="container">
             <div class="hero__grid">
                 <div class="hero__content">
-                    <div class="hero__badge">Available now</div>
                     <h1>Never schedule another meeting yourself.</h1>
                     <p class="hero__subtitle">Riva is your AI scheduling assistant. CC it on any email thread and it handles the back-and-forth, finds times that work, and books meetings—all with your approval via text.</p>
                     <div class="hero__cta-group">
