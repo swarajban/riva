@@ -189,6 +189,13 @@ export async function queueEmail(options: SendEmailOptions): Promise<string> {
 
   // If immediate, send now; otherwise leave for worker to pick up
   if (options.immediate) {
+    // Claim the email first (set sentAt to epoch) to prevent worker from picking it up
+    // if the process dies after Gmail sends but before DB update completes
+    await db
+      .update(emailThreads)
+      .set({ sentAt: new Date(0) })
+      .where(eq(emailThreads.id, emailThread.id));
+
     try {
       await sendEmailNow(options.userId, emailThread.id);
     } catch (error) {
