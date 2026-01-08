@@ -5,7 +5,6 @@ module.exports = {
       script: 'node_modules/.bin/next',
       args: 'start',
       exec_mode: 'fork',
-      kill_timeout: 30000, // 30s for graceful shutdown
     },
     {
       name: 'worker',
