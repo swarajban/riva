@@ -14,7 +14,6 @@ module.exports = {
       exec_mode: 'fork',
       restart_delay: 5000,
       kill_timeout: 30000, // 30s to allow current job to finish
-      listen_timeout: 10000,
     },
   ],
 };

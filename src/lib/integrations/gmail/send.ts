@@ -190,11 +190,18 @@ export async function queueEmail(options: SendEmailOptions): Promise<string> {
   // If immediate, send now; otherwise leave for worker to pick up
   if (options.immediate) {
     // Claim the email first (set sentAt to epoch) to prevent worker from picking it up
-    // if the process dies after Gmail sends but before DB update completes
+    // if the process dies after Gmail sends but before DB update completes.
+    // Trade-off: if process dies after claim but before Gmail send, email is orphaned.
+    // This is acceptable because orphaned emails are better than duplicate sends.
     await db
       .update(emailThreads)
       .set({ sentAt: new Date(0) })
       .where(eq(emailThreads.id, emailThread.id));
+
+    logger.info('Email claimed for immediate send', {
+      emailId: emailThread.id,
+      schedulingRequestId: options.schedulingRequestId,
+    });
 
     try {
       await sendEmailNow(options.userId, emailThread.id);
