@@ -9,6 +9,46 @@ import { logger } from '@/lib/utils/logger';
 
 const POLL_INTERVAL_MS = 10_000; // 10 seconds
 
+// Graceful shutdown state
+let isShuttingDown = false;
+let isProcessing = false;
+let pollInterval: NodeJS.Timeout | null = null;
+
+function setupGracefulShutdown(): void {
+  const shutdown = async (signal: string) => {
+    if (isShuttingDown) return; // Already shutting down
+    isShuttingDown = true;
+
+    logger.info(`Received ${signal}, starting graceful shutdown...`);
+
+    // Stop polling for new jobs
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
+    }
+
+    // Wait for current job to finish (max 25s to stay under Render's 30s default)
+    const maxWait = 25_000;
+    const startTime = Date.now();
+
+    while (isProcessing && Date.now() - startTime < maxWait) {
+      logger.info('Waiting for current job to complete...');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    if (isProcessing) {
+      logger.warn('Current job did not complete in time, exiting anyway');
+    } else {
+      logger.info('Graceful shutdown complete');
+    }
+
+    process.exit(0);
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+}
+
 // Process pending emails (scheduled_send_at <= now AND sent_at IS NULL)
 async function processPendingEmails(): Promise<void> {
   const now = new Date();
@@ -184,6 +224,12 @@ async function processGmailWatchRenewals(): Promise<void> {
 
 // Main polling loop
 async function pollOnce(): Promise<void> {
+  if (isShuttingDown) {
+    logger.info('Shutdown in progress, skipping poll');
+    return;
+  }
+
+  isProcessing = true;
   try {
     await processPendingEmails();
     await processSmsReminders();
@@ -191,6 +237,8 @@ async function pollOnce(): Promise<void> {
     await processGmailWatchRenewals();
   } catch (error) {
     logger.error('Worker poll error', error);
+  } finally {
+    isProcessing = false;
   }
 }
 
@@ -198,11 +246,14 @@ async function pollOnce(): Promise<void> {
 export async function startWorker(): Promise<void> {
   logger.info('Starting polling worker', { pollIntervalMs: POLL_INTERVAL_MS });
 
+  // Set up graceful shutdown handlers
+  setupGracefulShutdown();
+
   // Run immediately on start
   await pollOnce();
 
-  // Then poll on interval
-  setInterval(pollOnce, POLL_INTERVAL_MS);
+  // Then poll on interval (store reference for cleanup)
+  pollInterval = setInterval(pollOnce, POLL_INTERVAL_MS);
 
   logger.info('Worker started');
 }
