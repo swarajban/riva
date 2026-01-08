@@ -962,6 +962,18 @@
             color: var(--color-text-secondary);
         }
 
+        .footer__made {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--color-text-secondary);
+            margin-top: var(--space-md);
+            letter-spacing: 0.02em;
+        }
+
+        .footer__heart {
+            color: var(--color-accent);
+        }
+
         /* Animations */
         @keyframes fadeInUp {
             from {
@@ -1580,10 +1592,11 @@
                 <div class="footer__links">
                     <a href="#" class="footer__link">Privacy Policy</a>
                     <a href="#" class="footer__link">Terms of Service</a>
-                    <a href="mailto:support@riva.systems" class="footer__link">support@riva.systems</a>
+                    <a href="mailto:hello@riva.systems" class="footer__link">hello@riva.systems</a>
                 </div>
-                <span class="footer__copyright">&copy; 2025 Riva. All rights reserved.</span>
+                <span class="footer__copyright">&copy; <span id="year"></span> Riva. All rights reserved.</span>
             </div>
+            <div class="footer__made">Made with <span class="footer__heart">&hearts;</span> in San Francisco</div>
         </div>
     </footer>
 
@@ -1693,6 +1706,9 @@
         document.querySelectorAll('.use-case').forEach((card, index) => {
             card.style.transitionDelay = `${index * 0.1}s`;
         });
+
+        // Dynamic year
+        document.getElementById('year').textContent = new Date().getFullYear();
     </script>
 </body>
 </html>
