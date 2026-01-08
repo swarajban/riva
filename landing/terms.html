@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - Riva</title>
+    <meta name="description" content="Terms of Service for Riva, the AI email scheduling assistant. Read our terms and conditions for using the service.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --color-bg: #faf9f7;
+            --color-bg-alt: #f3f1ed;
+            --color-surface: #ffffff;
+            --color-text: #1a1a1f;
+            --color-text-secondary: #5a5a65;
+            --color-text-muted: #8a8a95;
+            --color-accent: #b8845c;
+            --color-accent-hover: #a37249;
+            --color-accent-light: rgba(184, 132, 92, 0.08);
+            --color-border: #e5e3df;
+            --color-border-light: #eeece8;
+
+            --font-display: 'DM Serif Display', Georgia, serif;
+            --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --font-legal: 'Crimson Pro', Georgia, serif;
+
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 1.5rem;
+            --space-lg: 2.5rem;
+            --space-xl: 4rem;
+            --space-2xl: 6rem;
+
+            --max-width: 720px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Grain overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.03;
+            z-index: 9999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        a {
+            color: var(--color-accent);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--color-accent-hover);
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: var(--space-sm) 0;
+            background: rgba(250, 249, 247, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav__inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-md);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav__logo {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            color: var(--color-text);
+        }
+
+        .nav__back {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            transition: color 0.2s ease;
+        }
+
+        .nav__back:hover {
+            color: var(--color-text);
+        }
+
+        .nav__back svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Hero Header */
+        .hero {
+            padding: calc(80px + var(--space-xl)) var(--space-md) var(--space-xl);
+            text-align: center;
+            background: linear-gradient(180deg, var(--color-bg-alt) 0%, var(--color-bg) 100%);
+            border-bottom: 1px solid var(--color-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 70% 30%, rgba(184, 132, 92, 0.04) 0%, transparent 50%),
+                        radial-gradient(circle at 30% 70%, rgba(184, 132, 92, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero__content {
+            position: relative;
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .hero__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 100px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-md);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .hero__badge svg {
+            width: 16px;
+            height: 16px;
+            color: var(--color-accent);
+        }
+
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            margin-bottom: var(--space-sm);
+        }
+
+        .hero__updated {
+            font-size: 0.9375rem;
+            color: var(--color-text-secondary);
+        }
+
+        /* Main Content */
+        .content {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: var(--space-2xl) var(--space-md);
+        }
+
+        /* Table of Contents */
+        .toc {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: var(--space-lg);
+            margin-bottom: var(--space-2xl);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+        }
+
+        .toc__title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            margin-bottom: var(--space-md);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toc__title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--color-accent);
+            border-radius: 2px;
+        }
+
+        .toc__list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem var(--space-lg);
+        }
+
+        .toc__item {
+            position: relative;
+        }
+
+        .toc__link {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            font-size: 0.9375rem;
+            color: var(--color-text-secondary);
+            padding: 0.375rem 0;
+            transition: all 0.2s ease;
+        }
+
+        .toc__link:hover {
+            color: var(--color-text);
+        }
+
+        .toc__number {
+            font-family: var(--font-display);
+            font-size: 0.875rem;
+            color: var(--color-accent);
+            min-width: 1.5rem;
+        }
+
+        /* Legal Sections */
+        .legal-section {
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-xl);
+            border-bottom: 1px solid var(--color-border-light);
+        }
+
+        .legal-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .legal-section__header {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+        }
+
+        .legal-section__number {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            line-height: 1;
+            color: var(--color-border);
+            min-width: 3rem;
+        }
+
+        .legal-section h2 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 400;
+            line-height: 1.2;
+            padding-top: 0.25rem;
+        }
+
+        .legal-section p {
+            font-family: var(--font-legal);
+            font-size: 1.0625rem;
+            line-height: 1.8;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-sm);
+        }
+
+        .legal-section p:last-child {
+            margin-bottom: 0;
+        }
+
+        .legal-section strong {
+            font-weight: 500;
+            color: var(--color-text);
+        }
+
+        /* Subsections */
+        .legal-section h3 {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-top: var(--space-md);
+            margin-bottom: var(--space-xs);
+        }
+
+        /* Lists */
+        .legal-section ul {
+            list-style: none;
+            margin: var(--space-sm) 0;
+            padding-left: var(--space-sm);
+        }
+
+        .legal-section ul li {
+            position: relative;
+            padding-left: var(--space-md);
+            font-family: var(--font-legal);
+            font-size: 1.0625rem;
+            line-height: 1.8;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .legal-section ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.75rem;
+            width: 6px;
+            height: 6px;
+            background: var(--color-accent);
+            border-radius: 50%;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: var(--color-accent-light);
+            border-left: 3px solid var(--color-accent);
+            padding: var(--space-md);
+            margin: var(--space-md) 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .info-box p {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            color: var(--color-text);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        /* Warning Box */
+        .warning-box {
+            background: rgba(26, 26, 31, 0.03);
+            border: 1px solid var(--color-border);
+            padding: var(--space-md);
+            margin: var(--space-md) 0;
+            border-radius: 8px;
+        }
+
+        .warning-box p {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            color: var(--color-text);
+            margin: 0;
+            line-height: 1.6;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        /* Legal emphasis */
+        .legal-emphasis {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            color: var(--color-text);
+        }
+
+        /* Contact Box */
+        .contact-box {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: var(--space-lg);
+            margin-top: var(--space-xl);
+            text-align: center;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+        }
+
+        .contact-box h3 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin-bottom: var(--space-sm);
+        }
+
+        .contact-box p {
+            font-family: var(--font-body);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-md);
+        }
+
+        .contact-box__email {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--color-accent);
+            padding: 0.75rem 1.5rem;
+            background: var(--color-accent-light);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .contact-box__email:hover {
+            background: rgba(184, 132, 92, 0.15);
+        }
+
+        .contact-box__email svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Footer */
+        .footer {
+            padding: var(--space-lg) 0;
+            background: var(--color-bg-alt);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .footer__inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-md);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: var(--space-md);
+        }
+
+        .footer__logo {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            color: var(--color-text);
+        }
+
+        .footer__links {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+        }
+
+        .footer__link {
+            font-size: 0.875rem;
+            color: var(--color-text-secondary);
+            transition: color 0.2s ease;
+        }
+
+        .footer__link:hover {
+            color: var(--color-text);
+        }
+
+        .footer__link--active {
+            color: var(--color-accent);
+            font-weight: 500;
+        }
+
+        .footer__copyright {
+            font-size: 0.8125rem;
+            color: var(--color-text-secondary);
+        }
+
+        .footer__made {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--color-text-secondary);
+            margin-top: var(--space-md);
+            letter-spacing: 0.02em;
+        }
+
+        .footer__heart {
+            color: var(--color-accent);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero__content {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .toc {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease 0.1s forwards;
+        }
+
+        .legal-section {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            height: 2px;
+            background: var(--color-accent);
+            width: 0%;
+            z-index: 999;
+            transition: width 0.1s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .toc__list {
+                grid-template-columns: 1fr;
+            }
+
+            .legal-section__header {
+                flex-direction: column;
+                gap: var(--space-xs);
+            }
+
+            .legal-section__number {
+                font-size: 1.75rem;
+            }
+
+            .footer__inner {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progress"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav__inner">
+            <a href="index.html" class="nav__logo">Riva</a>
+            <a href="index.html" class="nav__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back to Home
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Header -->
+    <header class="hero">
+        <div class="hero__content">
+            <div class="hero__badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                Legal Document
+            </div>
+            <h1>Terms of Service</h1>
+            <p class="hero__updated">Last Updated: January 8, 2026</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content">
+        <!-- Table of Contents -->
+        <nav class="toc">
+            <h2 class="toc__title">Contents</h2>
+            <ol class="toc__list">
+                <li class="toc__item"><a href="#acceptance" class="toc__link"><span class="toc__number">01</span> Acceptance of Terms</a></li>
+                <li class="toc__item"><a href="#description" class="toc__link"><span class="toc__number">02</span> Description of Service</a></li>
+                <li class="toc__item"><a href="#account" class="toc__link"><span class="toc__number">03</span> Account Requirements</a></li>
+                <li class="toc__item"><a href="#subscriptions" class="toc__link"><span class="toc__number">04</span> Subscriptions and Payment</a></li>
+                <li class="toc__item"><a href="#acceptable-use" class="toc__link"><span class="toc__number">05</span> Acceptable Use</a></li>
+                <li class="toc__item"><a href="#sms-consent" class="toc__link"><span class="toc__number">06</span> SMS Communications Consent</a></li>
+                <li class="toc__item"><a href="#intellectual-property" class="toc__link"><span class="toc__number">07</span> Intellectual Property</a></li>
+                <li class="toc__item"><a href="#third-party" class="toc__link"><span class="toc__number">08</span> Third-Party Services</a></li>
+                <li class="toc__item"><a href="#disclaimers" class="toc__link"><span class="toc__number">09</span> Disclaimers</a></li>
+                <li class="toc__item"><a href="#liability" class="toc__link"><span class="toc__number">10</span> Limitation of Liability</a></li>
+                <li class="toc__item"><a href="#indemnification" class="toc__link"><span class="toc__number">11</span> Indemnification</a></li>
+                <li class="toc__item"><a href="#termination" class="toc__link"><span class="toc__number">12</span> Termination</a></li>
+                <li class="toc__item"><a href="#changes" class="toc__link"><span class="toc__number">13</span> Changes to Terms</a></li>
+                <li class="toc__item"><a href="#governing-law" class="toc__link"><span class="toc__number">14</span> Governing Law and Disputes</a></li>
+                <li class="toc__item"><a href="#general" class="toc__link"><span class="toc__number">15</span> General Provisions</a></li>
+                <li class="toc__item"><a href="#contact" class="toc__link"><span class="toc__number">16</span> Contact Us</a></li>
+            </ol>
+        </nav>
+
+        <p style="font-family: var(--font-legal); font-size: 1.0625rem; line-height: 1.8; color: var(--color-text-secondary); margin-bottom: var(--space-xl);">
+            These Terms of Service ("Terms") govern your use of Riva, an AI email scheduling assistant service. By using Riva, you agree to these Terms.
+        </p>
+
+        <!-- Section 1 -->
+        <section id="acceptance" class="legal-section" style="animation-delay: 0.15s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">01</span>
+                <h2>Acceptance of Terms</h2>
+            </div>
+            <p>By creating an account or using Riva, you agree to be bound by these Terms and our <a href="privacy.html">Privacy Policy</a>. If you do not agree, do not use the service.</p>
+            <p>You must be at least 18 years old (or the age of majority in your jurisdiction) to use Riva.</p>
+        </section>
+
+        <!-- Section 2 -->
+        <section id="description" class="legal-section" style="animation-delay: 0.2s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">02</span>
+                <h2>Description of Service</h2>
+            </div>
+            <p>Riva is an AI-powered email scheduling assistant. The service:</p>
+            <ul>
+                <li>Monitors a connected "assistant" Gmail account for scheduling requests</li>
+                <li>Analyzes email conversations to understand scheduling needs</li>
+                <li>Checks calendar availability</li>
+                <li>Proposes meeting times to participants</li>
+                <li>Sends confirmation requests via SMS or Telegram</li>
+                <li>Creates calendar events once confirmed</li>
+            </ul>
+
+            <div class="info-box">
+                <p><strong>Riva requires you to connect a separate Google account</strong> (your "assistant account") that handles email and calendar operations. This is distinct from your personal Google account used for login.</p>
+            </div>
+        </section>
+
+        <!-- Section 3 -->
+        <section id="account" class="legal-section" style="animation-delay: 0.25s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">03</span>
+                <h2>Account Requirements</h2>
+            </div>
+            <p>To use Riva, you must:</p>
+            <ul>
+                <li>Have a valid Google account for identity verification</li>
+                <li>Connect a separate Google account as your assistant (with Gmail and Calendar access)</li>
+                <li>Provide accurate contact information (phone number or Telegram) for confirmations</li>
+                <li>Keep your account credentials secure</li>
+            </ul>
+            <p>You are responsible for all activity under your account.</p>
+        </section>
+
+        <!-- Section 4 -->
+        <section id="subscriptions" class="legal-section" style="animation-delay: 0.3s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">04</span>
+                <h2>Subscriptions and Payment</h2>
+            </div>
+
+            <h3>Subscription Plans</h3>
+            <p>Riva offers subscription plans with different features and limits. Plan details and pricing are available on our website.</p>
+
+            <h3>Billing</h3>
+            <ul>
+                <li>Subscriptions are billed in advance on a monthly or annual basis</li>
+                <li>Payment is processed through Stripe</li>
+                <li>By subscribing, you authorize us to charge your payment method on a recurring basis</li>
+            </ul>
+
+            <h3>Auto-Renewal</h3>
+            <p>Subscriptions automatically renew at the end of each billing period unless you cancel. You can cancel anytime from your account settings.</p>
+
+            <h3>Cancellation</h3>
+            <ul>
+                <li>You may cancel your subscription at any time</li>
+                <li>Cancellation takes effect at the end of your current billing period</li>
+                <li>You retain access to paid features until the end of your paid period</li>
+                <li>No refunds are provided for partial billing periods</li>
+            </ul>
+
+            <h3>Price Changes</h3>
+            <p>We may change subscription prices with at least 30 days notice. Price changes take effect at your next billing cycle after the notice period.</p>
+
+            <h3>Free Trials</h3>
+            <p>If we offer a free trial, you may be required to provide payment information. If you do not cancel before the trial ends, your subscription will begin and you will be charged.</p>
+        </section>
+
+        <!-- Section 5 -->
+        <section id="acceptable-use" class="legal-section" style="animation-delay: 0.35s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">05</span>
+                <h2>Acceptable Use</h2>
+            </div>
+            <p>You agree NOT to:</p>
+            <ul>
+                <li>Use Riva for spam, unsolicited bulk email, or harassment</li>
+                <li>Send messages that violate others' privacy or rights</li>
+                <li>Attempt to access other users' data or accounts</li>
+                <li>Interfere with or disrupt the service</li>
+                <li>Use the service for any illegal purpose</li>
+                <li>Circumvent any usage limits or access controls</li>
+                <li>Reverse engineer or attempt to extract source code</li>
+                <li>Use Riva to schedule meetings for purposes that violate laws or regulations</li>
+            </ul>
+            <p>We reserve the right to suspend or terminate accounts that violate these terms.</p>
+        </section>
+
+        <!-- Section 6 -->
+        <section id="sms-consent" class="legal-section" style="animation-delay: 0.4s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">06</span>
+                <h2>SMS Communications Consent</h2>
+            </div>
+            <p><strong>By providing your phone number and selecting SMS notifications, you expressly consent to receive text messages from Riva</strong> related to your scheduling requests. This includes:</p>
+            <ul>
+                <li>Meeting time proposals</li>
+                <li>Confirmation requests</li>
+                <li>Scheduling updates and reminders</li>
+            </ul>
+
+            <p><strong>Message Frequency:</strong> Varies based on your scheduling activity. Expect 2-10 messages per scheduling request.</p>
+            <p><strong>Message and Data Rates:</strong> Standard message and data rates from your carrier may apply.</p>
+            <p><strong>Opt-Out:</strong> Reply STOP to any message to unsubscribe from SMS notifications. You can also change your notification preference to Telegram in your account settings.</p>
+            <p><strong>Help:</strong> Reply HELP for assistance or contact hello@riva.systems.</p>
+            <p>These are transactional messages related to services you requested, not marketing messages.</p>
+        </section>
+
+        <!-- Section 7 -->
+        <section id="intellectual-property" class="legal-section" style="animation-delay: 0.45s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">07</span>
+                <h2>Intellectual Property</h2>
+            </div>
+
+            <h3>Our Rights</h3>
+            <p>Riva and its underlying technology, including software, algorithms, designs, and documentation, are owned by us or our licensors. These Terms do not grant you any rights to our intellectual property except the limited right to use the service.</p>
+
+            <h3>Your Content</h3>
+            <p>You retain ownership of your content (emails, calendar data, etc.). By using Riva, you grant us a limited license to process your content as necessary to provide the service.</p>
+        </section>
+
+        <!-- Section 8 -->
+        <section id="third-party" class="legal-section" style="animation-delay: 0.5s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">08</span>
+                <h2>Third-Party Services</h2>
+            </div>
+            <p>Riva integrates with third-party services including:</p>
+            <ul>
+                <li>Google (Gmail, Calendar, OAuth, Contacts)</li>
+                <li>Anthropic (AI processing)</li>
+                <li>Twilio (SMS delivery)</li>
+                <li>Telegram (messaging)</li>
+                <li>Stripe (payment processing)</li>
+            </ul>
+            <p>Your use of these services is subject to their respective terms and privacy policies. We are not responsible for third-party services.</p>
+        </section>
+
+        <!-- Section 9 -->
+        <section id="disclaimers" class="legal-section" style="animation-delay: 0.55s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">09</span>
+                <h2>Disclaimers</h2>
+            </div>
+
+            <div class="warning-box">
+                <p>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED.</p>
+            </div>
+
+            <p>We do not guarantee that:</p>
+            <ul>
+                <li>The service will be uninterrupted or error-free</li>
+                <li>All scheduling requests will be processed correctly</li>
+                <li>The AI will always understand scheduling intent accurately</li>
+                <li>Meetings will be scheduled as intended</li>
+            </ul>
+
+            <div class="info-box">
+                <p><strong>You are responsible for verifying that important meetings are correctly scheduled.</strong> We recommend checking your calendar for critical appointments.</p>
+            </div>
+        </section>
+
+        <!-- Section 10 -->
+        <section id="liability" class="legal-section" style="animation-delay: 0.6s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">10</span>
+                <h2>Limitation of Liability</h2>
+            </div>
+
+            <div class="warning-box">
+                <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW:</p>
+            </div>
+
+            <ul>
+                <li>Our total liability for any claims arising from your use of Riva is limited to the amount you paid us in the 12 months preceding the claim, or $100, whichever is greater</li>
+                <li>We are not liable for any indirect, incidental, special, consequential, or punitive damages</li>
+                <li>We are not liable for missed meetings, scheduling errors, or any damages resulting from AI mistakes</li>
+            </ul>
+            <p>Some jurisdictions do not allow limitation of liability, so these limitations may not apply to you.</p>
+        </section>
+
+        <!-- Section 11 -->
+        <section id="indemnification" class="legal-section" style="animation-delay: 0.65s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">11</span>
+                <h2>Indemnification</h2>
+            </div>
+            <p>You agree to indemnify and hold us harmless from any claims, damages, or expenses (including reasonable attorney fees) arising from:</p>
+            <ul>
+                <li>Your use of the service</li>
+                <li>Your violation of these Terms</li>
+                <li>Your violation of any third-party rights</li>
+                <li>Content you submit through the service</li>
+            </ul>
+        </section>
+
+        <!-- Section 12 -->
+        <section id="termination" class="legal-section" style="animation-delay: 0.7s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">12</span>
+                <h2>Termination</h2>
+            </div>
+
+            <h3>By You</h3>
+            <p>You may stop using Riva and delete your account at any time from your account settings.</p>
+
+            <h3>By Us</h3>
+            <p>We may suspend or terminate your account if you:</p>
+            <ul>
+                <li>Violate these Terms</li>
+                <li>Engage in fraudulent or illegal activity</li>
+                <li>Fail to pay for subscription services</li>
+                <li>For any reason with 30 days notice</li>
+            </ul>
+
+            <h3>Effect of Termination</h3>
+            <p>Upon termination:</p>
+            <ul>
+                <li>Your access to the service ends</li>
+                <li>Your subscription (if any) is cancelled</li>
+                <li>You may request deletion of your data</li>
+            </ul>
+        </section>
+
+        <!-- Section 13 -->
+        <section id="changes" class="legal-section" style="animation-delay: 0.75s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">13</span>
+                <h2>Changes to Terms</h2>
+            </div>
+            <p>We may modify these Terms at any time. If we make material changes, we will notify you by email at least 30 days before the changes take effect. Your continued use of Riva after changes become effective constitutes acceptance of the new Terms.</p>
+        </section>
+
+        <!-- Section 14 -->
+        <section id="governing-law" class="legal-section" style="animation-delay: 0.8s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">14</span>
+                <h2>Governing Law and Disputes</h2>
+            </div>
+            <p>These Terms are governed by the laws of California, USA, without regard to conflict of law principles.</p>
+            <p>Any disputes arising from these Terms or your use of Riva will be resolved in the state or federal courts located in San Francisco, California. You consent to the personal jurisdiction of these courts.</p>
+        </section>
+
+        <!-- Section 15 -->
+        <section id="general" class="legal-section" style="animation-delay: 0.85s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">15</span>
+                <h2>General Provisions</h2>
+            </div>
+            <ul>
+                <li><strong>Entire Agreement:</strong> These Terms and our Privacy Policy constitute the entire agreement between you and Riva</li>
+                <li><strong>Severability:</strong> If any provision is found unenforceable, the remaining provisions remain in effect</li>
+                <li><strong>Waiver:</strong> Our failure to enforce any right does not waive that right</li>
+                <li><strong>Assignment:</strong> You may not assign these Terms; we may assign them to a successor</li>
+            </ul>
+        </section>
+
+        <!-- Section 16 -->
+        <section id="contact" class="legal-section" style="animation-delay: 0.9s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">16</span>
+                <h2>Contact Us</h2>
+            </div>
+            <p>Questions about these Terms? Contact us:</p>
+
+            <div class="contact-box">
+                <h3>Get in Touch</h3>
+                <p>We're here to help with any questions about our Terms of Service.</p>
+                <a href="mailto:hello@riva.systems" class="contact-box__email">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    hello@riva.systems
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__inner">
+                <a href="index.html" class="footer__logo">Riva</a>
+                <div class="footer__links">
+                    <a href="privacy.html" class="footer__link">Privacy Policy</a>
+                    <a href="terms.html" class="footer__link footer__link--active">Terms of Service</a>
+                    <a href="mailto:hello@riva.systems" class="footer__link">hello@riva.systems</a>
+                </div>
+                <span class="footer__copyright">&copy; <span id="year"></span> Riva. All rights reserved.</span>
+            </div>
+            <div class="footer__made">Made with <span class="footer__heart">&hearts;</span> in San Francisco</div>
+        </div>
+    </footer>
+
+    <script>
+        // Progress bar
+        const progressBar = document.getElementById('progress');
+
+        window.addEventListener('scroll', () => {
+            const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (window.scrollY / windowHeight) * 100;
+            progressBar.style.width = scrolled + '%';
+        });
+
+        // Animate sections on scroll
+        const sections = document.querySelectorAll('.legal-section');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // Dynamic year
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Smooth scroll for TOC links
+        document.querySelectorAll('.toc__link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = document.querySelector(link.getAttribute('href'));
+                const offset = 100;
+                const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
+
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

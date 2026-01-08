@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Riva</title>
+    <meta name="description" content="Privacy Policy for Riva, the AI email scheduling assistant. Learn how we collect, use, and protect your information.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --color-bg: #faf9f7;
+            --color-bg-alt: #f3f1ed;
+            --color-surface: #ffffff;
+            --color-text: #1a1a1f;
+            --color-text-secondary: #5a5a65;
+            --color-text-muted: #8a8a95;
+            --color-accent: #b8845c;
+            --color-accent-hover: #a37249;
+            --color-accent-light: rgba(184, 132, 92, 0.08);
+            --color-border: #e5e3df;
+            --color-border-light: #eeece8;
+
+            --font-display: 'DM Serif Display', Georgia, serif;
+            --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --font-legal: 'Crimson Pro', Georgia, serif;
+
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 1.5rem;
+            --space-lg: 2.5rem;
+            --space-xl: 4rem;
+            --space-2xl: 6rem;
+
+            --max-width: 720px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Grain overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.03;
+            z-index: 9999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        a {
+            color: var(--color-accent);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--color-accent-hover);
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: var(--space-sm) 0;
+            background: rgba(250, 249, 247, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav__inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-md);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav__logo {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            color: var(--color-text);
+        }
+
+        .nav__back {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            transition: color 0.2s ease;
+        }
+
+        .nav__back:hover {
+            color: var(--color-text);
+        }
+
+        .nav__back svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Hero Header */
+        .hero {
+            padding: calc(80px + var(--space-xl)) var(--space-md) var(--space-xl);
+            text-align: center;
+            background: linear-gradient(180deg, var(--color-bg-alt) 0%, var(--color-bg) 100%);
+            border-bottom: 1px solid var(--color-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 20%, rgba(184, 132, 92, 0.04) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(184, 132, 92, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero__content {
+            position: relative;
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .hero__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 100px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-md);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .hero__badge svg {
+            width: 16px;
+            height: 16px;
+            color: var(--color-accent);
+        }
+
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            margin-bottom: var(--space-sm);
+        }
+
+        .hero__updated {
+            font-size: 0.9375rem;
+            color: var(--color-text-secondary);
+        }
+
+        /* Main Content */
+        .content {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: var(--space-2xl) var(--space-md);
+        }
+
+        /* Table of Contents */
+        .toc {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: var(--space-lg);
+            margin-bottom: var(--space-2xl);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+        }
+
+        .toc__title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            margin-bottom: var(--space-md);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toc__title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--color-accent);
+            border-radius: 2px;
+        }
+
+        .toc__list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem var(--space-lg);
+        }
+
+        .toc__item {
+            position: relative;
+        }
+
+        .toc__link {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            font-size: 0.9375rem;
+            color: var(--color-text-secondary);
+            padding: 0.375rem 0;
+            transition: all 0.2s ease;
+        }
+
+        .toc__link:hover {
+            color: var(--color-text);
+        }
+
+        .toc__number {
+            font-family: var(--font-display);
+            font-size: 0.875rem;
+            color: var(--color-accent);
+            min-width: 1.5rem;
+        }
+
+        /* Legal Sections */
+        .legal-section {
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-xl);
+            border-bottom: 1px solid var(--color-border-light);
+        }
+
+        .legal-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .legal-section__header {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+        }
+
+        .legal-section__number {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            line-height: 1;
+            color: var(--color-border);
+            min-width: 3rem;
+        }
+
+        .legal-section h2 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 400;
+            line-height: 1.2;
+            padding-top: 0.25rem;
+        }
+
+        .legal-section p {
+            font-family: var(--font-legal);
+            font-size: 1.0625rem;
+            line-height: 1.8;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-sm);
+        }
+
+        .legal-section p:last-child {
+            margin-bottom: 0;
+        }
+
+        .legal-section strong {
+            font-weight: 500;
+            color: var(--color-text);
+        }
+
+        /* Subsections */
+        .legal-section h3 {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-top: var(--space-md);
+            margin-bottom: var(--space-xs);
+        }
+
+        /* Lists */
+        .legal-section ul {
+            list-style: none;
+            margin: var(--space-sm) 0;
+            padding-left: var(--space-sm);
+        }
+
+        .legal-section ul li {
+            position: relative;
+            padding-left: var(--space-md);
+            font-family: var(--font-legal);
+            font-size: 1.0625rem;
+            line-height: 1.8;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .legal-section ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.75rem;
+            width: 6px;
+            height: 6px;
+            background: var(--color-accent);
+            border-radius: 50%;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: var(--color-accent-light);
+            border-left: 3px solid var(--color-accent);
+            padding: var(--space-md);
+            margin: var(--space-md) 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .info-box p {
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            color: var(--color-text);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: var(--space-md) 0;
+            font-size: 0.9375rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.875rem var(--space-sm);
+            text-align: left;
+            border-bottom: 1px solid var(--color-border-light);
+        }
+
+        .data-table th {
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 0.8125rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-secondary);
+            background: var(--color-bg-alt);
+        }
+
+        .data-table th:first-child {
+            border-radius: 8px 0 0 0;
+        }
+
+        .data-table th:last-child {
+            border-radius: 0 8px 0 0;
+        }
+
+        .data-table td {
+            font-family: var(--font-legal);
+            color: var(--color-text-secondary);
+            vertical-align: top;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover td {
+            background: var(--color-bg-alt);
+        }
+
+        .data-table__service {
+            font-weight: 500;
+            color: var(--color-text);
+        }
+
+        /* Contact Box */
+        .contact-box {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: var(--space-lg);
+            margin-top: var(--space-xl);
+            text-align: center;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+        }
+
+        .contact-box h3 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin-bottom: var(--space-sm);
+        }
+
+        .contact-box p {
+            font-family: var(--font-body);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-md);
+        }
+
+        .contact-box__email {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--color-accent);
+            padding: 0.75rem 1.5rem;
+            background: var(--color-accent-light);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .contact-box__email:hover {
+            background: rgba(184, 132, 92, 0.15);
+        }
+
+        .contact-box__email svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Footer */
+        .footer {
+            padding: var(--space-lg) 0;
+            background: var(--color-bg-alt);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .footer__inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-md);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: var(--space-md);
+        }
+
+        .footer__logo {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            color: var(--color-text);
+        }
+
+        .footer__links {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+        }
+
+        .footer__link {
+            font-size: 0.875rem;
+            color: var(--color-text-secondary);
+            transition: color 0.2s ease;
+        }
+
+        .footer__link:hover {
+            color: var(--color-text);
+        }
+
+        .footer__link--active {
+            color: var(--color-accent);
+            font-weight: 500;
+        }
+
+        .footer__copyright {
+            font-size: 0.8125rem;
+            color: var(--color-text-secondary);
+        }
+
+        .footer__made {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--color-text-secondary);
+            margin-top: var(--space-md);
+            letter-spacing: 0.02em;
+        }
+
+        .footer__heart {
+            color: var(--color-accent);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero__content {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .toc {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease 0.1s forwards;
+        }
+
+        .legal-section {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            height: 2px;
+            background: var(--color-accent);
+            width: 0%;
+            z-index: 999;
+            transition: width 0.1s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .toc__list {
+                grid-template-columns: 1fr;
+            }
+
+            .legal-section__header {
+                flex-direction: column;
+                gap: var(--space-xs);
+            }
+
+            .legal-section__number {
+                font-size: 1.75rem;
+            }
+
+            .data-table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .footer__inner {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progress"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav__inner">
+            <a href="index.html" class="nav__logo">Riva</a>
+            <a href="index.html" class="nav__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back to Home
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Header -->
+    <header class="hero">
+        <div class="hero__content">
+            <div class="hero__badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                Legal Document
+            </div>
+            <h1>Privacy Policy</h1>
+            <p class="hero__updated">Last Updated: January 8, 2026</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content">
+        <!-- Table of Contents -->
+        <nav class="toc">
+            <h2 class="toc__title">Contents</h2>
+            <ol class="toc__list">
+                <li class="toc__item"><a href="#what-riva-does" class="toc__link"><span class="toc__number">01</span> What Riva Does</a></li>
+                <li class="toc__item"><a href="#information-we-collect" class="toc__link"><span class="toc__number">02</span> Information We Collect</a></li>
+                <li class="toc__item"><a href="#how-we-use" class="toc__link"><span class="toc__number">03</span> How We Use Your Information</a></li>
+                <li class="toc__item"><a href="#third-party" class="toc__link"><span class="toc__number">04</span> Third-Party Services</a></li>
+                <li class="toc__item"><a href="#data-security" class="toc__link"><span class="toc__number">05</span> Data Security</a></li>
+                <li class="toc__item"><a href="#data-retention" class="toc__link"><span class="toc__number">06</span> Data Retention</a></li>
+                <li class="toc__item"><a href="#your-rights" class="toc__link"><span class="toc__number">07</span> Your Rights</a></li>
+                <li class="toc__item"><a href="#sms-terms" class="toc__link"><span class="toc__number">08</span> SMS/Text Message Terms</a></li>
+                <li class="toc__item"><a href="#childrens-privacy" class="toc__link"><span class="toc__number">09</span> Children's Privacy</a></li>
+                <li class="toc__item"><a href="#california-rights" class="toc__link"><span class="toc__number">10</span> California Privacy Rights</a></li>
+                <li class="toc__item"><a href="#changes" class="toc__link"><span class="toc__number">11</span> Changes to This Policy</a></li>
+                <li class="toc__item"><a href="#contact" class="toc__link"><span class="toc__number">12</span> Contact Us</a></li>
+            </ol>
+        </nav>
+
+        <p style="font-family: var(--font-legal); font-size: 1.0625rem; line-height: 1.8; color: var(--color-text-secondary); margin-bottom: var(--space-xl);">
+            This Privacy Policy explains how Riva ("we," "us," or "our") collects, uses, and protects your information when you use our AI email scheduling assistant service.
+        </p>
+
+        <!-- Section 1 -->
+        <section id="what-riva-does" class="legal-section" style="animation-delay: 0.15s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">01</span>
+                <h2>What Riva Does</h2>
+            </div>
+            <p>Riva is an AI assistant that helps you schedule meetings. When someone CCs your Riva assistant on an email thread, it reads the conversation, checks your calendar availability, proposes meeting times, and creates calendar events once confirmed.</p>
+        </section>
+
+        <!-- Section 2 -->
+        <section id="information-we-collect" class="legal-section" style="animation-delay: 0.2s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">02</span>
+                <h2>Information We Collect</h2>
+            </div>
+
+            <h3>Account Information</h3>
+            <p>When you sign up, we collect:</p>
+            <ul>
+                <li><strong>Email address and name</strong> from your Google account (for identity verification only)</li>
+                <li><strong>Phone number</strong> (if you choose SMS notifications)</li>
+                <li><strong>Telegram Chat ID</strong> (if you choose Telegram notifications)</li>
+            </ul>
+
+            <h3>Assistant Account</h3>
+            <p>Riva requires you to connect a separate Google account as your "assistant." This is a different account from your personal Google account. For this assistant account, we request access to:</p>
+            <ul>
+                <li><strong>Gmail</strong> (read, send, and manage emails)</li>
+                <li><strong>Google Calendar</strong> (view availability and create events)</li>
+                <li><strong>Google Contacts</strong> (look up attendee information)</li>
+            </ul>
+
+            <div class="info-box">
+                <p><strong>Important:</strong> We do NOT have access to your personal email inbox. We only access the assistant account you explicitly connect.</p>
+            </div>
+
+            <h3>Scheduling Data</h3>
+            <p>When processing scheduling requests, we collect and store:</p>
+            <ul>
+                <li>Email threads where your assistant is CC'd (subject, body, participants)</li>
+                <li>Meeting attendee information (names and email addresses)</li>
+                <li>Meeting details (title, duration, proposed and confirmed times)</li>
+                <li>Your scheduling preferences (working hours, timezone, buffer times)</li>
+            </ul>
+
+            <h3>Communication Data</h3>
+            <p>We store messages exchanged for scheduling confirmations:</p>
+            <ul>
+                <li>SMS messages sent via Twilio</li>
+                <li>Telegram messages sent via our bot</li>
+            </ul>
+
+            <h3>User Preferences</h3>
+            <p>You can configure:</p>
+            <ul>
+                <li>Working hours and timezone</li>
+                <li>Zoom personal meeting link</li>
+                <li>Meeting duration defaults</li>
+                <li>Scheduling rules and preferences</li>
+            </ul>
+        </section>
+
+        <!-- Section 3 -->
+        <section id="how-we-use" class="legal-section" style="animation-delay: 0.25s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">03</span>
+                <h2>How We Use Your Information</h2>
+            </div>
+            <p>We use your information to:</p>
+            <ul>
+                <li>Process and coordinate meeting scheduling requests</li>
+                <li>Send emails from your assistant account</li>
+                <li>Check your calendar availability</li>
+                <li>Create calendar events with video conferencing links</li>
+                <li>Send SMS or Telegram notifications for confirmations</li>
+                <li>Analyze email content using AI to understand scheduling intent</li>
+            </ul>
+        </section>
+
+        <!-- Section 4 -->
+        <section id="third-party" class="legal-section" style="animation-delay: 0.3s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">04</span>
+                <h2>Third-Party Services</h2>
+            </div>
+            <p>We share data with these service providers to operate Riva:</p>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Data Shared</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="data-table__service">Google</span></td>
+                        <td>OAuth tokens, email content, calendar data</td>
+                        <td>Gmail/Calendar/Contacts API access</td>
+                    </tr>
+                    <tr>
+                        <td><span class="data-table__service">Anthropic (Claude AI)</span></td>
+                        <td>Email content, scheduling context</td>
+                        <td>AI analysis to understand scheduling requests</td>
+                    </tr>
+                    <tr>
+                        <td><span class="data-table__service">Twilio</span></td>
+                        <td>Phone number, message content</td>
+                        <td>SMS delivery (if you choose SMS)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="data-table__service">Telegram</span></td>
+                        <td>Chat ID, message content</td>
+                        <td>Message delivery (if you choose Telegram)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>What We Do NOT Do</h3>
+            <ul>
+                <li>Sell your personal information</li>
+                <li>Use your data for advertising</li>
+                <li>Share your data with third parties for their marketing purposes</li>
+                <li>Access your personal email (only the assistant account you connect)</li>
+            </ul>
+        </section>
+
+        <!-- Section 5 -->
+        <section id="data-security" class="legal-section" style="animation-delay: 0.35s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">05</span>
+                <h2>Data Security</h2>
+            </div>
+            <p>We protect your information by:</p>
+            <ul>
+                <li>Using HTTPS encryption for all data transmission</li>
+                <li>Storing OAuth tokens securely in our database</li>
+                <li>Hosting our servers in the United States (Render)</li>
+                <li>Limiting access to authorized personnel only</li>
+            </ul>
+        </section>
+
+        <!-- Section 6 -->
+        <section id="data-retention" class="legal-section" style="animation-delay: 0.4s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">06</span>
+                <h2>Data Retention</h2>
+            </div>
+            <ul>
+                <li><strong>Account data:</strong> Retained until you delete your account</li>
+                <li><strong>Email threads and messages:</strong> Retained for service operation and scheduling history</li>
+                <li><strong>Scheduling requests:</strong> Active for 2 days, then archived</li>
+                <li><strong>OAuth tokens:</strong> Retained until you disconnect your assistant account</li>
+            </ul>
+            <p>You can request deletion of your data at any time by contacting us.</p>
+        </section>
+
+        <!-- Section 7 -->
+        <section id="your-rights" class="legal-section" style="animation-delay: 0.45s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">07</span>
+                <h2>Your Rights</h2>
+            </div>
+            <p>You have the right to:</p>
+            <ul>
+                <li><strong>Access</strong> your personal data</li>
+                <li><strong>Delete</strong> your account and associated data</li>
+                <li><strong>Revoke</strong> Google OAuth access at any time via your Google account settings</li>
+                <li><strong>Opt out</strong> of SMS by replying STOP to any message</li>
+                <li><strong>Export</strong> your data upon request</li>
+            </ul>
+        </section>
+
+        <!-- Section 8 -->
+        <section id="sms-terms" class="legal-section" style="animation-delay: 0.5s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">08</span>
+                <h2>SMS/Text Message Terms</h2>
+            </div>
+            <p>If you choose SMS notifications:</p>
+            <ul>
+                <li><strong>Consent:</strong> By providing your phone number and selecting SMS notifications, you consent to receive scheduling-related text messages</li>
+                <li><strong>Message types:</strong> Appointment confirmations, scheduling options, reminders</li>
+                <li><strong>Frequency:</strong> Varies based on your scheduling activity (typically 2-10 messages per scheduling request)</li>
+                <li><strong>Rates:</strong> Message and data rates may apply</li>
+                <li><strong>Opt-out:</strong> Reply STOP to any message to unsubscribe. We will confirm your opt-out and stop sending messages within 10 days</li>
+                <li><strong>Help:</strong> Reply HELP for assistance or contact us at the email below</li>
+            </ul>
+            <p>These are transactional messages related to your scheduling requests, not marketing messages.</p>
+        </section>
+
+        <!-- Section 9 -->
+        <section id="childrens-privacy" class="legal-section" style="animation-delay: 0.55s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">09</span>
+                <h2>Children's Privacy</h2>
+            </div>
+            <p>Riva is not intended for users under 18 years of age. We do not knowingly collect information from children.</p>
+        </section>
+
+        <!-- Section 10 -->
+        <section id="california-rights" class="legal-section" style="animation-delay: 0.6s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">10</span>
+                <h2>California Privacy Rights</h2>
+            </div>
+            <p>If you are a California resident, you have additional rights under the California Consumer Privacy Act (CCPA):</p>
+            <ul>
+                <li>Right to know what personal information we collect</li>
+                <li>Right to delete your personal information</li>
+                <li>Right to opt-out of sale of personal information (we do not sell your data)</li>
+                <li>Right to non-discrimination for exercising your rights</li>
+            </ul>
+        </section>
+
+        <!-- Section 11 -->
+        <section id="changes" class="legal-section" style="animation-delay: 0.65s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">11</span>
+                <h2>Changes to This Policy</h2>
+            </div>
+            <p>We may update this Privacy Policy from time to time. If we make material changes, we will notify you by email before the changes take effect. Your continued use of Riva after changes become effective constitutes acceptance of the updated policy.</p>
+        </section>
+
+        <!-- Section 12 -->
+        <section id="contact" class="legal-section" style="animation-delay: 0.7s;">
+            <div class="legal-section__header">
+                <span class="legal-section__number">12</span>
+                <h2>Contact Us</h2>
+            </div>
+            <p>If you have questions about this Privacy Policy or want to exercise your rights, contact us:</p>
+
+            <div class="contact-box">
+                <h3>Get in Touch</h3>
+                <p>We're here to help with any privacy-related questions or requests.</p>
+                <a href="mailto:hello@riva.systems" class="contact-box__email">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    hello@riva.systems
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__inner">
+                <a href="index.html" class="footer__logo">Riva</a>
+                <div class="footer__links">
+                    <a href="privacy.html" class="footer__link footer__link--active">Privacy Policy</a>
+                    <a href="terms.html" class="footer__link">Terms of Service</a>
+                    <a href="mailto:hello@riva.systems" class="footer__link">hello@riva.systems</a>
+                </div>
+                <span class="footer__copyright">&copy; <span id="year"></span> Riva. All rights reserved.</span>
+            </div>
+            <div class="footer__made">Made with <span class="footer__heart">&hearts;</span> in San Francisco</div>
+        </div>
+    </footer>
+
+    <script>
+        // Progress bar
+        const progressBar = document.getElementById('progress');
+
+        window.addEventListener('scroll', () => {
+            const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (window.scrollY / windowHeight) * 100;
+            progressBar.style.width = scrolled + '%';
+        });
+
+        // Animate sections on scroll
+        const sections = document.querySelectorAll('.legal-section');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // Dynamic year
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Smooth scroll for TOC links
+        document.querySelectorAll('.toc__link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = document.querySelector(link.getAttribute('href'));
+                const offset = 100;
+                const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
+
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
