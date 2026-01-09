@@ -42,7 +42,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [notificationPreference, setNotificationPreference] = useState<'sms' | 'telegram'>('sms');
+  const [notificationPreference, setNotificationPreference] = useState<'sms' | 'telegram'>('telegram');
   const [telegramChatId, setTelegramChatId] = useState('');
   const [phone, setPhone] = useState('');
   const [assistant, setAssistant] = useState<AssistantInfo | null>(null);
@@ -94,7 +94,7 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error('Failed to fetch settings');
       const data = await res.json();
       setSettings(data.settings);
-      setNotificationPreference(data.notificationPreference || 'sms');
+      setNotificationPreference(data.notificationPreference || 'telegram');
       setTelegramChatId(data.telegramChatId || '');
       setPhone(data.user?.phone || '');
       setAssistant(data.assistant || null);

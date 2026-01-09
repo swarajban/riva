@@ -83,7 +83,7 @@ export const users = pgTable('users', {
   name: varchar('name', { length: 255 }),
   phone: varchar('phone', { length: 20 }),
   telegramChatId: varchar('telegram_chat_id', { length: 255 }),
-  notificationPreference: notificationPreferenceEnum('notification_preference').default('sms'),
+  notificationPreference: notificationPreferenceEnum('notification_preference').default('telegram'),
   calendarId: varchar('calendar_id', { length: 255 }).notNull(), // Google Calendar ID (usually same as email)
   assistantId: uuid('assistant_id')
     .unique()
