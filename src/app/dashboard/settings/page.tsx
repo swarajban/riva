@@ -393,24 +393,12 @@ export default function SettingsPage() {
                 onChange={(e) => setNotificationPreference(e.target.value as 'sms' | 'telegram')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="sms">SMS (Twilio)</option>
+                <option value="sms" disabled>SMS (Twilio) - Coming Soon</option>
                 <option value="telegram">Telegram</option>
               </select>
               <p className="mt-1 text-sm text-gray-500">
                 Choose how you want to receive meeting confirmation requests.
               </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number (for SMS)</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1234567890"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="mt-1 text-sm text-gray-500">Your phone number for SMS notifications (with country code).</p>
             </div>
 
             <div>
