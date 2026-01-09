@@ -29,7 +29,7 @@ export function buildSystemPrompt(user: User, assistant: Assistant, context: Age
 - Lookahead days: ${settings.lookaheadDays}
 - Options to suggest: ${settings.numOptionsToSuggest}
 - Max slots per day: ${settings.maxSlotsPerDay}
-${settings.keywordRules.length > 0 ? `- Keyword rules: ${JSON.stringify(settings.keywordRules)}` : ''}
+${settings.keywordRules.length > 0 ? `- Keyword rules:\n${settings.keywordRules.map(r => `  - When you see "${r.phrase}": ${r.instruction}`).join('\n')}` : ''}
 
 ## Time Format in Emails
 When proposing times, use this format:

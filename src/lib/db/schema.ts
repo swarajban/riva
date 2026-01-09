@@ -46,10 +46,7 @@ export type UserSettings = {
 
 export type KeywordRule = {
   phrase: string;
-  meetingLengthMinutes?: number;
-  allowedDays?: string[];
-  hourRangeStart?: string;
-  hourRangeEnd?: string;
+  instruction: string;
 };
 
 export type Attendee = {

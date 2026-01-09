@@ -20,10 +20,7 @@ interface UserSettings {
 
 interface KeywordRule {
   phrase: string;
-  meetingLengthMinutes?: number;
-  allowedDays?: string[];
-  hourRangeStart?: string;
-  hourRangeEnd?: string;
+  instruction: string;
 }
 
 interface AssistantInfo {
@@ -52,6 +49,8 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isAddingRule, setIsAddingRule] = useState(false);
+  const [newRule, setNewRule] = useState<KeywordRule>({ phrase: '', instruction: '' });
 
   useEffect(() => {
     fetchSettings();
@@ -145,6 +144,16 @@ export default function SettingsPage() {
       ? settings.workingDays.filter((d) => d !== day)
       : [...settings.workingDays, day];
     updateSetting('workingDays', days);
+  }
+
+  function addRule() {
+    if (!settings || !newRule.phrase.trim() || !newRule.instruction.trim()) return;
+    updateSetting('keywordRules', [
+      ...settings.keywordRules,
+      { phrase: newRule.phrase.trim(), instruction: newRule.instruction.trim() },
+    ]);
+    setNewRule({ phrase: '', instruction: '' });
+    setIsAddingRule(false);
   }
 
   if (loading) {
@@ -448,38 +457,80 @@ export default function SettingsPage() {
         {/* Keyword Rules */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Keyword Rules</h2>
-          <p className="text-sm text-gray-500 mb-4">Define custom rules that trigger based on phrases in emails.</p>
-          {settings.keywordRules.length === 0 ? (
-            <div className="text-gray-500 text-sm">No keyword rules defined.</div>
-          ) : (
-            <div className="space-y-4">
+          <p className="text-sm text-gray-500 mb-4">
+            Define custom instructions that trigger based on phrases in emails.
+          </p>
+          {settings.keywordRules.length > 0 && (
+            <div className="space-y-3 mb-4">
               {settings.keywordRules.map((rule, index) => (
-                <div key={index} className="p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
+                <div key={index} className="p-3 bg-gray-50 rounded-lg flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
                     <span className="font-medium text-gray-900">&quot;{rule.phrase}&quot;</span>
-                    <button
-                      onClick={() => {
-                        const rules = [...settings.keywordRules];
-                        rules.splice(index, 1);
-                        updateSetting('keywordRules', rules);
-                      }}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Remove
-                    </button>
+                    <span className="text-gray-400 mx-2">&rarr;</span>
+                    <span className="text-gray-600">{rule.instruction}</span>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {rule.meetingLengthMinutes && <span className="mr-3">{rule.meetingLengthMinutes} min</span>}
-                    {rule.allowedDays && <span className="mr-3">Days: {rule.allowedDays.join(', ')}</span>}
-                    {rule.hourRangeStart && rule.hourRangeEnd && (
-                      <span>
-                        Hours: {rule.hourRangeStart}-{rule.hourRangeEnd}
-                      </span>
-                    )}
-                  </div>
+                  <button
+                    onClick={() => {
+                      const rules = [...settings.keywordRules];
+                      rules.splice(index, 1);
+                      updateSetting('keywordRules', rules);
+                    }}
+                    className="text-red-600 hover:text-red-800 text-sm shrink-0"
+                  >
+                    Remove
+                  </button>
                 </div>
               ))}
             </div>
+          )}
+          {isAddingRule ? (
+            <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">When I see...</label>
+                <input
+                  type="text"
+                  value={newRule.phrase}
+                  onChange={(e) => setNewRule({ ...newRule, phrase: e.target.value })}
+                  placeholder="e.g., quick sync"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Then...</label>
+                <input
+                  type="text"
+                  value={newRule.instruction}
+                  onChange={(e) => setNewRule({ ...newRule, instruction: e.target.value })}
+                  placeholder="e.g., make the meeting 15 minutes"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setIsAddingRule(false);
+                    setNewRule({ phrase: '', instruction: '' });
+                  }}
+                  className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={addRule}
+                  disabled={!newRule.phrase.trim() || !newRule.instruction.trim()}
+                  className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add Rule
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsAddingRule(true)}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              + Add Rule
+            </button>
           )}
         </div>
 
