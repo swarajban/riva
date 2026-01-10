@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from '@/lib/config';
 import { db } from '@/lib/db';
-import { users } from '@/lib/db/schema';
+import { users, schedulingRequests } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { AgentContext, ToolName } from './types';
 import { buildSystemPrompt } from './prompts';
@@ -39,95 +39,113 @@ export async function runAgent(context: AgentContext): Promise<void> {
     throw new Error('User has no assistant configured');
   }
 
-  // Build system prompt
-  const systemPrompt = buildSystemPrompt(user, user.assistant, context);
-
-  // Convert our tool definitions to Anthropic format
-  const tools: Anthropic.Messages.Tool[] = toolDefinitions.map((t) => ({
-    name: t.name,
-    description: t.description,
-    input_schema: t.input_schema,
-  }));
-
-  // Initial message from the trigger
-  const messages: Anthropic.Messages.MessageParam[] = [
-    {
-      role: 'user',
-      content: await buildInitialMessage(context),
-    },
-  ];
-
-  let iterations = 0;
-
-  while (iterations < MAX_ITERATIONS) {
-    iterations++;
-    log.info('Agent iteration', { iteration: iterations });
-
-    // Call Claude with optional extended thinking
-    const response = await anthropic.messages.create({
-      model: config.anthropic.model,
-      max_tokens: config.anthropic.useExtendedThinking ? 16000 : 4096,
-      system: systemPrompt,
-      tools,
-      messages,
-      ...(config.anthropic.useExtendedThinking && {
-        thinking: {
-          type: 'enabled' as const,
-          budget_tokens: config.anthropic.thinkingBudget,
-        },
-      }),
-    });
-
-    log.info('Agent response', {
-      stopReason: response.stop_reason,
-      contentBlocks: response.content.length,
-    });
-
-    // Check if we're done
-    if (response.stop_reason === 'end_turn') {
-      log.info('Agent completed naturally');
-      break;
-    }
-
-    // Process tool uses
-    if (response.stop_reason === 'tool_use') {
-      const assistantContent = response.content;
-      messages.push({ role: 'assistant', content: assistantContent });
-
-      const toolResults: Anthropic.Messages.ToolResultBlockParam[] = [];
-
-      for (const block of assistantContent) {
-        if (block.type === 'tool_use') {
-          log.info('Executing tool', { tool: block.name, input: block.input });
-
-          const result = await executeTool(block.name as ToolName, block.input, context);
-
-          log.info('Tool result', { tool: block.name, result });
-
-          // Critical tool failure - stop execution entirely
-          if (!result.success && block.name === 'send_sms_to_user') {
-            throw new Error(`Failed to notify user: ${result.error}`);
-          }
-
-          toolResults.push({
-            type: 'tool_result',
-            tool_use_id: block.id,
-            content: JSON.stringify(result),
-            is_error: !result.success,
-          });
-        }
-      }
-
-      messages.push({ role: 'user', content: toolResults });
-    } else {
-      // Unknown stop reason
-      log.warn('Unknown stop reason', { stopReason: response.stop_reason });
-      break;
-    }
+  // Mark request as processing (if we have a scheduling request)
+  if (context.schedulingRequestId) {
+    await db
+      .update(schedulingRequests)
+      .set({ agentProcessingStartedAt: new Date() })
+      .where(eq(schedulingRequests.id, context.schedulingRequestId));
   }
 
-  if (iterations >= MAX_ITERATIONS) {
-    log.warn('Agent hit max iterations limit', { maxIterations: MAX_ITERATIONS });
+  try {
+    // Build system prompt
+    const systemPrompt = buildSystemPrompt(user, user.assistant, context);
+
+    // Convert our tool definitions to Anthropic format
+    const tools: Anthropic.Messages.Tool[] = toolDefinitions.map((t) => ({
+      name: t.name,
+      description: t.description,
+      input_schema: t.input_schema,
+    }));
+
+    // Initial message from the trigger
+    const messages: Anthropic.Messages.MessageParam[] = [
+      {
+        role: 'user',
+        content: await buildInitialMessage(context),
+      },
+    ];
+
+    let iterations = 0;
+
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+      log.info('Agent iteration', { iteration: iterations });
+
+      // Call Claude with optional extended thinking
+      const response = await anthropic.messages.create({
+        model: config.anthropic.model,
+        max_tokens: config.anthropic.useExtendedThinking ? 16000 : 4096,
+        system: systemPrompt,
+        tools,
+        messages,
+        ...(config.anthropic.useExtendedThinking && {
+          thinking: {
+            type: 'enabled' as const,
+            budget_tokens: config.anthropic.thinkingBudget,
+          },
+        }),
+      });
+
+      log.info('Agent response', {
+        stopReason: response.stop_reason,
+        contentBlocks: response.content.length,
+      });
+
+      // Check if we're done
+      if (response.stop_reason === 'end_turn') {
+        log.info('Agent completed naturally');
+        break;
+      }
+
+      // Process tool uses
+      if (response.stop_reason === 'tool_use') {
+        const assistantContent = response.content;
+        messages.push({ role: 'assistant', content: assistantContent });
+
+        const toolResults: Anthropic.Messages.ToolResultBlockParam[] = [];
+
+        for (const block of assistantContent) {
+          if (block.type === 'tool_use') {
+            log.info('Executing tool', { tool: block.name, input: block.input });
+
+            const result = await executeTool(block.name as ToolName, block.input, context);
+
+            log.info('Tool result', { tool: block.name, result });
+
+            // Critical tool failure - stop execution entirely
+            if (!result.success && block.name === 'send_sms_to_user') {
+              throw new Error(`Failed to notify user: ${result.error}`);
+            }
+
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: block.id,
+              content: JSON.stringify(result),
+              is_error: !result.success,
+            });
+          }
+        }
+
+        messages.push({ role: 'user', content: toolResults });
+      } else {
+        // Unknown stop reason
+        log.warn('Unknown stop reason', { stopReason: response.stop_reason });
+        break;
+      }
+    }
+
+    if (iterations >= MAX_ITERATIONS) {
+      log.warn('Agent hit max iterations limit', { maxIterations: MAX_ITERATIONS });
+    }
+  } finally {
+    // Clear processing state when done (success or error)
+    if (context.schedulingRequestId) {
+      await db
+        .update(schedulingRequests)
+        .set({ agentProcessingStartedAt: null })
+        .where(eq(schedulingRequests.id, context.schedulingRequestId));
+    }
   }
 }
 

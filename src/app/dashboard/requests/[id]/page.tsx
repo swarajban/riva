@@ -1,13 +1,15 @@
 import { db } from '@/lib/db';
-import { schedulingRequests, emailThreads, smsMessages } from '@/lib/db/schema';
+import { schedulingRequests, emailThreads, smsMessages, notifications } from '@/lib/db/schema';
 import { getCurrentUser } from '@/lib/auth/session';
-import { eq, asc, desc, and } from 'drizzle-orm';
+import { eq, asc, desc, and, isNotNull } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { formatDateTimePT } from '@/lib/utils/time';
 import { CancelRequestButton } from '@/components/CancelRequestButton';
 import { SendNowButton } from '@/components/SendNowButton';
 import { LocalTimestamp } from '@/components/LocalTimestamp';
+import { DashboardMessageInput } from '@/components/DashboardMessageInput';
+import { AgentProcessingBanner } from '@/components/AgentProcessingBanner';
 
 const statusColors: Record<string, string> = {
   pending: 'badge-pending',
@@ -46,6 +48,16 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
     orderBy: asc(smsMessages.createdAt),
   });
 
+  // Get the most recent pending confirmation for this request
+  const pendingConfirmation = await db.query.notifications.findFirst({
+    where: and(
+      eq(notifications.schedulingRequestId, id),
+      eq(notifications.direction, 'outbound'),
+      isNotNull(notifications.awaitingResponseType)
+    ),
+    orderBy: desc(notifications.createdAt),
+  });
+
   const attendees = (request.attendees as { email: string; name?: string }[]) || [];
   const proposedTimes = (request.proposedTimes as { start: string; end: string; round: number }[]) || [];
 
@@ -63,6 +75,9 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
           </span>
         </div>
       </div>
+
+      {/* Processing banner */}
+      <AgentProcessingBanner isProcessing={!!request.agentProcessingStartedAt} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main content */}
@@ -180,37 +195,49 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
           {/* SMS history */}
           <div className="card overflow-hidden">
             <div className="px-4 py-3 border-b border-border">
-              <h2 className="font-display text-charcoal">SMS History</h2>
+              <h2 className="font-display text-charcoal">Notification History</h2>
             </div>
-            {sms.length === 0 ? (
-              <div className="p-4 text-slate text-sm">No SMS messages yet</div>
-            ) : (
-              <div className="p-4 space-y-3">
-                {sms.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.direction === 'outbound' ? 'justify-start' : 'justify-end'}`}
-                  >
+            <div className="p-4">
+              {sms.length === 0 ? (
+                <div className="text-slate text-sm mb-4">No messages yet</div>
+              ) : (
+                <div className="space-y-3 mb-4">
+                  {sms.map((message) => (
                     <div
-                      className={`max-w-xs rounded-2xl px-4 py-2 ${
-                        message.direction === 'outbound' ? 'bg-cream-alt text-charcoal' : 'bg-taupe text-white'
-                      }`}
+                      key={message.id}
+                      className={`flex ${message.direction === 'outbound' ? 'justify-start' : 'justify-end'}`}
                     >
-                      <div className="text-sm whitespace-pre-wrap">{message.body}</div>
                       <div
-                        className={`text-xs mt-1 ${
-                          message.direction === 'outbound' ? 'text-slate-muted' : 'text-white/70'
+                        className={`max-w-xs rounded-2xl px-4 py-2 ${
+                          message.direction === 'outbound' ? 'bg-cream-alt text-charcoal' : 'bg-taupe text-white'
                         }`}
                       >
-                        {(message.sentAt || message.receivedAt) && (
-                          <LocalTimestamp date={(message.sentAt || message.receivedAt)!} />
-                        )}
+                        <div className="text-sm whitespace-pre-wrap">{message.body}</div>
+                        <div
+                          className={`text-xs mt-1 ${
+                            message.direction === 'outbound' ? 'text-slate-muted' : 'text-white/70'
+                          }`}
+                        >
+                          {(message.sentAt || message.receivedAt) && (
+                            <LocalTimestamp date={(message.sentAt || message.receivedAt)!} />
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+
+              {/* Dashboard message input - only show when there's an active conversation */}
+              {!['cancelled', 'expired', 'error', 'confirmed'].includes(request.status) &&
+                (pendingConfirmation || sms.length > 0 || request.agentProcessingStartedAt) && (
+                  <DashboardMessageInput
+                    schedulingRequestId={request.id}
+                    awaitingResponseType={pendingConfirmation?.awaitingResponseType}
+                    isProcessing={!!request.agentProcessingStartedAt}
+                  />
+                )}
+            </div>
           </div>
         </div>
 

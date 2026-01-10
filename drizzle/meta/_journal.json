@@ -36,6 +36,20 @@
       "when": 1768002249907,
       "tag": "0004_sharp_dreadnoughts",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1768071510845,
+      "tag": "0005_aspiring_sandman",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1768072949944,
+      "tag": "0006_fuzzy_katie_power",
+      "breakpoints": true
     }
   ]
 }

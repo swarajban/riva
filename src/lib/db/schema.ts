@@ -26,7 +26,7 @@ export const awaitingResponseTypeEnum = pgEnum('awaiting_response_type', [
 
 export const notificationPreferenceEnum = pgEnum('notification_preference', ['sms', 'telegram']);
 
-export const notificationProviderEnum = pgEnum('notification_provider', ['twilio', 'telegram']);
+export const notificationProviderEnum = pgEnum('notification_provider', ['twilio', 'telegram', 'dashboard']);
 
 // Types for JSONB fields
 export type UserSettings = {
@@ -132,6 +132,7 @@ export const schedulingRequests = pgTable(
     smsReminderAt: timestamp('sms_reminder_at', { withTimezone: true }),
     smsReminderSentAt: timestamp('sms_reminder_sent_at', { withTimezone: true }),
     expiresAt: timestamp('expires_at', { withTimezone: true }),
+    agentProcessingStartedAt: timestamp('agent_processing_started_at', { withTimezone: true }),
   },
   (table) => ({
     userStatusIdx: index('idx_scheduling_requests_user_status').on(table.userId, table.status),

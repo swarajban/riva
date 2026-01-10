@@ -1,0 +1,1 @@
+ALTER TABLE "scheduling_requests" ADD COLUMN "agent_processing_started_at" timestamp with time zone;

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."notification_provider" ADD VALUE 'dashboard';

@@ -6,7 +6,7 @@ import { eq, and, isNotNull, desc } from 'drizzle-orm';
 import { sendTelegramMessage } from '../telegram/client';
 import { logger } from '@/lib/utils/logger';
 
-export type NotificationProvider = 'twilio' | 'telegram';
+export type NotificationProvider = 'twilio' | 'telegram' | 'dashboard';
 
 export type AwaitingResponseType =
   | 'booking_approval'
