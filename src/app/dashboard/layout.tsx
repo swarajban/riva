@@ -1,16 +1,28 @@
 import { redirect } from 'next/navigation';
-import { getCurrentUser } from '@/lib/auth/session';
+import { getImpersonationInfo } from '@/lib/auth/session';
 import Link from 'next/link';
+import { AdminUserSelector } from '@/components/AdminUserSelector';
+import { ImpersonationBanner } from '@/components/ImpersonationBanner';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const user = await getCurrentUser();
+  const impersonationInfo = await getImpersonationInfo();
 
-  if (!user) {
+  if (!impersonationInfo || !impersonationInfo.actualUser) {
     redirect('/auth/user/login');
   }
 
+  const { actualUser, impersonatedUser, isImpersonating } = impersonationInfo;
+
+  // Display user is the impersonated user if impersonating, otherwise actual user
+  const displayUser = impersonatedUser || actualUser;
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Impersonation Banner */}
+      {isImpersonating && impersonatedUser && (
+        <ImpersonationBanner impersonatedEmail={impersonatedUser.email} />
+      )}
+
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -32,7 +44,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
               </nav>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">{user.name || user.email}</span>
+              {/* Admin User Selector - only shown to admins */}
+              {actualUser.isAdmin && <AdminUserSelector />}
+
+              <span className="text-sm text-gray-600">{displayUser.name || displayUser.email}</span>
               <a href="/api/auth/logout" className="text-sm text-gray-600 hover:text-gray-900">
                 Logout
               </a>
