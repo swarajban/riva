@@ -214,19 +214,17 @@ When sending emails, use the raw "to" and "cc" fields to include everyone on the
     });
 
     if (context.awaitingResponseType) {
-      // Provide IDs for tools (notification_id, scheduling_request_id, pendingEmailId)
-      const singlePendingInfo = allPending.length === 1
-        ? `\n\nIDs for this confirmation:
-- notificationId: ${allPending[0].notificationId}
-- schedulingRequestId: ${allPending[0].schedulingRequestId || 'N/A'}${allPending[0].pendingEmailId ? `\n- pendingEmailId: ${allPending[0].pendingEmailId}` : ''}`
-        : '';
-
-      const notificationIdNote =
-        allPending.length === 1
-          ? singlePendingInfo
-          : allPending.length > 1
-            ? `\n\nIMPORTANT: ${allPending.length} confirmations are pending. Determine which one the user is responding to. Use the correct IDs from the pending list when calling tools.`
-            : '';
+      // Build context about pending confirmations for the agent
+      let notificationIdNote = '';
+      if (allPending.length === 1) {
+        const pending = allPending[0];
+        const pendingEmailLine = pending.pendingEmailId ? `\n- pendingEmailId: ${pending.pendingEmailId}` : '';
+        notificationIdNote = `\n\nIDs for this confirmation:
+- notificationId: ${pending.notificationId}
+- schedulingRequestId: ${pending.schedulingRequestId || 'N/A'}${pendingEmailLine}`;
+      } else if (allPending.length > 1) {
+        notificationIdNote = `\n\nIMPORTANT: ${allPending.length} confirmations are pending. Determine which one the user is responding to. Use the correct IDs from the pending list when calling tools.`;
+      }
 
       return `User responded to SMS. Their message: "${context.triggerContent}"
 

@@ -44,6 +44,23 @@ const QUICK_ACTIONS: Record<
   meeting_title: [],
 };
 
+// Helper text for each awaiting response type
+const HELPER_TEXT: Record<AwaitingResponseType, string> = {
+  booking_approval: 'Reply "Y" to confirm, "N" to reject, or type edits like "change to 3pm" or "change title to Team Sync"',
+  email_approval: 'Reply "approve" to send, "reject" to cancel, or describe changes like "change the tone to be more formal"',
+  availability_guidance: 'Describe when you\'re available, e.g., "next week" or "afternoons only"',
+  stale_slot_decision: 'The selected time is no longer available. Choose a different option or ask to find new times.',
+  reschedule_approval: 'Reply "Y" to confirm, "N" to reject the reschedule request.',
+  cancel_approval: 'Reply "Y" to cancel, "N" to keep the meeting.',
+  meeting_title: 'Enter a title for the meeting',
+};
+
+function getPlaceholder(isProcessing: boolean, awaitingResponseType?: AwaitingResponseType | null): string {
+  if (isProcessing) return 'Waiting for response...';
+  if (awaitingResponseType) return 'Type a response or use quick actions above...';
+  return 'Type a message...';
+}
+
 export function DashboardMessageInput({
   schedulingRequestId,
   awaitingResponseType,
@@ -139,13 +156,7 @@ export function DashboardMessageInput({
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder={
-            isProcessing
-              ? 'Waiting for response...'
-              : awaitingResponseType
-                ? 'Type a response or use quick actions above...'
-                : 'Type a message...'
-          }
+          placeholder={getPlaceholder(isProcessing, awaitingResponseType)}
           disabled={isDisabled}
           className="flex-1 px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-taupe/30 focus:border-taupe disabled:opacity-50 disabled:bg-cream-alt"
         />
@@ -163,17 +174,7 @@ export function DashboardMessageInput({
 
       {/* Helper text */}
       {awaitingResponseType && !isProcessing && (
-        <p className="text-xs text-slate-muted">
-          {awaitingResponseType === 'booking_approval' &&
-            'Reply "Y" to confirm, "N" to reject, or type edits like "change to 3pm" or "change title to Team Sync"'}
-          {awaitingResponseType === 'email_approval' &&
-            'Reply "approve" to send, "reject" to cancel, or describe changes like "change the tone to be more formal"'}
-          {awaitingResponseType === 'availability_guidance' &&
-            'Describe when you\'re available, e.g., "next week" or "afternoons only"'}
-          {awaitingResponseType === 'stale_slot_decision' &&
-            'The selected time is no longer available. Choose a different option or ask to find new times.'}
-          {awaitingResponseType === 'meeting_title' && 'Enter a title for the meeting'}
-        </p>
+        <p className="text-xs text-slate-muted">{HELPER_TEXT[awaitingResponseType]}</p>
       )}
     </div>
   );
