@@ -159,64 +159,64 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading settings...</div>
+        <div className="text-slate">Loading settings...</div>
       </div>
     );
   }
 
   if (!settings) {
-    return <div className="text-red-600">Failed to load settings</div>;
+    return <div className="text-rose-600">Failed to load settings</div>;
   }
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
+      <h1 className="font-display text-2xl text-charcoal mb-6">Settings</h1>
 
       {message && (
         <div
-          className={`mb-6 p-4 rounded-lg ${
+          className={`mb-6 p-4 rounded-card ${
             message.type === 'success'
-              ? 'bg-green-50 text-green-800 border border-green-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'bg-rose-50 text-rose-800 border border-rose-200'
           }`}
         >
           {message.text}
         </div>
       )}
 
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Assistant Account */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Assistant Account</h2>
+        <div className="card p-6">
+          <h2 className="font-display text-lg text-charcoal mb-4">Assistant Account</h2>
           {assistant ? (
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
                 <div>
-                  <div className="font-medium text-gray-900">{assistant.name || assistant.email}</div>
-                  <div className="text-sm text-gray-500">{assistant.email}</div>
+                  <div className="font-medium text-charcoal">{assistant.name || assistant.email}</div>
+                  <div className="text-sm text-slate">{assistant.email}</div>
                 </div>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate">
                 This Google account sends emails and manages calendar events on your behalf.
               </p>
-              <a href="/auth/assistant/login" className="inline-block text-sm text-blue-600 hover:underline">
+              <a href="/auth/assistant/login" className="inline-block text-sm link-underline">
                 Connect a different account
               </a>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate">
                 Connect a Google account that Riva will use to send emails and manage calendar events on your behalf.
                 This should be a separate account from your personal login (e.g., assistant@yourcompany.com).
               </p>
               <a
                 href="/auth/assistant/login"
-                className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                className="btn-accent"
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path
@@ -243,12 +243,12 @@ export default function SettingsPage() {
         </div>
 
         {/* Timezone */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Timezone</h2>
+        <div className="card p-6">
+          <h2 className="font-display text-lg text-charcoal mb-4">Timezone</h2>
           <select
             value={settings.timezone}
             onChange={(e) => updateSetting('timezone', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="select"
           >
             {Intl.supportedValuesOf('timeZone').map((tz) => (
               <option key={tz} value={tz}>
@@ -256,48 +256,48 @@ export default function SettingsPage() {
               </option>
             ))}
           </select>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-slate">
             Used for working hours and to avoid sending emails during your nighttime (12am-5am).
           </p>
         </div>
 
         {/* Working Hours */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Working Hours</h2>
+        <div className="card p-6">
+          <h2 className="font-display text-lg text-charcoal mb-4">Working Hours</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+              <label className="block text-sm font-medium text-charcoal mb-1">Start Time</label>
               <input
                 type="time"
                 value={settings.workingHoursStart}
                 onChange={(e) => updateSetting('workingHoursStart', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+              <label className="block text-sm font-medium text-charcoal mb-1">End Time</label>
               <input
                 type="time"
                 value={settings.workingHoursEnd}
                 onChange={(e) => updateSetting('workingHoursEnd', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input"
               />
             </div>
           </div>
         </div>
 
         {/* Working Days */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Working Days</h2>
+        <div className="card p-6">
+          <h2 className="font-display text-lg text-charcoal mb-4">Working Days</h2>
           <div className="flex flex-wrap gap-2">
             {DAYS.map((day) => (
               <button
                 key={day.value}
                 onClick={() => toggleDay(day.value)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   settings.workingDays.includes(day.value)
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-taupe text-white'
+                    : 'bg-cream-alt text-slate hover:bg-border hover:text-charcoal'
                 }`}
               >
                 {day.label}
@@ -307,119 +307,119 @@ export default function SettingsPage() {
         </div>
 
         {/* Meeting Preferences */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Meeting Preferences</h2>
+        <div className="card p-6">
+          <h2 className="font-display text-lg text-charcoal mb-4">Meeting Preferences</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Default Meeting Length (minutes)</label>
+              <label className="block text-sm font-medium text-charcoal mb-1">Default Meeting Length (minutes)</label>
               <input
                 type="number"
                 value={settings.defaultMeetingLengthMinutes}
                 onChange={(e) => updateSetting('defaultMeetingLengthMinutes', parseInt(e.target.value) || 30)}
-                className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input w-32"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Buffer Between Meetings (minutes)</label>
+              <label className="block text-sm font-medium text-charcoal mb-1">Buffer Between Meetings (minutes)</label>
               <input
                 type="number"
                 value={settings.bufferMinutes}
                 onChange={(e) => updateSetting('bufferMinutes', parseInt(e.target.value) || 0)}
-                className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input w-32"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Number of Options to Suggest</label>
+              <label className="block text-sm font-medium text-charcoal mb-1">Number of Options to Suggest</label>
               <input
                 type="number"
                 value={settings.numOptionsToSuggest}
                 onChange={(e) => updateSetting('numOptionsToSuggest', parseInt(e.target.value) || 4)}
-                className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input w-32"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Max Slots Per Day</label>
+              <label className="block text-sm font-medium text-charcoal mb-1">Max Slots Per Day</label>
               <input
                 type="number"
                 value={settings.maxSlotsPerDay}
                 onChange={(e) => updateSetting('maxSlotsPerDay', parseInt(e.target.value) || 2)}
-                className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input w-32"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Lookahead Days</label>
+              <label className="block text-sm font-medium text-charcoal mb-1">Lookahead Days</label>
               <input
                 type="number"
                 value={settings.lookaheadDays}
                 onChange={(e) => updateSetting('lookaheadDays', parseInt(e.target.value) || 10)}
-                className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input w-32"
               />
             </div>
           </div>
         </div>
 
         {/* Zoom Link */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Zoom Personal Meeting Room</h2>
+        <div className="card p-6">
+          <h2 className="font-display text-lg text-charcoal mb-4">Zoom Personal Meeting Room</h2>
           <input
             type="url"
             value={settings.zoomPersonalLink || ''}
             onChange={(e) => updateSetting('zoomPersonalLink', e.target.value || null)}
             placeholder="https://zoom.us/j/..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="input"
           />
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-slate">
             This link will be included in calendar invites when video is enabled.
           </p>
         </div>
 
         {/* Email Confirmation */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Email Confirmation</h2>
+        <div className="card p-6">
+          <h2 className="font-display text-lg text-charcoal mb-4">Email Confirmation</h2>
           <label className="flex items-center space-x-3 cursor-pointer">
             <input
               type="checkbox"
               checked={settings.confirmOutboundEmails || false}
               onChange={(e) => updateSetting('confirmOutboundEmails', e.target.checked)}
-              className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
+              className="checkbox"
             />
-            <span className="text-gray-700">Confirm all outbound emails before sending</span>
+            <span className="text-charcoal">Confirm all outbound emails before sending</span>
           </label>
-          <p className="mt-3 text-sm text-gray-500">
+          <p className="mt-3 text-sm text-slate">
             When enabled, you will receive a preview of every email via SMS/Telegram and must approve it before it is
             sent. You can also request edits to the email content or recipients.
           </p>
         </div>
 
         {/* Notification Preferences */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Notification Preferences</h2>
+        <div className="card p-6">
+          <h2 className="font-display text-lg text-charcoal mb-4">Notification Preferences</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notification Method</label>
+              <label className="block text-sm font-medium text-charcoal mb-1">Notification Method</label>
               <select
                 value={notificationPreference}
                 onChange={(e) => setNotificationPreference(e.target.value as 'sms' | 'telegram')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="select"
               >
                 <option value="sms" disabled>SMS (Twilio) - Coming Soon</option>
                 <option value="telegram">Telegram</option>
               </select>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-slate">
                 Choose how you want to receive meeting confirmation requests.
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Telegram Chat ID</label>
+              <label className="block text-sm font-medium text-charcoal mb-1">Telegram Chat ID</label>
               <input
                 type="text"
                 value={telegramChatId}
                 onChange={(e) => setTelegramChatId(e.target.value)}
                 placeholder="123456789"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input"
               />
-              <div className="mt-2 text-sm text-gray-500 space-y-2">
+              <div className="mt-2 text-sm text-slate space-y-2">
                 <p>Setup steps:</p>
                 <ol className="list-decimal list-inside space-y-1">
                   <li>
@@ -427,7 +427,7 @@ export default function SettingsPage() {
                       href={`https://t.me/${(process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || '').replace('@', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
+                      className="link-underline"
                     >
                       Open Riva bot in Telegram
                     </a>{' '}
@@ -439,7 +439,7 @@ export default function SettingsPage() {
                       href="https://t.me/userinfobot"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
+                      className="link-underline"
                     >
                       @userinfobot
                     </a>{' '}
@@ -455,19 +455,19 @@ export default function SettingsPage() {
         </div>
 
         {/* Keyword Rules */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Keyword Rules</h2>
-          <p className="text-sm text-gray-500 mb-4">
+        <div className="card p-6">
+          <h2 className="font-display text-lg text-charcoal mb-4">Keyword Rules</h2>
+          <p className="text-sm text-slate mb-4">
             Define custom instructions that trigger based on phrases in emails.
           </p>
           {settings.keywordRules.length > 0 && (
             <div className="space-y-3 mb-4">
               {settings.keywordRules.map((rule, index) => (
-                <div key={index} className="p-3 bg-gray-50 rounded-lg flex items-start justify-between gap-3">
+                <div key={index} className="p-3 bg-cream-alt rounded-card flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <span className="font-medium text-gray-900">&quot;{rule.phrase}&quot;</span>
-                    <span className="text-gray-400 mx-2">&rarr;</span>
-                    <span className="text-gray-600">{rule.instruction}</span>
+                    <span className="font-medium text-charcoal">&quot;{rule.phrase}&quot;</span>
+                    <span className="text-slate mx-2">&rarr;</span>
+                    <span className="text-slate">{rule.instruction}</span>
                   </div>
                   <button
                     onClick={() => {
@@ -475,7 +475,7 @@ export default function SettingsPage() {
                       rules.splice(index, 1);
                       updateSetting('keywordRules', rules);
                     }}
-                    className="text-red-600 hover:text-red-800 text-sm shrink-0"
+                    className="text-rose-600 hover:text-rose-800 text-sm shrink-0 transition-colors"
                   >
                     Remove
                   </button>
@@ -484,25 +484,25 @@ export default function SettingsPage() {
             </div>
           )}
           {isAddingRule ? (
-            <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+            <div className="p-4 bg-cream-alt rounded-card space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">When I see...</label>
+                <label className="block text-sm font-medium text-charcoal mb-1">When I see...</label>
                 <input
                   type="text"
                   value={newRule.phrase}
                   onChange={(e) => setNewRule({ ...newRule, phrase: e.target.value })}
                   placeholder="e.g., quick sync"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Then...</label>
+                <label className="block text-sm font-medium text-charcoal mb-1">Then...</label>
                 <input
                   type="text"
                   value={newRule.instruction}
                   onChange={(e) => setNewRule({ ...newRule, instruction: e.target.value })}
                   placeholder="e.g., make the meeting 15 minutes"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input"
                 />
               </div>
               <div className="flex gap-2">
@@ -511,14 +511,14 @@ export default function SettingsPage() {
                     setIsAddingRule(false);
                     setNewRule({ phrase: '', instruction: '' });
                   }}
-                  className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
+                  className="px-3 py-1.5 text-sm text-slate hover:text-charcoal transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={addRule}
                   disabled={!newRule.phrase.trim() || !newRule.instruction.trim()}
-                  className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-accent text-sm px-3 py-1.5"
                 >
                   Add Rule
                 </button>
@@ -527,7 +527,7 @@ export default function SettingsPage() {
           ) : (
             <button
               onClick={() => setIsAddingRule(true)}
-              className="text-sm text-blue-600 hover:text-blue-800"
+              className="text-sm link"
             >
               + Add Rule
             </button>
@@ -539,7 +539,7 @@ export default function SettingsPage() {
           <button
             onClick={saveSettings}
             disabled={saving}
-            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-accent"
           >
             {saving ? 'Saving...' : 'Save Settings'}
           </button>

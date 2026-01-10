@@ -36,7 +36,7 @@ export function SendNowButton({ emailId }: SendNowButtonProps) {
     <button
       onClick={handleSendNow}
       disabled={isLoading}
-      className="ml-2 px-2 py-0.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+      className="ml-2 px-2 py-0.5 bg-taupe text-white text-xs font-medium rounded hover:bg-taupe-hover disabled:opacity-50 transition-all duration-200"
     >
       {isLoading ? 'Sending...' : 'Send now'}
     </button>

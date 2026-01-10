@@ -37,8 +37,8 @@ export function CancelRequestButton({ requestId, hasCalendarEvent }: CancelReque
 
   if (showConfirm) {
     return (
-      <div className="bg-red-50 rounded-lg border border-red-200 p-4">
-        <p className="text-sm text-red-800 mb-3">
+      <div className="bg-rose-50 rounded-card border border-rose-200 p-4">
+        <p className="text-sm text-rose-800 mb-3">
           Are you sure you want to cancel this request?
           {hasCalendarEvent && (
             <span className="block mt-1 font-medium">
@@ -50,14 +50,14 @@ export function CancelRequestButton({ requestId, hasCalendarEvent }: CancelReque
           <button
             onClick={handleCancel}
             disabled={isLoading}
-            className="px-3 py-1.5 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 disabled:opacity-50"
+            className="px-3 py-1.5 bg-rose-600 text-white text-sm font-medium rounded-md hover:bg-rose-700 disabled:opacity-50 transition-all duration-200"
           >
             {isLoading ? 'Cancelling...' : 'Yes, cancel'}
           </button>
           <button
             onClick={() => setShowConfirm(false)}
             disabled={isLoading}
-            className="px-3 py-1.5 bg-white text-gray-700 text-sm font-medium rounded border border-gray-300 hover:bg-gray-50"
+            className="px-3 py-1.5 bg-white text-charcoal text-sm font-medium rounded-md border border-border hover:bg-cream-alt transition-all duration-200"
           >
             No, keep it
           </button>
@@ -69,7 +69,7 @@ export function CancelRequestButton({ requestId, hasCalendarEvent }: CancelReque
   return (
     <button
       onClick={() => setShowConfirm(true)}
-      className="w-full px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+      className="w-full px-4 py-2.5 bg-rose-600 text-white text-sm font-medium rounded-card hover:bg-rose-700 transition-all duration-200"
     >
       Cancel Request
     </button>

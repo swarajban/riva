@@ -17,28 +17,25 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const displayUser = impersonatedUser || actualUser;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-cream">
       {/* Impersonation Banner */}
       {isImpersonating && impersonatedUser && (
         <ImpersonationBanner impersonatedEmail={impersonatedUser.email} />
       )}
 
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="glass-nav sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
-              <Link href="/dashboard" className="text-xl font-bold text-gray-900">
+              <Link href="/dashboard" className="font-display text-xl tracking-tight text-charcoal">
                 Riva
               </Link>
-              <nav className="flex space-x-4">
-                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">
+              <nav className="flex space-x-1">
+                <Link href="/dashboard" className="nav-link">
                   Requests
                 </Link>
-                <Link
-                  href="/dashboard/settings"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-                >
+                <Link href="/dashboard/settings" className="nav-link">
                   Settings
                 </Link>
               </nav>
@@ -47,8 +44,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
               {/* Admin User Selector - only shown to admins */}
               {actualUser.isAdmin && <AdminUserSelector />}
 
-              <span className="text-sm text-gray-600">{displayUser.name || displayUser.email}</span>
-              <a href="/api/auth/logout" className="text-sm text-gray-600 hover:text-gray-900">
+              <span className="text-sm text-slate">{displayUser.name || displayUser.email}</span>
+              <a
+                href="/api/auth/logout"
+                className="text-sm text-slate hover:text-charcoal transition-colors duration-200"
+              >
                 Logout
               </a>
             </div>

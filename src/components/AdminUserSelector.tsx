@@ -61,7 +61,7 @@ export function AdminUserSelector(): React.ReactElement {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-1 px-3 py-1.5 text-sm bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors"
+        className="flex items-center space-x-1 px-3 py-1.5 text-sm bg-taupe-light text-taupe rounded-md hover:bg-taupe hover:text-white transition-all duration-200"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -75,9 +75,9 @@ export function AdminUserSelector(): React.ReactElement {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-          <div className="p-2 border-b border-gray-100">
-            <span className="text-xs font-medium text-gray-500 uppercase">Select user to view as</span>
+        <div className="absolute right-0 mt-2 w-64 bg-white rounded-card shadow-dropdown border border-border z-50 overflow-hidden">
+          <div className="p-2 border-b border-border-light">
+            <span className="text-xs font-medium text-slate uppercase tracking-wide">Select user to view as</span>
           </div>
           <div className="max-h-64 overflow-y-auto">
             {users.map((user) => (
@@ -85,10 +85,10 @@ export function AdminUserSelector(): React.ReactElement {
                 key={user.id}
                 onClick={() => handleImpersonate(user.id)}
                 disabled={loading}
-                className="w-full text-left px-4 py-2 hover:bg-gray-50 disabled:opacity-50"
+                className="w-full text-left px-4 py-2 hover:bg-cream-alt disabled:opacity-50 transition-colors"
               >
-                <div className="text-sm font-medium text-gray-900">{user.name || user.email}</div>
-                <div className="text-xs text-gray-500">{user.email}</div>
+                <div className="text-sm font-medium text-charcoal">{user.name || user.email}</div>
+                <div className="text-xs text-slate">{user.email}</div>
               </button>
             ))}
           </div>
