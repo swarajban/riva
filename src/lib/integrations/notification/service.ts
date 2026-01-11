@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { notifications, users } from '@/lib/db/schema';
 import { eq, and, isNotNull, desc } from 'drizzle-orm';
 import { sendTelegramMessage } from '../telegram/client';
+import { queueEmail } from '../gmail/send';
 import { logger } from '@/lib/utils/logger';
 
 export type NotificationProvider = 'twilio' | 'telegram' | 'dashboard';
@@ -120,7 +121,19 @@ export async function sendNotification(options: SendNotificationOptions): Promis
   let providerMessageId: string | undefined;
 
   if (provider === 'dashboard') {
-    // Dashboard-only: no external send, user will see in dashboard
+    // Send email alert to user via assistant
+    try {
+      await queueEmail({
+        userId,
+        to: [user.email],
+        subject: 'Riva needs your attention',
+        body: `You have a pending confirmation request.\n\nMessage:\n${body}\n\nReply in your dashboard: ${config.appUrl}${schedulingRequestId ? `/dashboard/requests/${schedulingRequestId}` : '/dashboard'}`,
+        immediate: true,
+      });
+    } catch (error) {
+      // Log but don't fail - dashboard notification still works
+      logger.warn('Failed to send dashboard email alert', { userId, error });
+    }
     providerMessageId = undefined;
   } else if (provider === 'telegram') {
     // Send via Telegram
