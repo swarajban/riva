@@ -50,6 +50,20 @@
       "when": 1768072949944,
       "tag": "0006_fuzzy_katie_power",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1768104720682,
+      "tag": "0007_add_dashboard_preference",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1768104720683,
+      "tag": "0008_default_dashboard_preference",
+      "breakpoints": true
     }
   ]
 }

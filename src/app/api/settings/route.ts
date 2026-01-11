@@ -22,7 +22,7 @@ export async function GET() {
   return NextResponse.json({
     user,
     settings: user.settings,
-    notificationPreference: user.notificationPreference || 'sms',
+    notificationPreference: user.notificationPreference || 'dashboard',
     telegramChatId: user.telegramChatId || '',
     assistant: userWithAssistant?.assistant
       ? {
@@ -51,7 +51,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Validate notification preference if provided
-    if (notificationPreference && !['sms', 'telegram'].includes(notificationPreference)) {
+    if (notificationPreference && !['dashboard', 'sms', 'telegram'].includes(notificationPreference)) {
       return NextResponse.json({ error: 'Invalid notification preference' }, { status: 400 });
     }
 
@@ -60,7 +60,7 @@ export async function PATCH(request: NextRequest) {
       .update(users)
       .set({
         settings,
-        notificationPreference: notificationPreference || 'sms',
+        notificationPreference: notificationPreference || 'dashboard',
         telegramChatId: telegramChatId || null,
         phone: phone || null,
         updatedAt: new Date(),

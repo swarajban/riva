@@ -43,21 +43,27 @@ export async function getProviderForUser(userId: string): Promise<{
     throw new Error('User not found');
   }
 
-  // Default to SMS if no preference set
-  const preference = user.notificationPreference || 'sms';
+  // Default to dashboard if no preference set
+  const preference = user.notificationPreference || 'dashboard';
 
-  // Check if user has required credentials for their preference
+  // Dashboard - always available, no external credentials needed
+  if (preference === 'dashboard') {
+    return { provider: 'dashboard', user };
+  }
+
+  // Telegram - check if user has chat ID configured
   if (preference === 'telegram') {
     if (!user.telegramChatId) {
-      logger.warn('User prefers Telegram but has no chat ID, falling back to SMS', { userId });
-      return { provider: 'twilio', user };
+      logger.warn('User prefers Telegram but has no chat ID, falling back to dashboard', { userId });
+      return { provider: 'dashboard', user };
     }
     return { provider: 'telegram', user };
   }
 
-  // SMS
+  // SMS - check if user has phone configured
   if (!user.phone) {
-    throw new Error('User has no phone number configured');
+    logger.warn('User prefers SMS but has no phone, falling back to dashboard', { userId });
+    return { provider: 'dashboard', user };
   }
   return { provider: 'twilio', user };
 }
@@ -111,9 +117,12 @@ export async function sendNotification(options: SendNotificationOptions): Promis
     }
   }
 
-  let providerMessageId: string;
+  let providerMessageId: string | undefined;
 
-  if (provider === 'telegram') {
+  if (provider === 'dashboard') {
+    // Dashboard-only: no external send, user will see in dashboard
+    providerMessageId = undefined;
+  } else if (provider === 'telegram') {
     // Send via Telegram
     providerMessageId = await sendTelegramMessage(user.telegramChatId!, messageBody);
   } else {

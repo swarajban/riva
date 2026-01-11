@@ -24,7 +24,7 @@ export const awaitingResponseTypeEnum = pgEnum('awaiting_response_type', [
   'email_approval',
 ]);
 
-export const notificationPreferenceEnum = pgEnum('notification_preference', ['sms', 'telegram']);
+export const notificationPreferenceEnum = pgEnum('notification_preference', ['dashboard', 'sms', 'telegram']);
 
 export const notificationProviderEnum = pgEnum('notification_provider', ['twilio', 'telegram', 'dashboard']);
 
@@ -84,7 +84,7 @@ export const users = pgTable('users', {
   phone: varchar('phone', { length: 20 }),
   telegramChatId: varchar('telegram_chat_id', { length: 255 }),
   isAdmin: boolean('is_admin').default(false),
-  notificationPreference: notificationPreferenceEnum('notification_preference').default('telegram'),
+  notificationPreference: notificationPreferenceEnum('notification_preference').default('dashboard'),
   calendarId: varchar('calendar_id', { length: 255 }).notNull(), // Google Calendar ID (usually same as email)
   assistantId: uuid('assistant_id')
     .unique()

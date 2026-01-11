@@ -62,8 +62,11 @@ export async function sendSmsToUser(input: unknown, context: AgentContext): Prom
     // Create new notification for the edit (preserves reference number, keeps history)
     const { provider, user } = await getProviderForUser(context.userId);
 
-    let providerMessageId: string;
-    if (provider === 'telegram') {
+    let providerMessageId: string | undefined;
+    if (provider === 'dashboard') {
+      // Dashboard-only: no external send
+      providerMessageId = undefined;
+    } else if (provider === 'telegram') {
       providerMessageId = await sendTelegramMessage(user.telegramChatId!, params.body);
     } else {
       const client = Twilio(config.twilio.accountSid, config.twilio.authToken);
@@ -79,7 +82,7 @@ export async function sendSmsToUser(input: unknown, context: AgentContext): Prom
     notificationId = await createEditedNotification(
       params.update_notification_id,
       params.body,
-      providerMessageId
+      providerMessageId || `dashboard-${Date.now()}`
     );
   } else {
     // Create new notification (reference number logic handled in sendNotification())

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."notification_preference" ADD VALUE 'dashboard' BEFORE 'sms';

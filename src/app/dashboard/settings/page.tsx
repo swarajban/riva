@@ -42,7 +42,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [notificationPreference, setNotificationPreference] = useState<'sms' | 'telegram'>('telegram');
+  const [notificationPreference, setNotificationPreference] = useState<'dashboard' | 'sms' | 'telegram'>('dashboard');
   const [telegramChatId, setTelegramChatId] = useState('');
   const [phone, setPhone] = useState('');
   const [assistant, setAssistant] = useState<AssistantInfo | null>(null);
@@ -94,7 +94,7 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error('Failed to fetch settings');
       const data = await res.json();
       setSettings(data.settings);
-      setNotificationPreference(data.notificationPreference || 'telegram');
+      setNotificationPreference(data.notificationPreference || 'dashboard');
       setTelegramChatId(data.telegramChatId || '');
       setPhone(data.user?.phone || '');
       setAssistant(data.assistant || null);
@@ -395,62 +395,121 @@ export default function SettingsPage() {
         <div className="card p-6">
           <h2 className="font-display text-lg text-charcoal mb-4">Notification Preferences</h2>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">Notification Method</label>
-              <select
-                value={notificationPreference}
-                onChange={(e) => setNotificationPreference(e.target.value as 'sms' | 'telegram')}
-                className="select"
-              >
-                <option value="sms" disabled>SMS (Twilio) - Coming Soon</option>
-                <option value="telegram">Telegram</option>
-              </select>
-              <p className="mt-1 text-sm text-slate">
-                Choose how you want to receive meeting confirmation requests.
+            <p className="text-sm text-slate">
+              Dashboard notifications are always enabled. You can view and respond to confirmation requests directly in the dashboard.
+            </p>
+
+            {/* Real-time alerts toggle */}
+            <div className="pt-2">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={notificationPreference !== 'dashboard'}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setNotificationPreference('telegram');
+                    } else {
+                      setNotificationPreference('dashboard');
+                    }
+                  }}
+                  className="checkbox"
+                />
+                <span className="text-charcoal">Enable real-time alerts</span>
+              </label>
+              <p className="mt-1 ml-7 text-sm text-slate">
+                Get notified instantly via SMS or Telegram when Riva needs your attention.
               </p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">Telegram Chat ID</label>
-              <input
-                type="text"
-                value={telegramChatId}
-                onChange={(e) => setTelegramChatId(e.target.value)}
-                placeholder="123456789"
-                className="input"
-              />
-              <div className="mt-2 text-sm text-slate space-y-2">
-                <p>Setup steps:</p>
-                <ol className="list-decimal list-inside space-y-1">
-                  <li>
-                    <a
-                      href={`https://t.me/${(process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || '').replace('@', '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="link-underline"
-                    >
-                      Open Riva bot in Telegram
-                    </a>{' '}
-                    and send /start
-                  </li>
-                  <li>
-                    Message{' '}
-                    <a
-                      href="https://t.me/userinfobot"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="link-underline"
-                    >
-                      @userinfobot
-                    </a>{' '}
-                    - it will reply with your info
-                  </li>
-                  <li>
-                    Copy the numeric <strong>Id</strong> (e.g. 123456789), not your username
-                  </li>
-                </ol>
+            {/* Alert method selection - only show when alerts enabled */}
+            {notificationPreference !== 'dashboard' && (
+              <div className="ml-7 space-y-4 pt-2">
+                <div className="flex gap-4">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="alertMethod"
+                      checked={notificationPreference === 'telegram'}
+                      onChange={() => setNotificationPreference('telegram')}
+                      className="w-4 h-4 text-taupe focus:ring-taupe"
+                    />
+                    <span className="text-charcoal">Telegram</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="alertMethod"
+                      checked={notificationPreference === 'sms'}
+                      onChange={() => setNotificationPreference('sms')}
+                      className="w-4 h-4 text-taupe focus:ring-taupe"
+                    />
+                    <span className="text-charcoal">SMS</span>
+                  </label>
+                </div>
+
+                {/* Telegram setup */}
+                {notificationPreference === 'telegram' && (
+                  <div>
+                    <label className="block text-sm font-medium text-charcoal mb-1">Telegram Chat ID</label>
+                    <input
+                      type="text"
+                      value={telegramChatId}
+                      onChange={(e) => setTelegramChatId(e.target.value)}
+                      placeholder="123456789"
+                      className="input"
+                    />
+                    <div className="mt-2 text-sm text-slate space-y-2">
+                      <p>Setup steps:</p>
+                      <ol className="list-decimal list-inside space-y-1">
+                        <li>
+                          <a
+                            href={`https://t.me/${(process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || '').replace('@', '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="link-underline"
+                          >
+                            Open Riva bot in Telegram
+                          </a>{' '}
+                          and send /start
+                        </li>
+                        <li>
+                          Message{' '}
+                          <a
+                            href="https://t.me/userinfobot"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="link-underline"
+                          >
+                            @userinfobot
+                          </a>{' '}
+                          - it will reply with your info
+                        </li>
+                        <li>
+                          Copy the numeric <strong>Id</strong> (e.g. 123456789), not your username
+                        </li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
+
+                {/* SMS setup */}
+                {notificationPreference === 'sms' && (
+                  <div>
+                    <label className="block text-sm font-medium text-charcoal mb-1">Phone Number</label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+1 (555) 123-4567"
+                      className="input"
+                    />
+                    <p className="mt-1 text-sm text-slate">
+                      Include country code for international numbers.
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
         </div>
 
