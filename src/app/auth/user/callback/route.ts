@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
           email: userInfo.email,
           name: userInfo.name,
           calendarId: userInfo.email, // Google Calendar ID is typically the email
+          notificationPreference: 'dashboard',
         })
         .returning();
       user = newUser;
