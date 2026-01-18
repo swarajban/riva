@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
       schedulingRequestId: p.schedulingRequestId,
       awaitingResponseType: p.awaitingResponseType,
       pendingEmailId: p.pendingEmailId,
+      pendingCalendarEventId: p.pendingCalendarEventId,
       body: p.body || '',
       attendees: p.schedulingRequest?.attendees || undefined,
       meetingTitle: p.schedulingRequest?.meetingTitle || undefined,
