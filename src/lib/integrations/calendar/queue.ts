@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { scheduledCalendarEvents, users, UserSettings, CalendarEventData, schedulingRequests } from '@/lib/db/schema';
+import { scheduledCalendarEvents, users, UserSettings, CalendarEventData, schedulingRequests, emailThreads } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { createCalendarEvent } from './client';
 import { getAssistantForUser } from '@/lib/auth/google-oauth';
@@ -68,6 +68,20 @@ export async function queueCalendarEvent(options: QueueCalendarEventOptions): Pr
       linkedEmailId: options.linkedEmailId,
     })
     .returning({ id: scheduledCalendarEvents.id });
+
+  // If there's a linked email, clear its scheduledSendAt so email worker won't pick it up
+  // The calendar worker will send it atomically with the invite
+  if (options.linkedEmailId) {
+    await db
+      .update(emailThreads)
+      .set({ scheduledSendAt: null })
+      .where(eq(emailThreads.id, options.linkedEmailId));
+
+    logger.info('Linked email cleared for atomic send with calendar', {
+      emailId: options.linkedEmailId,
+      calendarEventId: event.id,
+    });
+  }
 
   logger.info('Calendar event queued', {
     eventId: event.id,
