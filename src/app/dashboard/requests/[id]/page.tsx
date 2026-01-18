@@ -68,6 +68,11 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
     orderBy: desc(scheduledCalendarEvents.createdAt),
   });
 
+  // Get email IDs that are linked to pending calendar events (these shouldn't show individual "Send now")
+  const emailsLinkedToCalendarEvents = new Set(
+    pendingCalendarEvents.map(e => e.linkedEmailId).filter((id): id is string => id !== null)
+  );
+
   const attendees = (request.attendees as { email: string; name?: string }[]) || [];
   const proposedTimes = (request.proposedTimes as { start: string; end: string; round: number }[]) || [];
 
@@ -171,7 +176,10 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                           ) : isScheduled ? (
                             <>
                               <LocalTimestamp date={email.scheduledSendAt!} />
-                              <SendNowButton emailId={email.id} />
+                              {/* Hide Send now for emails linked to calendar events - use calendar Send now instead */}
+                              {!emailsLinkedToCalendarEvents.has(email.id) && (
+                                <SendNowButton emailId={email.id} />
+                              )}
                             </>
                           ) : null}
                         </span>
