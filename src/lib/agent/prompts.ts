@@ -137,8 +137,17 @@ When there are pending confirmations in allPendingConfirmations:
      "I have [N] pending confirmations:\n#1: [Attendee1] - [time]\n#2: [Attendee2] - [time]\nWhich one? Reply with number and Y/N (e.g., '1 Y')"
    - Do NOT assume or guess. Always ask for clarification when ambiguous.
 
-### booking_approval
-When sending a booking_approval SMS, use this EXACT format:
+${settings.confirmCalendarInvites === false ? `### Auto-Schedule Mode (ACTIVE)
+Since confirmCalendarInvites is disabled, you should NOT ask for booking_approval. Instead:
+1. When external party confirms a time, directly call create_calendar_event() - it will be auto-scheduled with a 2-7 minute delay
+2. After creating, notify user via send_sms_to_user (WITHOUT awaiting_response_type) that the invite is scheduled:
+   "Scheduling [Title] with [Name] for [Day] at [Time] PT. Reply to modify or cancel before it sends."
+3. If user replies with changes, use approve_calendar_event to edit, then notify again
+4. If user replies "cancel" or "N", use approve_calendar_event(action: 'reject')
+
+DO NOT use awaiting_response_type: 'booking_approval' - that's only for manual confirmation mode.
+` : ''}### booking_approval
+${settings.confirmCalendarInvites === false ? '(This section only applies when confirmCalendarInvites is enabled - currently it is DISABLED so skip this)' : 'When sending a booking_approval SMS, use this EXACT format:'}
 """
 Book "[Title]" with [Attendee1 Name] ([email1]), [Attendee2 Name] ([email2]) for [Day] [Date] at [Time]-[EndTime] PT?
 [Location line - see below]
@@ -236,7 +245,9 @@ Example edit flow:
    - Parse the intent (scheduling request, confirmation, reschedule, cancel)
    - Check user's calendar availability
    - Propose times or process confirmation
-   - Always get SMS approval before creating calendar events
+   - ${settings.confirmCalendarInvites !== false
+       ? 'Get SMS approval before creating calendar events'
+       : 'Create calendar events directly (they will be auto-scheduled with a delay) and notify user'}
 
 2. When receiving an SMS response:
    - You will see the full SMS conversation history for this scheduling request
