@@ -22,6 +22,7 @@ export const awaitingResponseTypeEnum = pgEnum('awaiting_response_type', [
   'cancel_approval',
   'meeting_title',
   'email_approval',
+  'calendar_event_approval',
 ]);
 
 export const notificationPreferenceEnum = pgEnum('notification_preference', ['dashboard', 'sms', 'telegram']);
@@ -42,6 +43,7 @@ export type UserSettings = {
   maxSlotsPerDay: number;
   keywordRules: KeywordRule[];
   confirmOutboundEmails?: boolean;
+  confirmCalendarInvites?: boolean;  // default true (require confirmation)
 };
 
 export type KeywordRule = {
@@ -52,6 +54,21 @@ export type KeywordRule = {
 export type Attendee = {
   email: string;
   name?: string;
+};
+
+export type CalendarEventData = {
+  title: string;
+  startTime: string;  // ISO
+  endTime: string;    // ISO
+  attendees: { email: string; name?: string; optional?: boolean }[];
+  location?: string;
+  timezone: string;
+  // Flexible conferencing - supports Zoom, Google Meet, Teams, etc.
+  conferencing?: {
+    type: 'zoom' | 'google_meet' | 'teams' | 'other';
+    link?: string;  // user's personal link or auto-generated
+  } | null;
+  // Extensible: add future fields here (description, reminders, etc.)
 };
 
 export type ProposedTime = {
@@ -173,6 +190,27 @@ export const emailThreads = pgTable(
   })
 );
 
+export const scheduledCalendarEvents = pgTable(
+  'scheduled_calendar_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    schedulingRequestId: uuid('scheduling_request_id')
+      .references(() => schedulingRequests.id, { onDelete: 'cascade' })
+      .notNull(),
+    eventData: jsonb('event_data').$type<CalendarEventData>().notNull(),
+    scheduledSendAt: timestamp('scheduled_send_at', { withTimezone: true }), // null = awaiting approval
+    sentAt: timestamp('sent_at', { withTimezone: true }), // null = not yet sent
+    googleCalendarEventId: varchar('google_calendar_event_id', { length: 255 }),
+    linkedEmailId: uuid('linked_email_id').references(() => emailThreads.id, { onDelete: 'set null' }),
+    processingError: text('processing_error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    pendingSendIdx: index('idx_scheduled_calendar_events_pending_send').on(table.scheduledSendAt),
+    requestIdx: index('idx_scheduled_calendar_events_request').on(table.schedulingRequestId),
+  })
+);
+
 export const notifications = pgTable(
   'notifications',
   {
@@ -189,6 +227,7 @@ export const notifications = pgTable(
     awaitingResponseType: awaitingResponseTypeEnum('awaiting_response_type'),
     providerMessageId: varchar('provider_message_id', { length: 255 }),
     pendingEmailId: uuid('pending_email_id').references(() => emailThreads.id, { onDelete: 'set null' }),
+    pendingCalendarEventId: uuid('pending_calendar_event_id').references(() => scheduledCalendarEvents.id, { onDelete: 'set null' }),
     referenceNumber: integer('reference_number'), // Stable ref # for multi-confirmation disambiguation
     sentAt: timestamp('sent_at', { withTimezone: true }),
     receivedAt: timestamp('received_at', { withTimezone: true }),
@@ -233,6 +272,17 @@ export const emailThreadsRelations = relations(emailThreads, ({ one }) => ({
   }),
 }));
 
+export const scheduledCalendarEventsRelations = relations(scheduledCalendarEvents, ({ one }) => ({
+  schedulingRequest: one(schedulingRequests, {
+    fields: [scheduledCalendarEvents.schedulingRequestId],
+    references: [schedulingRequests.id],
+  }),
+  linkedEmail: one(emailThreads, {
+    fields: [scheduledCalendarEvents.linkedEmailId],
+    references: [emailThreads.id],
+  }),
+}));
+
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   schedulingRequest: one(schedulingRequests, {
     fields: [notifications.schedulingRequestId],
@@ -253,6 +303,8 @@ export type SchedulingRequest = typeof schedulingRequests.$inferSelect;
 export type NewSchedulingRequest = typeof schedulingRequests.$inferInsert;
 export type EmailThread = typeof emailThreads.$inferSelect;
 export type NewEmailThread = typeof emailThreads.$inferInsert;
+export type ScheduledCalendarEvent = typeof scheduledCalendarEvents.$inferSelect;
+export type NewScheduledCalendarEvent = typeof scheduledCalendarEvents.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
 

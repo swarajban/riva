@@ -9,6 +9,7 @@ import { lookupContact, lookupContactDef } from './lookup-contact';
 import { getThreadEmails, getThreadEmailsDef } from './get-thread-emails';
 import { linkThreads, linkThreadsDef } from './link-threads';
 import { approveEmail, approveEmailDef } from './approve-email';
+import { approveCalendarEvent, approveCalendarEventDef } from './approve-calendar-event';
 import { clearAwaiting, clearAwaitingDef } from './clear-awaiting';
 import { logger } from '@/lib/utils/logger';
 
@@ -24,6 +25,7 @@ export const toolDefinitions: ToolDefinition[] = [
   getThreadEmailsDef,
   linkThreadsDef,
   approveEmailDef,
+  approveCalendarEventDef,
   clearAwaitingDef,
 ];
 
@@ -39,6 +41,7 @@ const toolExecutors: Record<ToolName, (input: unknown, context: AgentContext) =>
   get_thread_emails: getThreadEmails,
   link_threads: linkThreads,
   approve_email: approveEmail,
+  approve_calendar_event: approveCalendarEvent,
   clear_awaiting_response: clearAwaiting,
 };
 

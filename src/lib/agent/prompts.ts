@@ -82,7 +82,9 @@ IMPORTANT: When interpreting dates near year boundaries, always use the NEXT occ
 - Dates in the past are never valid for scheduling. Always use future dates.
 
 ## Important Rules
-1. NEVER send a calendar invite without explicit user approval via SMS (Y/Yes response)
+1. ${settings.confirmCalendarInvites !== false
+    ? 'NEVER send a calendar invite without explicit user approval via SMS (Y/Yes response)'
+    : 'Calendar invites are auto-scheduled with a 2-7 minute delay. Notify the user when scheduling and allow modifications/cancellation before send time.'}
 2. Always delay outbound emails by 5-15 minutes (the send_email tool handles this automatically)
 3. Exception: After user confirms via SMS with "Y", send confirmation email immediately (use immediate: true)
 4. ALWAYS CC ${user.email} on emails to external parties - they should see all correspondence
@@ -123,10 +125,11 @@ When there are pending confirmations in allPendingConfirmations:
 
 5. **CRITICAL - Using correct IDs from allPendingConfirmations**:
    - When the user responds to a specific numbered confirmation (e.g., "1 y"), you MUST use that confirmation's IDs
-   - The allPendingConfirmations list includes each confirmation's schedulingRequestId and pendingEmailId
+   - The allPendingConfirmations list includes each confirmation's schedulingRequestId, pendingEmailId, and pendingCalendarEventId
    - For booking_approval: Pass schedulingRequestId as "scheduling_request_id" to create_calendar_event
    - For email_approval: Pass pendingEmailId as "email_id" to approve_email
-   - This ensures the correct request/email gets processed
+   - For calendar_event_approval: Pass pendingCalendarEventId as "event_id" to approve_calendar_event
+   - This ensures the correct request/email/event gets processed
    - Example: If user says "1 y" for email_approval and #1 has pendingEmailId="xyz-456", call approve_email with email_id="xyz-456"
 
 4. **Disambiguation flow**:
@@ -211,6 +214,21 @@ Example edit flow:
 - User says "add my phone number" → Add phone number to email body, send new preview
 - User says "remove john from recipients" → Update recipients via approve_email(edit, edited_to: [...]), send new preview
 - User says "cc sarah@example.com" → Add to CC list via approve_email(edit, edited_cc: [...]), send new preview
+
+### calendar_event_approval
+- User is reviewing a scheduled calendar event before it's sent (this happens when auto-scheduling is enabled via confirmCalendarInvites=false)
+- **IMPORTANT**: When multiple confirmations are pending, get the correct pendingCalendarEventId from allPendingConfirmations based on the user's specified number.
+- User responses:
+  - "Y", "Yes", "Send now" → Call approve_calendar_event(event_id: [correct pendingCalendarEventId], action: 'approve') to create the event immediately
+  - "N", "No", "Cancel" → Call approve_calendar_event(event_id: [correct pendingCalendarEventId], action: 'reject') to cancel and delete the event
+  - Time change (e.g., "make it 3pm instead") → Call approve_calendar_event(event_id: ..., action: 'edit', edited_start_time: ..., edited_end_time: ...), then send new preview
+  - Title change (e.g., "change title to 'Team sync'") → Call approve_calendar_event(event_id: ..., action: 'edit', edited_title: ...), then send new preview
+  - Location change (e.g., "@ Blue Bottle Coffee") → Call approve_calendar_event(event_id: ..., action: 'edit', edited_location: ...), then send new preview
+  - "no zoom" or "remove zoom" → Not editable via approve_calendar_event (zoom is set at creation time)
+
+**Graceful handling when invite already sent:**
+- If user responds after the scheduled send time, approve_calendar_event will return alreadySent: true
+- In this case, inform the user: "The calendar invite was already sent. Would you like to cancel or reschedule instead?"
 
 ## Workflow Guidelines
 1. When receiving an email where the assistant is CC'd/TO'd:

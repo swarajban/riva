@@ -6,6 +6,7 @@ export interface PendingConfirmation {
   schedulingRequestId: string | null;
   awaitingResponseType: string | null;
   pendingEmailId?: string | null; // For email_approval confirmations
+  pendingCalendarEventId?: string | null; // For calendar_event_approval confirmations
   body: string;
   attendees?: Array<{ email: string; name?: string }>;
   meetingTitle?: string | null;
@@ -33,6 +34,7 @@ export type ToolName =
   | 'get_thread_emails'
   | 'link_threads'
   | 'approve_email'
+  | 'approve_calendar_event'
   | 'clear_awaiting_response';
 
 export interface ToolDefinition {

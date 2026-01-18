@@ -16,6 +16,7 @@ interface UserSettings {
   maxSlotsPerDay: number;
   keywordRules: KeywordRule[];
   confirmOutboundEmails?: boolean;
+  confirmCalendarInvites?: boolean;
 }
 
 interface KeywordRule {
@@ -388,6 +389,25 @@ export default function SettingsPage() {
           <p className="mt-3 text-sm text-slate">
             When enabled, you will receive a preview of every email via SMS/Telegram and must approve it before it is
             sent. You can also request edits to the email content or recipients.
+          </p>
+        </div>
+
+        {/* Calendar Invite Confirmation */}
+        <div className="card p-6">
+          <h2 className="font-display text-lg text-charcoal mb-4">Calendar Invite Confirmation</h2>
+          <label className="flex items-center space-x-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={settings.confirmCalendarInvites ?? true}
+              onChange={(e) => updateSetting('confirmCalendarInvites', e.target.checked)}
+              className="checkbox"
+            />
+            <span className="text-charcoal">Confirm calendar invites before sending</span>
+          </label>
+          <p className="mt-3 text-sm text-slate">
+            When enabled, you must approve every calendar invite via SMS/Telegram before it is created.
+            When disabled, calendar invites are auto-scheduled with a 2-7 minute delay, during which you
+            can modify or cancel them.
           </p>
         </div>
 
