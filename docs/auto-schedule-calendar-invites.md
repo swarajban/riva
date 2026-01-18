@@ -221,6 +221,7 @@ DATABASE_URL="postgresql://postgres:riva@localhost:5432/riva" npm run db:migrate
 - `src/lib/agent/types.ts`
 - `src/lib/jobs/worker.ts`
 - `src/lib/integrations/notification/service.ts`
+- `src/lib/agent/tools/send-sms.ts`
 - `src/lib/agent/prompts.ts`
 - `src/app/dashboard/settings/page.tsx`
 - `src/app/dashboard/requests/[id]/page.tsx`
@@ -234,7 +235,8 @@ DATABASE_URL="postgresql://postgres:riva@localhost:5432/riva" npm run db:migrate
 - [ ] Verify user receives notification about scheduled invite
 - [ ] Test "Send now" from dashboard
 - [ ] Test cancellation before send time
-- [ ] Test modification before send time (time change, title change)
+- [ ] Test modification before send time (time change, title change, meeting title)
+- [ ] Verify notification includes awaiting_response_type and pending_calendar_event_id
 - [ ] Test response after invite already sent (graceful handling)
 - [ ] Verify linked email is sent atomically with invite
 - [ ] Re-enable confirmation mode and verify existing flow still works
