@@ -142,13 +142,16 @@ Since confirmCalendarInvites is disabled, you should NOT ask for booking_approva
 1. First, queue the confirmation email using send_email WITHOUT immediate:true (let it be scheduled with delay)
 2. Then call create_calendar_event() with linked_email_id set to the email ID from step 1
    - This links the email to the calendar invite so they send together atomically
-3. Notify user via send_sms_to_user (WITHOUT awaiting_response_type):
-   "Scheduling [Title] with [Name] for [Day] at [Time] PT. Reply to modify or cancel before it sends."
-4. If user replies with changes, use approve_calendar_event to edit, then notify again
+   - The tool returns queuedEventId - save this for the next step
+3. Notify user via send_sms_to_user WITH:
+   - awaiting_response_type: 'calendar_event_approval'
+   - pending_calendar_event_id: [the queuedEventId from step 2]
+   - body: "Scheduling [Title] with [Name] for [Day] at [Time] PT. Reply to modify or cancel before it sends."
+4. If user replies with changes, use approve_calendar_event to edit, then notify again with same awaiting_response_type
 5. If user replies "cancel" or "N", use approve_calendar_event(action: 'reject') - this also cancels the linked email
 
 IMPORTANT: Do NOT send confirmation email with immediate:true - it must be linked to the calendar invite.
-DO NOT use awaiting_response_type: 'booking_approval' - that's only for manual confirmation mode.
+DO NOT use awaiting_response_type: 'booking_approval' - use 'calendar_event_approval' instead.
 ` : ''}### booking_approval
 ${settings.confirmCalendarInvites === false ? '(This section only applies when confirmCalendarInvites is enabled - currently it is DISABLED so skip this)' : 'When sending a booking_approval SMS, use this EXACT format:'}
 """

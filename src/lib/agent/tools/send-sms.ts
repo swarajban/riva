@@ -17,8 +17,10 @@ interface SendSmsInput {
     | 'stale_slot_decision'
     | 'reschedule_approval'
     | 'cancel_approval'
-    | 'meeting_title';
+    | 'meeting_title'
+    | 'calendar_event_approval';
   update_notification_id?: string;
+  pending_calendar_event_id?: string;
 }
 
 export const sendSmsToUserDef: ToolDefinition = {
@@ -40,6 +42,7 @@ export const sendSmsToUserDef: ToolDefinition = {
           'reschedule_approval',
           'cancel_approval',
           'meeting_title',
+          'calendar_event_approval',
         ],
         description: 'Type of response expected from user. Required to properly route their reply.',
       },
@@ -47,6 +50,11 @@ export const sendSmsToUserDef: ToolDefinition = {
         type: 'string',
         description:
           'If editing an existing confirmation (e.g., user requested title/time/location change), pass the notification ID to update. This preserves the reference number. Get the notification ID from allPendingConfirmations based on the referenceNumber the user specified.',
+      },
+      pending_calendar_event_id: {
+        type: 'string',
+        description:
+          'For calendar_event_approval: the ID of the pending calendar event (queuedEventId from create_calendar_event). This links the notification to the event so user can modify/cancel it.',
       },
     },
     required: ['body'],
@@ -91,6 +99,7 @@ export async function sendSmsToUser(input: unknown, context: AgentContext): Prom
       body: params.body,
       schedulingRequestId: context.schedulingRequestId,
       awaitingResponseType: params.awaiting_response_type,
+      pendingCalendarEventId: params.pending_calendar_event_id,
     });
 
     // Schedule reminder and expiration if this is a booking approval request (only for new notifications)
