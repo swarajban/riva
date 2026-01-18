@@ -118,8 +118,9 @@ export async function createCalendarEventNow(userId: string, scheduledEventId: s
     throw new Error(`Scheduled calendar event not found: ${scheduledEventId}`);
   }
 
-  // Check if already sent
-  if (event.sentAt) {
+  // Check if already sent (but ignore epoch timestamp which is used as a worker claim placeholder)
+  const EPOCH = new Date(0).getTime();
+  if (event.sentAt && event.sentAt.getTime() !== EPOCH) {
     logger.info('Calendar event already sent, skipping', { eventId: scheduledEventId });
     return event.googleCalendarEventId!;
   }
