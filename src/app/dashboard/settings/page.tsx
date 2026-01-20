@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { AutomationSelector, type AutomationLevel } from '@/components/AutomationSelector';
 
 interface UserSettings {
   defaultMeetingLengthMinutes: number;
@@ -157,6 +158,28 @@ export default function SettingsPage() {
     setIsAddingRule(false);
   }
 
+  function getAutomationLevel(): AutomationLevel {
+    if (!settings) return 'confirm-calendar';
+    if (settings.confirmOutboundEmails) return 'confirm-all';
+    if (settings.confirmCalendarInvites ?? true) return 'confirm-calendar';
+    return 'full-auto';
+  }
+
+  function setAutomationLevel(level: AutomationLevel) {
+    if (!settings) return;
+    switch (level) {
+      case 'confirm-all':
+        setSettings({ ...settings, confirmOutboundEmails: true, confirmCalendarInvites: true });
+        break;
+      case 'confirm-calendar':
+        setSettings({ ...settings, confirmOutboundEmails: false, confirmCalendarInvites: true });
+        break;
+      case 'full-auto':
+        setSettings({ ...settings, confirmOutboundEmails: false, confirmCalendarInvites: false });
+        break;
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -242,6 +265,12 @@ export default function SettingsPage() {
             </div>
           )}
         </div>
+
+        {/* Automation Level */}
+        <AutomationSelector
+          value={getAutomationLevel()}
+          onChange={setAutomationLevel}
+        />
 
         {/* Timezone */}
         <div className="card p-6">
@@ -371,43 +400,6 @@ export default function SettingsPage() {
           />
           <p className="mt-2 text-sm text-slate">
             This link will be included in calendar invites when video is enabled.
-          </p>
-        </div>
-
-        {/* Email Confirmation */}
-        <div className="card p-6">
-          <h2 className="font-display text-lg text-charcoal mb-4">Email Confirmation</h2>
-          <label className="flex items-center space-x-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.confirmOutboundEmails || false}
-              onChange={(e) => updateSetting('confirmOutboundEmails', e.target.checked)}
-              className="checkbox"
-            />
-            <span className="text-charcoal">Confirm all outbound emails before sending</span>
-          </label>
-          <p className="mt-3 text-sm text-slate">
-            When enabled, you will receive a preview of every email via SMS/Telegram and must approve it before it is
-            sent. You can also request edits to the email content or recipients.
-          </p>
-        </div>
-
-        {/* Calendar Invite Confirmation */}
-        <div className="card p-6">
-          <h2 className="font-display text-lg text-charcoal mb-4">Calendar Invite Confirmation</h2>
-          <label className="flex items-center space-x-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.confirmCalendarInvites ?? true}
-              onChange={(e) => updateSetting('confirmCalendarInvites', e.target.checked)}
-              className="checkbox"
-            />
-            <span className="text-charcoal">Confirm calendar invites before sending</span>
-          </label>
-          <p className="mt-3 text-sm text-slate">
-            When enabled, you must approve every calendar invite via SMS/Telegram before it is created.
-            When disabled, calendar invites are auto-scheduled with a 2-7 minute delay, during which you
-            can modify or cancel them.
           </p>
         </div>
 
