@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation';
 interface CancelRequestButtonProps {
   requestId: string;
   hasCalendarEvent: boolean;
+  hasPendingCalendarInvite: boolean;
 }
 
-export function CancelRequestButton({ requestId, hasCalendarEvent }: CancelRequestButtonProps) {
+export function CancelRequestButton({ requestId, hasCalendarEvent, hasPendingCalendarInvite }: CancelRequestButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -43,6 +44,11 @@ export function CancelRequestButton({ requestId, hasCalendarEvent }: CancelReque
           {hasCalendarEvent && (
             <span className="block mt-1 font-medium">
               This will also delete the calendar event and notify attendees.
+            </span>
+          )}
+          {hasPendingCalendarInvite && !hasCalendarEvent && (
+            <span className="block mt-1 font-medium">
+              This will also cancel the scheduled calendar invite and confirmation email.
             </span>
           )}
         </p>

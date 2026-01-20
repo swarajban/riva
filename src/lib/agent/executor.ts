@@ -189,7 +189,8 @@ When sending emails, use the raw "to" and "cc" fields to include everyone on the
         .map((p) => {
           const attendee = p.attendees?.[0]?.name || p.attendees?.[0]?.email || 'Unknown';
           const emailIdInfo = p.pendingEmailId ? `, pendingEmailId: ${p.pendingEmailId}` : '';
-          return `#${p.referenceNumber}: ${p.awaitingResponseType} with ${attendee} (notificationId: ${p.notificationId}, schedulingRequestId: ${p.schedulingRequestId || 'N/A'}${emailIdInfo})`;
+          const calendarIdInfo = p.pendingCalendarEventId ? `, pendingCalendarEventId: ${p.pendingCalendarEventId}` : '';
+          return `#${p.referenceNumber}: ${p.awaitingResponseType} with ${attendee} (notificationId: ${p.notificationId}, schedulingRequestId: ${p.schedulingRequestId || 'N/A'}${emailIdInfo}${calendarIdInfo})`;
         })
         .join('\n');
       conversationSection = `\n\n## Pending confirmations (${allPending.length}):\n${pendingList}`;
@@ -219,9 +220,10 @@ When sending emails, use the raw "to" and "cc" fields to include everyone on the
       if (allPending.length === 1) {
         const pending = allPending[0];
         const pendingEmailLine = pending.pendingEmailId ? `\n- pendingEmailId: ${pending.pendingEmailId}` : '';
+        const pendingCalendarLine = pending.pendingCalendarEventId ? `\n- pendingCalendarEventId: ${pending.pendingCalendarEventId}` : '';
         notificationIdNote = `\n\nIDs for this confirmation:
 - notificationId: ${pending.notificationId}
-- schedulingRequestId: ${pending.schedulingRequestId || 'N/A'}${pendingEmailLine}`;
+- schedulingRequestId: ${pending.schedulingRequestId || 'N/A'}${pendingEmailLine}${pendingCalendarLine}`;
       } else if (allPending.length > 1) {
         notificationIdNote = `\n\nIMPORTANT: ${allPending.length} confirmations are pending. Determine which one the user is responding to. Use the correct IDs from the pending list when calling tools.`;
       }

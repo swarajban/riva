@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { schedulingRequests, users } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { schedulingRequests, users, scheduledCalendarEvents, emailThreads } from '@/lib/db/schema';
+import { eq, and, isNull } from 'drizzle-orm';
 import { cancelCalendarEvent } from '@/lib/integrations/calendar/client';
 import { logger } from '@/lib/utils/logger';
 
@@ -50,6 +50,38 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           // Continue with status update even if calendar deletion fails
         }
       }
+    }
+
+    // Delete any pending scheduled calendar events (not yet sent)
+    const pendingCalendarEvents = await db.query.scheduledCalendarEvents.findMany({
+      where: and(
+        eq(scheduledCalendarEvents.schedulingRequestId, id),
+        isNull(scheduledCalendarEvents.sentAt)
+      ),
+    });
+
+    for (const event of pendingCalendarEvents) {
+      // If there's a linked email, mark it as cancelled
+      if (event.linkedEmailId) {
+        await db
+          .update(emailThreads)
+          .set({ processingError: 'Cancelled with scheduling request' })
+          .where(eq(emailThreads.id, event.linkedEmailId));
+
+        logger.info('Cancelled linked email for pending calendar event', {
+          emailId: event.linkedEmailId,
+          calendarEventId: event.id,
+          schedulingRequestId: id,
+        });
+      }
+
+      // Delete the pending calendar event
+      await db.delete(scheduledCalendarEvents).where(eq(scheduledCalendarEvents.id, event.id));
+
+      logger.info('Deleted pending scheduled calendar event', {
+        calendarEventId: event.id,
+        schedulingRequestId: id,
+      });
     }
 
     // Update the scheduling request status to cancelled

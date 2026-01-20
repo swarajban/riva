@@ -1,12 +1,13 @@
 import { db } from '@/lib/db';
-import { schedulingRequests, emailThreads, smsMessages, notifications } from '@/lib/db/schema';
+import { schedulingRequests, emailThreads, smsMessages, notifications, scheduledCalendarEvents, CalendarEventData } from '@/lib/db/schema';
 import { getCurrentUser } from '@/lib/auth/session';
-import { eq, asc, desc, and, isNotNull } from 'drizzle-orm';
+import { eq, asc, desc, and, isNotNull, isNull } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { formatDateTimePT } from '@/lib/utils/time';
 import { CancelRequestButton } from '@/components/CancelRequestButton';
 import { SendNowButton } from '@/components/SendNowButton';
+import { SendCalendarNowButton } from '@/components/SendCalendarNowButton';
 import { LocalTimestamp } from '@/components/LocalTimestamp';
 import { DashboardMessageInput } from '@/components/DashboardMessageInput';
 import { AgentProcessingBanner } from '@/components/AgentProcessingBanner';
@@ -57,6 +58,20 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
     ),
     orderBy: desc(notifications.createdAt),
   });
+
+  // Get pending scheduled calendar events for this request
+  const pendingCalendarEvents = await db.query.scheduledCalendarEvents.findMany({
+    where: and(
+      eq(scheduledCalendarEvents.schedulingRequestId, id),
+      isNull(scheduledCalendarEvents.sentAt)
+    ),
+    orderBy: desc(scheduledCalendarEvents.createdAt),
+  });
+
+  // Get email IDs that are linked to pending calendar events (these shouldn't show individual "Send now")
+  const emailsLinkedToCalendarEvents = new Set(
+    pendingCalendarEvents.map(e => e.linkedEmailId).filter((id): id is string => id !== null)
+  );
 
   const attendees = (request.attendees as { email: string; name?: string }[]) || [];
   const proposedTimes = (request.proposedTimes as { start: string; end: string; round: number }[]) || [];
@@ -161,7 +176,10 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                           ) : isScheduled ? (
                             <>
                               <LocalTimestamp date={email.scheduledSendAt!} />
-                              <SendNowButton emailId={email.id} />
+                              {/* Hide Send now for emails linked to calendar events - use calendar Send now instead */}
+                              {!emailsLinkedToCalendarEvents.has(email.id) && (
+                                <SendNowButton emailId={email.id} />
+                              )}
                             </>
                           ) : null}
                         </span>
@@ -282,6 +300,46 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
             </div>
           )}
 
+          {/* Scheduled calendar invites (pending) */}
+          {pendingCalendarEvents.length > 0 && (
+            <div className="bg-amber-50 rounded-card border border-amber-200 overflow-hidden">
+              <div className="px-4 py-3 border-b border-amber-200">
+                <h2 className="font-display text-amber-900">Scheduled Calendar Invite</h2>
+              </div>
+              {pendingCalendarEvents.map((event) => {
+                const eventData = event.eventData as CalendarEventData;
+                const isAwaitingApproval = !event.scheduledSendAt;
+                return (
+                  <div key={event.id} className="p-4 text-sm space-y-2">
+                    <div className="font-medium text-amber-800">{eventData.title}</div>
+                    <div className="text-amber-700">
+                      {formatDateTimePT(new Date(eventData.startTime))}
+                    </div>
+                    {eventData.attendees.length > 0 && (
+                      <div className="text-amber-600 text-xs">
+                        Attendees: {eventData.attendees.map(a => a.name || a.email).join(', ')}
+                      </div>
+                    )}
+                    {eventData.location && (
+                      <div className="text-amber-600 text-xs">Location: {eventData.location}</div>
+                    )}
+                    {event.scheduledSendAt && (
+                      <div className="text-amber-600 text-xs flex items-center gap-2">
+                        <span>Scheduled: <LocalTimestamp date={event.scheduledSendAt} /></span>
+                        <SendCalendarNowButton eventId={event.id} />
+                      </div>
+                    )}
+                    {isAwaitingApproval && (
+                      <div className="text-amber-600 text-xs">
+                        Awaiting your approval
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {/* Confirmed booking */}
           {request.confirmedStartTime && (
             <div className="bg-emerald-50 rounded-card border border-emerald-200 overflow-hidden">
@@ -330,7 +388,11 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
 
           {/* Cancel button - only show for active requests */}
           {!['cancelled', 'expired', 'error'].includes(request.status) && (
-            <CancelRequestButton requestId={request.id} hasCalendarEvent={!!request.googleCalendarEventId} />
+            <CancelRequestButton
+              requestId={request.id}
+              hasCalendarEvent={!!request.googleCalendarEventId}
+              hasPendingCalendarInvite={pendingCalendarEvents.length > 0}
+            />
           )}
         </div>
       </div>

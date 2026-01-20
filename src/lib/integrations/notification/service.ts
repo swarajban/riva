@@ -16,7 +16,8 @@ export type AwaitingResponseType =
   | 'reschedule_approval'
   | 'cancel_approval'
   | 'meeting_title'
-  | 'email_approval';
+  | 'email_approval'
+  | 'calendar_event_approval';
 
 export interface SendNotificationOptions {
   userId: string;
@@ -24,6 +25,7 @@ export interface SendNotificationOptions {
   schedulingRequestId?: string;
   awaitingResponseType?: AwaitingResponseType;
   pendingEmailId?: string;
+  pendingCalendarEventId?: string;
 }
 
 // Get Twilio client
@@ -84,7 +86,7 @@ async function getNextReferenceNumber(userId: string): Promise<number> {
 
 // Send notification via the appropriate provider
 export async function sendNotification(options: SendNotificationOptions): Promise<string> {
-  const { userId, body, schedulingRequestId, awaitingResponseType, pendingEmailId } = options;
+  const { userId, body, schedulingRequestId, awaitingResponseType, pendingEmailId, pendingCalendarEventId } = options;
 
   const { provider, user } = await getProviderForUser(userId);
 
@@ -161,6 +163,7 @@ export async function sendNotification(options: SendNotificationOptions): Promis
       awaitingResponseType,
       providerMessageId,
       pendingEmailId,
+      pendingCalendarEventId,
       referenceNumber,
       sentAt: new Date(),
     })
@@ -314,6 +317,7 @@ export async function createEditedNotification(
       awaitingResponseType: original.awaitingResponseType,
       providerMessageId,
       pendingEmailId: original.pendingEmailId,
+      pendingCalendarEventId: original.pendingCalendarEventId,
       referenceNumber: original.referenceNumber, // Preserve the reference number!
       sentAt: new Date(),
     })

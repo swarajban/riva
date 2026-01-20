@@ -1,8 +1,9 @@
 import { db } from '@/lib/db';
-import { emailThreads, schedulingRequests, assistants } from '@/lib/db/schema';
+import { emailThreads, schedulingRequests, assistants, scheduledCalendarEvents, notifications } from '@/lib/db/schema';
 import { and, isNotNull, isNull, lte, eq, gt } from 'drizzle-orm';
 import { sendEmailNow } from '@/lib/integrations/gmail/send';
 import { setupGmailWatch } from '@/lib/integrations/gmail/client';
+import { createCalendarEventNow } from '@/lib/integrations/calendar/queue';
 import { handleSmsReminder } from './handlers/sms-reminder';
 import { handleExpireRequest } from './handlers/expire-request';
 import { logger } from '@/lib/utils/logger';
@@ -153,6 +154,106 @@ async function processPendingEmails(): Promise<void> {
   }
 }
 
+// Process pending calendar events (scheduled_send_at <= now AND sent_at IS NULL)
+async function processPendingCalendarEvents(): Promise<void> {
+  const now = new Date();
+
+  const pendingEvents = await db.query.scheduledCalendarEvents.findMany({
+    where: and(
+      isNotNull(scheduledCalendarEvents.scheduledSendAt),
+      isNull(scheduledCalendarEvents.sentAt),
+      lte(scheduledCalendarEvents.scheduledSendAt, now)
+    ),
+    with: {
+      schedulingRequest: true,
+    },
+  });
+
+  for (const event of pendingEvents) {
+    logger.info('Processing pending calendar event', {
+      eventId: event.id,
+      schedulingRequestId: event.schedulingRequestId,
+      title: (event.eventData as { title?: string })?.title,
+    });
+
+    try {
+      // Atomically claim the event by setting sentAt to a placeholder
+      const claimed = await db
+        .update(scheduledCalendarEvents)
+        .set({ sentAt: new Date(0) }) // Placeholder timestamp (epoch)
+        .where(
+          and(
+            eq(scheduledCalendarEvents.id, event.id),
+            isNull(scheduledCalendarEvents.sentAt)
+          )
+        )
+        .returning({ id: scheduledCalendarEvents.id });
+
+      if (claimed.length === 0) {
+        logger.info('Calendar event already claimed, skipping', {
+          eventId: event.id,
+          schedulingRequestId: event.schedulingRequestId,
+        });
+        continue;
+      }
+
+      // Get the user ID from the scheduling request
+      if (!event.schedulingRequest) {
+        logger.error('Calendar event has no scheduling request', undefined, { eventId: event.id });
+        await db.update(scheduledCalendarEvents).set({ sentAt: null }).where(eq(scheduledCalendarEvents.id, event.id));
+        continue;
+      }
+
+      const userId = event.schedulingRequest.userId;
+
+      // Send linked email first if it exists
+      if (event.linkedEmailId) {
+        try {
+          await sendEmailNow(userId, event.linkedEmailId);
+          logger.info('Linked email sent with calendar event', {
+            eventId: event.id,
+            emailId: event.linkedEmailId,
+          });
+        } catch (error) {
+          logger.error('Failed to send linked email', error, {
+            eventId: event.id,
+            emailId: event.linkedEmailId,
+          });
+          // Continue - still try to create the calendar event
+        }
+      }
+
+      // Create the calendar event
+      await createCalendarEventNow(userId, event.id);
+
+      // Clear awaiting response type for any notification associated with this calendar event
+      await db
+        .update(notifications)
+        .set({ awaitingResponseType: null })
+        .where(eq(notifications.pendingCalendarEventId, event.id));
+
+      logger.info('Calendar event sent', {
+        eventId: event.id,
+        schedulingRequestId: event.schedulingRequestId,
+        title: (event.eventData as { title?: string })?.title,
+      });
+    } catch (error) {
+      logger.error('Failed to send calendar event', error, {
+        eventId: event.id,
+        schedulingRequestId: event.schedulingRequestId,
+      });
+      // Reset sentAt on failure so it can be retried
+      await db
+        .update(scheduledCalendarEvents)
+        .set({
+          sentAt: null,
+          processingError: error instanceof Error ? error.message : 'Unknown error',
+        })
+        .where(eq(scheduledCalendarEvents.id, event.id));
+    }
+  }
+}
+
 // Process SMS reminders (sms_reminder_at <= now AND sms_reminder_sent_at IS NULL)
 async function processSmsReminders(): Promise<void> {
   const now = new Date();
@@ -232,6 +333,7 @@ async function pollOnce(): Promise<void> {
   isProcessing = true;
   try {
     await processPendingEmails();
+    await processPendingCalendarEvents();
     await processSmsReminders();
     await processExpiredRequests();
     await processGmailWatchRenewals();

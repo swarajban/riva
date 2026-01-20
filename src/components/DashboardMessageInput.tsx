@@ -10,7 +10,8 @@ type AwaitingResponseType =
   | 'reschedule_approval'
   | 'cancel_approval'
   | 'meeting_title'
-  | 'email_approval';
+  | 'email_approval'
+  | 'calendar_event_approval';
 
 interface DashboardMessageInputProps {
   schedulingRequestId: string;
@@ -31,6 +32,10 @@ const QUICK_ACTIONS: Record<
     { label: 'Approve', message: 'approve', variant: 'approve' },
     { label: 'Reject', message: 'reject', variant: 'reject' },
   ],
+  calendar_event_approval: [
+    { label: 'Send now', message: 'Y', variant: 'approve' },
+    { label: 'Cancel', message: 'N', variant: 'reject' },
+  ],
   reschedule_approval: [
     { label: 'Approve', message: 'Y', variant: 'approve' },
     { label: 'Reject', message: 'N', variant: 'reject' },
@@ -48,6 +53,7 @@ const QUICK_ACTIONS: Record<
 const HELPER_TEXT: Record<AwaitingResponseType, string> = {
   booking_approval: 'Reply "Y" to confirm, "N" to reject, or type edits like "change to 3pm" or "change title to Team Sync"',
   email_approval: 'Reply "approve" to send, "reject" to cancel, or describe changes like "change the tone to be more formal"',
+  calendar_event_approval: 'Reply "Y" or "Send now" to send the invite, "N" to cancel, or type edits like "change to 3pm"',
   availability_guidance: 'Describe when you\'re available, e.g., "next week" or "afternoons only"',
   stale_slot_decision: 'The selected time is no longer available. Choose a different option or ask to find new times.',
   reschedule_approval: 'Reply "Y" to confirm, "N" to reject the reschedule request.',
