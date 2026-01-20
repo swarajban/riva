@@ -388,7 +388,11 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
 
           {/* Cancel button - only show for active requests */}
           {!['cancelled', 'expired', 'error'].includes(request.status) && (
-            <CancelRequestButton requestId={request.id} hasCalendarEvent={!!request.googleCalendarEventId} />
+            <CancelRequestButton
+              requestId={request.id}
+              hasCalendarEvent={!!request.googleCalendarEventId}
+              hasPendingCalendarInvite={pendingCalendarEvents.length > 0}
+            />
           )}
         </div>
       </div>
