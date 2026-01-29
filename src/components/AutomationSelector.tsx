@@ -193,6 +193,7 @@ export function AutomationSelector({
         .spectrum-dots {
           display: flex;
           gap: 6px;
+          transform: translateY(1px);
         }
 
         .spectrum-dot {

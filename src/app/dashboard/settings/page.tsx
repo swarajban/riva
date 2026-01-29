@@ -518,6 +518,11 @@ export default function SettingsPage() {
                     <p className="mt-1 text-sm text-slate">
                       Include country code for international numbers.
                     </p>
+                    <p className="mt-3 text-xs text-slate">
+                      By saving your phone number, you consent to receive SMS notifications from Riva about your meeting scheduling requests (e.g., confirmation requests, reminders, status updates). Message frequency varies based on your scheduling activity. Msg &amp; data rates may apply. Reply STOP to unsubscribe at any time.{' '}
+                      <a href="/privacy" className="link-underline">Privacy Policy</a> &amp;{' '}
+                      <a href="/terms" className="link-underline">Terms</a>.
+                    </p>
                   </div>
                 )}
               </div>
