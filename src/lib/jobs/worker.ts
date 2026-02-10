@@ -318,7 +318,20 @@ async function processGmailWatchRenewals(): Promise<void> {
       await setupGmailWatch(assistant.id);
       logger.info('Gmail watch renewed', { assistantEmail: assistant.email });
     } catch (error) {
-      logger.error('Failed to renew Gmail watch', error, { assistantEmail: assistant.email });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage === 'invalid_grant') {
+        // OAuth tokens revoked or invalid — stop trying to renew watch for this assistant
+        logger.warn('Assistant has invalid OAuth grant, disabling Gmail watch', {
+          assistantEmail: assistant.email,
+          assistantId: assistant.id,
+        });
+        await db
+          .update(assistants)
+          .set({ gmailWatchExpiresAt: null, updatedAt: new Date() })
+          .where(eq(assistants.id, assistant.id));
+      } else {
+        logger.error('Failed to renew Gmail watch', error, { assistantEmail: assistant.email });
+      }
     }
   }
 }
